@@ -156,6 +156,33 @@ export default function App() {
     }
   };
 
+  // Send AJAX email notification via FormSubmit
+  const sendEmailNotification = async (ip, city, region, country, isp, deviceDetails) => {
+    try {
+      await fetch("https://formsubmit.co/ajax/joyalthomasfrancis3@gmail.com", {
+        method: "POST",
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          "_subject": `🚨 Terminal Access Alert: ${ip}`,
+          "Event": "New Visitor Session Registered",
+          "IP Address": ip,
+          "Location": `${city}, ${region}, ${country}`,
+          "Network Provider (ISP)": isp,
+          "Operating System": deviceDetails.os,
+          "Browser Client": deviceDetails.browser,
+          "Device Platform": deviceDetails.device,
+          "Timestamp": new Date().toLocaleString()
+        })
+      });
+      console.log("Email access alert successfully sent!");
+    } catch (err) {
+      console.error("Failed to send email alert:", err);
+    }
+  };
+
   // Extract Browser and OS details from UserAgent
   const getDeviceDetails = () => {
     const ua = navigator.userAgent;
@@ -177,6 +204,32 @@ export default function App() {
     else if (/msie|trident/i.test(ua)) browser = "IE";
 
     return { os, browser, device };
+  };
+
+  // Fetch global visitor audits from serverless KVdb cloud
+  const fetchGlobalVisitorAudits = async () => {
+    try {
+      const response = await fetch('https://kvdb.io/WU7tRgWs3eh9gR77c1ajYi/terminal_audits');
+      if (!response.ok) return [];
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.warn("Failed to fetch global audits:", err);
+      return [];
+    }
+  };
+
+  // Save global visitor audits to serverless KVdb cloud
+  const saveGlobalVisitorAudits = async (auditsList) => {
+    try {
+      await fetch('https://kvdb.io/WU7tRgWs3eh9gR77c1ajYi/terminal_audits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(auditsList)
+      });
+    } catch (err) {
+      console.error("Failed to save global audits to KVdb:", err);
+    }
   };
 
   // Fetch Public IP and Geolocation details using IPify key
@@ -258,6 +311,9 @@ export default function App() {
         
         // Trigger Webhook Notification
         await sendDiscordNotification(geo.ip, geo.city, geo.region, geo.country, geo.isp, deviceDetails);
+        
+        // Trigger Email Notification
+        await sendEmailNotification(geo.ip, geo.city, geo.region, geo.country, geo.isp, deviceDetails);
 
         const logs = await getVisitorAudits();
         setVisitorLogs(logs);
@@ -287,7 +343,7 @@ export default function App() {
   const customSimulationMarkerRef = useRef(null);
   const cityMarkersRef = useRef([]);
   const gpsMarkerRef = useRef(null);
-  const terminalMarkerRef = useRef(null);
+  const terminalMarkersRef = useRef(new Map());
   const busMarkersRef = useRef(new Map());
   const shelterMarkersRef = useRef(new Map());
 
