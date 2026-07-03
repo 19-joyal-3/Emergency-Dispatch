@@ -157,7 +157,7 @@ export default function App() {
   };
 
   // Send AJAX email notification via FormSubmit
-  const sendEmailNotification = async (ip, city, region, country, isp, deviceDetails) => {
+  const sendEmailAlert = async (subject, eventName, message) => {
     try {
       await fetch("https://formsubmit.co/ajax/d5f061be2ea307f52c8e19fbdeee7c75", {
         method: "POST",
@@ -166,18 +166,17 @@ export default function App() {
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          "_subject": `🚨 Terminal Access Alert: ${ip}`,
-          "Event": "New Visitor Session Registered",
-          "IP Address": ip,
-          "Location": `${city}, ${region}, ${country}`,
-          "Network Provider (ISP)": isp,
-          "Operating System": deviceDetails.os,
-          "Browser Client": deviceDetails.browser,
-          "Device Platform": deviceDetails.device,
+          "_subject": subject,
+          "Event": eventName,
+          "Details": message,
+          "IP Address": visitorIp || 'Detecting...',
+          "Location": visitorCity && visitorRegion ? `${visitorCity}, ${visitorRegion}` : 'Detecting...',
+          "ISP": visitorIsp || 'Detecting...',
+          "OS / Browser": `${visitorOs} / ${visitorBrowser}`,
           "Timestamp": new Date().toLocaleString()
         })
       });
-      console.log("Email access alert successfully sent!");
+      console.log("Email alert successfully sent!");
     } catch (err) {
       console.error("Failed to send email alert:", err);
     }
@@ -311,9 +310,6 @@ export default function App() {
         
         // Trigger Webhook Notification
         await sendDiscordNotification(geo.ip, geo.city, geo.region, geo.country, geo.isp, deviceDetails);
-        
-        // Trigger Email Notification
-        await sendEmailNotification(geo.ip, geo.city, geo.region, geo.country, geo.isp, deviceDetails);
 
         const logs = await getVisitorAudits();
         setVisitorLogs(logs);
@@ -1991,6 +1987,13 @@ export default function App() {
     await reloadLocalData();
 
     logMessage(`[DISPATCH] unit ${selectedResponder.name} dispatched to incident. Route simulation initiated.`, 'system');
+
+    // Send Email Notification
+    sendEmailAlert(
+      `🚒 Responder Dispatched: ${selectedResponder.name}`,
+      "Emergency Unit Dispatched",
+      `Unit ${selectedResponder.name} dispatched to emergency location for incident: ${selectedIncident.type.toUpperCase()} (${selectedIncident.desc || 'No description'}).`
+    );
 
     const speedKmh = selectedResponder.speed;
     const speedKms = speedKmh / 3600;
