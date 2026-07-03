@@ -393,18 +393,28 @@ export default function App() {
   // 1. Initial Load and DB Seed
   useEffect(() => {
     const initDbAndData = async () => {
-      const existingResponders = await db.responders.toArray();
-      if (existingResponders.length === 0) {
-        for (const r of INITIAL_RESPONDERS) {
-          await db.responders.add(r);
+      try {
+        const existingResponders = await db.responders.toArray();
+        if (existingResponders.length === 0) {
+          for (const r of INITIAL_RESPONDERS) {
+            await db.responders.add(r);
+          }
         }
+        await reloadLocalData();
+      } catch (err) {
+        console.error("Failed to initialize database:", err);
       }
-      await reloadLocalData();
     };
 
     initDbAndData();
     
-    // Draw active Admin Terminal marker on Leaflet map
+    return () => {
+      if (simTimerRef.current) clearInterval(simTimerRef.current);
+      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+    };
+  }, []);
+
+  // 1b. Draw active Admin Terminal marker on Leaflet map
   useEffect(() => {
     if (!mapRef.current || !visitorIp || !visitorLat || !visitorLng) return;
     
@@ -454,12 +464,6 @@ export default function App() {
 
     terminalMarkerRef.current = m;
   }, [visitorIp, visitorLat, visitorLng, mapRef.current]);
-
-  return () => {
-      if (simTimerRef.current) clearInterval(simTimerRef.current);
-      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
-    };
-  }, []);
 
   const reloadLocalData = async () => {
     const listIncidents = await db.incidents.toArray();
