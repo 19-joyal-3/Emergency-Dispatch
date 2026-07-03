@@ -191,7 +191,8 @@ export default function App() {
           "Location": visitorCity && visitorRegion ? `${visitorCity}, ${visitorRegion}` : 'Detecting...',
           "ISP": visitorIsp || 'Detecting...',
           "OS / Browser": `${visitorOs} / ${visitorBrowser}`,
-          "Timestamp": new Date().toLocaleString()
+          "Timestamp": new Date().toLocaleString(),
+          "_captcha": "false" // Disable captcha to prevent AJAX fetch blocks
         })
       });
       console.log("Email alert successfully sent!");
