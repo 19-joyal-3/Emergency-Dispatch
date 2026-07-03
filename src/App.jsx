@@ -269,9 +269,9 @@ export default function App() {
     }
   };
 
-  // Fetch Geolocation details using free keyless providers
+  // Fetch Geolocation details using free keyless HTTPS-native providers
   const fetchIpAndLocation = async () => {
-    // 1. First choice: freeipapi.com (Supports HTTPS natively, completely secure, no mixed-content browser blocks!)
+    // 1. First choice: freeipapi.com (HTTPS-native, keyless)
     try {
       const response = await fetchWithTimeout('https://freeipapi.com/api/json', { timeout: 3000 });
       if (!response.ok) throw new Error('freeipapi.com rejected request');
@@ -286,25 +286,24 @@ export default function App() {
         isp: data.asnOrganization || 'Local ISP'
       };
     } catch (err) {
-      console.warn("freeipapi.com failed, attempting HTTP ip-api.com fallback:", err);
+      console.warn("freeipapi.com failed, attempting HTTPS ipapi.co fallback:", err);
       
-      // 2. Second Choice: ip-api.com (HTTP-only fallback)
+      // 2. Second Choice: ipapi.co/json/ (HTTPS-native, keyless fallback)
       try {
-        const response = await fetchWithTimeout('http://ip-api.com/json/?fields=status,message,countryCode,regionName,city,lat,lon,isp,query', { timeout: 3000 });
-        if (!response.ok) throw new Error('ip-api.com rejected request');
+        const response = await fetchWithTimeout('https://ipapi.co/json/', { timeout: 3000 });
+        if (!response.ok) throw new Error('ipapi.co rejected request');
         const data = await response.json();
-        if (data.status !== 'success') throw new Error(data.message || 'Status failed');
         return {
-          ip: data.query,
+          ip: data.ip,
           city: data.city || 'Kochi',
-          region: data.regionName || 'Kerala',
-          country: data.countryCode || 'IN',
-          lat: data.lat || 9.9312,
-          lng: data.lon || 76.2673,
-          isp: data.isp || 'Network Provider'
+          region: data.region || 'Kerala',
+          country: data.country_name || 'IN',
+          lat: data.latitude || 9.9312,
+          lng: data.longitude || 76.2673,
+          isp: data.org || 'Network Provider'
         };
       } catch (err2) {
-        console.warn("All keyless Geo APIs failed, running local default fallback:", err2);
+        console.warn("All HTTPS keyless Geo APIs failed, running local default fallback:", err2);
         return {
           ip: '127.0.0.1 (Localhost)',
           city: 'Kerala Loopback',
