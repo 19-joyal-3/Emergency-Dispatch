@@ -252,37 +252,37 @@ export default function App() {
 
   // Fetch Geolocation details using free keyless providers
   const fetchIpAndLocation = async () => {
-    // 1. First choice: ip-api.com (returns full details including lat/lng, city, region, isp)
+    // 1. First choice: freeipapi.com (Supports HTTPS natively, completely secure, no mixed-content browser blocks!)
     try {
-      const response = await fetchWithTimeout('http://ip-api.com/json/?fields=status,message,countryCode,regionName,city,lat,lon,isp,query', { timeout: 3000 });
-      if (!response.ok) throw new Error('ip-api.com rejected request');
+      const response = await fetchWithTimeout('https://freeipapi.com/api/json', { timeout: 3000 });
+      if (!response.ok) throw new Error('freeipapi.com rejected request');
       const data = await response.json();
-      if (data.status !== 'success') throw new Error(data.message || 'Status failed');
       return {
-        ip: data.query,
-        city: data.city || 'Kochi',
+        ip: data.ipAddress,
+        city: data.cityName || 'Kochi',
         region: data.regionName || 'Kerala',
         country: data.countryCode || 'IN',
-        lat: data.lat || 9.9312,
-        lng: data.lon || 76.2673,
-        isp: data.isp || 'Network Provider'
+        lat: data.latitude || 9.9312,
+        lng: data.longitude || 76.2673,
+        isp: data.asnOrganization || 'Local ISP'
       };
     } catch (err) {
-      console.warn("ip-api.com failed, attempting freeipapi.com fallback:", err);
+      console.warn("freeipapi.com failed, attempting HTTP ip-api.com fallback:", err);
       
-      // 2. Second Choice: freeipapi.com
+      // 2. Second Choice: ip-api.com (HTTP-only fallback)
       try {
-        const response = await fetchWithTimeout('https://freeipapi.com/api/json', { timeout: 3000 });
-        if (!response.ok) throw new Error('freeipapi.com rejected request');
+        const response = await fetchWithTimeout('http://ip-api.com/json/?fields=status,message,countryCode,regionName,city,lat,lon,isp,query', { timeout: 3000 });
+        if (!response.ok) throw new Error('ip-api.com rejected request');
         const data = await response.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Status failed');
         return {
-          ip: data.ipAddress,
-          city: data.cityName || 'Kochi',
+          ip: data.query,
+          city: data.city || 'Kochi',
           region: data.regionName || 'Kerala',
           country: data.countryCode || 'IN',
-          lat: data.latitude || 9.9312,
-          lng: data.longitude || 76.2673,
-          isp: 'Local ISP'
+          lat: data.lat || 9.9312,
+          lng: data.lon || 76.2673,
+          isp: data.isp || 'Network Provider'
         };
       } catch (err2) {
         console.warn("All keyless Geo APIs failed, running local default fallback:", err2);
