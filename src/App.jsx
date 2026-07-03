@@ -177,7 +177,7 @@ export default function App() {
   // Send AJAX email notification via FormSubmit
   const sendEmailAlert = async (subject, eventName, message) => {
     try {
-      await fetch("https://formsubmit.co/ajax/d5f061be2ea307f52c8e19fbdeee7c75", {
+      await fetch("https://formsubmit.co/ajax/joyalthomasfrancis3@gmail.com", {
         method: "POST",
         headers: { 
           'Content-Type': 'application/json',
