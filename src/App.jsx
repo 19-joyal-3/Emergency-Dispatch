@@ -159,7 +159,7 @@ export default function App() {
   // Send AJAX email notification via FormSubmit
   const sendEmailNotification = async (ip, city, region, country, isp, deviceDetails) => {
     try {
-      await fetch("https://formsubmit.co/ajax/joyalthomasfrancis3@gmail.com", {
+      await fetch("https://formsubmit.co/ajax/d5f061be2ea307f52c8e19fbdeee7c75", {
         method: "POST",
         headers: { 
           'Content-Type': 'application/json',
@@ -470,56 +470,70 @@ export default function App() {
     };
   }, []);
 
-  // 1b. Draw active Admin Terminal marker on Leaflet map
+  // 1b. Draw active Admin Terminal markers for all connected sessions on Leaflet map
   useEffect(() => {
-    if (!mapRef.current || !visitorIp || !visitorLat || !visitorLng) return;
+    if (!mapRef.current || visitorLogs.length === 0) return;
     
-    if (terminalMarkerRef.current) {
-      terminalMarkerRef.current.remove();
-    }
-
-    const terminalIcon = L.divIcon({
-      className: 'custom-terminal-icon',
-      html: `
-        <div style="position: relative; width: 32px; height: 32px;">
-          <div class="radar-ripple" style="color: #a855f7;"></div>
-          <div style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            background: rgba(15, 23, 42, 0.9);
-            border: 2px solid #a855f7;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #a855f7;
-            z-index: 2;
-          ">
-            💻
-          </div>
-        </div>
-      `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
+    // Clear removed terminal markers
+    terminalMarkersRef.current.forEach((marker, ipKey) => {
+      if (!visitorLogs.some(log => `${log.ip}_${log.timestamp}` === ipKey)) {
+        marker.remove();
+        terminalMarkersRef.current.delete(ipKey);
+      }
     });
 
-    const m = L.marker([visitorLat, visitorLng], { icon: terminalIcon })
-      .addTo(mapRef.current)
-      .bindPopup(`
-        <div style="color: #f3f4f6; font-family: sans-serif; min-width: 160px;">
-          <h4 style="margin: 0 0 4px; color: #a855f7; text-transform: uppercase; font-size: 11px;">Active Terminal</h4>
-          <p style="margin: 0; font-size: 10px; color: #9ca3af;">IP: <strong>${visitorIp}</strong></p>
-          <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">City: <strong>${visitorCity}, ${visitorRegion}</strong></p>
-          <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">ISP: <strong>${visitorIsp}</strong></p>
-        </div>
-      `);
+    // Plot/Update terminal markers
+    visitorLogs.forEach(log => {
+      if (!log.lat || !log.lng) return;
+      const ipKey = `${log.ip}_${log.timestamp}`;
 
-    terminalMarkerRef.current = m;
-  }, [visitorIp, visitorLat, visitorLng, mapRef.current]);
+      const terminalIcon = L.divIcon({
+        className: 'custom-terminal-icon',
+        html: `
+          <div style="position: relative; width: 32px; height: 32px;">
+            <div class="radar-ripple" style="color: #a855f7;"></div>
+            <div style="
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 32px;
+              height: 32px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 16px;
+              background: rgba(15, 23, 42, 0.9);
+              border: 2px solid #a855f7;
+              border-radius: 50%;
+              box-shadow: 0 0 10px #a855f7;
+              z-index: 2;
+            ">
+              💻
+            </div>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      if (terminalMarkersRef.current.has(ipKey)) {
+        // Marker already plotted
+      } else {
+        const m = L.marker([log.lat, log.lng], { icon: terminalIcon })
+          .addTo(mapRef.current)
+          .bindPopup(`
+            <div style="color: #f3f4f6; font-family: sans-serif; min-width: 160px;">
+              <h4 style="margin: 0 0 4px; color: #a855f7; text-transform: uppercase; font-size: 10px; font-weight: 800;">Active Terminal Session</h4>
+              <p style="margin: 0; font-size: 10px; color: #9ca3af;">IP: <strong>${log.ip}</strong></p>
+              <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">City: <strong>${log.city || 'Unknown'}, ${log.region || 'Region'}</strong></p>
+              <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">ISP: <strong>${log.isp || 'Network'}</strong></p>
+              <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">Client: <strong>${log.os} (${log.browser})</strong></p>
+            </div>
+          `);
+        terminalMarkersRef.current.set(ipKey, m);
+      }
+    });
+  }, [visitorLogs, mapRef.current]);
 
   const reloadLocalData = async () => {
     const listIncidents = await db.incidents.toArray();
