@@ -316,8 +316,20 @@ export default function App() {
       setVisitorLat(geo.lat);
       setVisitorLng(geo.lng);
 
+      // 1. Trigger Email Notification immediately (completely independent of database operations)
       try {
-        await logVisitorAudit({
+        await sendEmailAlert(
+          `🚨 Site Accessed: ${geo.ip} (${geo.city}, ${geo.region})`,
+          "Visitor Access Event",
+          `A visitor has loaded the Kerala Emergency Navigation system.`
+        );
+      } catch (emailErr) {
+        console.error("Failed to send access alert email:", emailErr);
+      }
+
+      // 2. Perform background database audits logging
+      try {
+        const newAudit = {
           ip: geo.ip,
           os: deviceDetails.os,
           browser: deviceDetails.browser,
@@ -329,20 +341,16 @@ export default function App() {
           lat: geo.lat,
           lng: geo.lng,
           timestamp: Date.now()
-        });
+        };
+
+        // Log locally in IndexedDB as backup
+        await logVisitorAudit(newAudit);
         
         logMessage(`[SYSTEM] Access verified: IP ${geo.ip} (${geo.city}, ${geo.region})`, 'system');
         
         // Trigger Webhook Notification
         await sendDiscordNotification(geo.ip, geo.city, geo.region, geo.country, geo.isp, deviceDetails);
         
-        // Trigger Email Notification
-        await sendEmailAlert(
-          `🚨 Site Accessed: ${geo.ip} (${geo.city}, ${geo.region})`,
-          "Visitor Access Event",
-          `A visitor has loaded the Kerala Emergency Navigation system.`
-        );
-
         const logs = await getVisitorAudits();
         setVisitorLogs(logs);
       } catch (err) {
