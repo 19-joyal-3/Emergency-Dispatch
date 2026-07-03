@@ -174,29 +174,37 @@ export default function App() {
     }
   };
 
-  // Send AJAX email notification via FormSubmit
+  // Send AJAX email notification via Web3Forms with live status logs
   const sendEmailAlert = async (subject, eventName, message) => {
     try {
-      await fetch("https://formsubmit.co/ajax/joyalthomasfrancis3@gmail.com", {
+      logMessage(`[SYSTEM] Despatching email alert: ${subject}...`, 'system');
+      const response = await fetchWithTimeout("https://api.web3forms.com/submit", {
         method: "POST",
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          "_subject": subject,
+          "access_key": "7f1cd05e-ab0d-424b-964b-4798e2b7c430",
+          "subject": subject,
           "Event": eventName,
           "Details": message,
           "IP Address": visitorIp || 'Detecting...',
           "Location": visitorCity && visitorRegion ? `${visitorCity}, ${visitorRegion}` : 'Detecting...',
           "ISP": visitorIsp || 'Detecting...',
           "OS / Browser": `${visitorOs} / ${visitorBrowser}`,
-          "Timestamp": new Date().toLocaleString(),
-          "_captcha": "false" // Disable captcha to prevent AJAX fetch blocks
+          "Timestamp": new Date().toLocaleString()
         })
       });
-      console.log("Email alert successfully sent!");
+      
+      const result = await response.json();
+      if (response.ok && result.success) {
+        logMessage(`[SYSTEM] Email Sent: ${result.message || 'Notification delivered successfully!'}`, 'success');
+      } else {
+        logMessage(`[ERROR] Web3Forms rejected: ${result.message || 'Check access key status.'}`, 'error');
+      }
     } catch (err) {
+      logMessage(`[ERROR] Network failed to send email: ${err.message}`, 'error');
       console.error("Failed to send email alert:", err);
     }
   };
