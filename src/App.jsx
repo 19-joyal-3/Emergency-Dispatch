@@ -103,6 +103,24 @@ export default function App() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState('');
 
+  // Fetch with abort timeout helper
+  const fetchWithTimeout = async (resource, options = {}) => {
+    const { timeout = 3000 } = options;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await fetch(resource, {
+        ...options,
+        signal: controller.signal
+      });
+      clearTimeout(id);
+      return response;
+    } catch (err) {
+      clearTimeout(id);
+      throw err;
+    }
+  };
+
   const handleAdminLogin = (e) => {
     e.preventDefault();
     if (adminUser === 'tryonce' && adminPassword === 'daretoenter') {
@@ -205,10 +223,10 @@ export default function App() {
     return { os, browser, device };
   };
 
-  // Fetch global visitor audits from serverless KVdb cloud
+  // Fetch global visitor audits from serverless KVdb cloud with timeout
   const fetchGlobalVisitorAudits = async () => {
     try {
-      const response = await fetch('https://kvdb.io/WU7tRgWs3eh9gR77c1ajYi/terminal_audits');
+      const response = await fetchWithTimeout('https://kvdb.io/WU7tRgWs3eh9gR77c1ajYi/terminal_audits', { timeout: 3000 });
       if (!response.ok) return [];
       const data = await response.json();
       return Array.isArray(data) ? data : [];
@@ -218,24 +236,25 @@ export default function App() {
     }
   };
 
-  // Save global visitor audits to serverless KVdb cloud
+  // Save global visitor audits to serverless KVdb cloud with timeout
   const saveGlobalVisitorAudits = async (auditsList) => {
     try {
-      await fetch('https://kvdb.io/WU7tRgWs3eh9gR77c1ajYi/terminal_audits', {
+      await fetchWithTimeout('https://kvdb.io/WU7tRgWs3eh9gR77c1ajYi/terminal_audits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(auditsList)
+        body: JSON.stringify(auditsList),
+        timeout: 3000
       });
     } catch (err) {
       console.error("Failed to save global audits to KVdb:", err);
     }
   };
 
-  // Fetch Public IP and Geolocation details using IPify key
+  // Fetch Public IP and Geolocation details using IPify key with timeout
   const fetchIpAndLocation = async () => {
     const apiKey = 'at_dJuXYJm5gfIOnGdUmRV75lSTAP6g7';
     try {
-      const response = await fetch(`https://geo.ipify.org/api/v2/country,city?apiKey=${apiKey}`);
+      const response = await fetchWithTimeout(`https://geo.ipify.org/api/v2/country,city?apiKey=${apiKey}`, { timeout: 3000 });
       if (!response.ok) throw new Error('Ipify API rejected request');
       const data = await response.json();
       return {
@@ -248,9 +267,9 @@ export default function App() {
         isp: data.isp || 'Local ISP'
       };
     } catch (err) {
-      console.error("IPify Geo API failed, running public fallback:", err);
+      console.warn("IPify Geo API failed or timed out, running public fallback:", err);
       try {
-        const response = await fetch('https://api.ipify.org?format=json');
+        const response = await fetchWithTimeout('https://api.ipify.org?format=json', { timeout: 3000 });
         const data = await response.json();
         return {
           ip: data.ip,
