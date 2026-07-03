@@ -250,40 +250,45 @@ export default function App() {
     }
   };
 
-  // Fetch Public IP and Geolocation details using IPify key with timeout
+  // Fetch Geolocation details using free keyless providers
   const fetchIpAndLocation = async () => {
-    const apiKey = 'at_dJuXYJm5gfIOnGdUmRV75lSTAP6g7';
+    // 1. First choice: ip-api.com (returns full details including lat/lng, city, region, isp)
     try {
-      const response = await fetchWithTimeout(`https://geo.ipify.org/api/v2/country,city?apiKey=${apiKey}`, { timeout: 3000 });
-      if (!response.ok) throw new Error('Ipify API rejected request');
+      const response = await fetchWithTimeout('http://ip-api.com/json/?fields=status,message,countryCode,regionName,city,lat,lon,isp,query', { timeout: 3000 });
+      if (!response.ok) throw new Error('ip-api.com rejected request');
       const data = await response.json();
+      if (data.status !== 'success') throw new Error(data.message || 'Status failed');
       return {
-        ip: data.ip,
-        city: data.location.city || 'Unknown City',
-        region: data.location.region || 'Unknown Region',
-        country: data.location.country || 'Unknown Country',
-        lat: data.location.lat,
-        lng: data.location.lng,
-        isp: data.isp || 'Local ISP'
+        ip: data.query,
+        city: data.city || 'Kochi',
+        region: data.regionName || 'Kerala',
+        country: data.countryCode || 'IN',
+        lat: data.lat || 9.9312,
+        lng: data.lon || 76.2673,
+        isp: data.isp || 'Network Provider'
       };
     } catch (err) {
-      console.warn("IPify Geo API failed or timed out, running public fallback:", err);
+      console.warn("ip-api.com failed, attempting freeipapi.com fallback:", err);
+      
+      // 2. Second Choice: freeipapi.com
       try {
-        const response = await fetchWithTimeout('https://api.ipify.org?format=json', { timeout: 3000 });
+        const response = await fetchWithTimeout('https://freeipapi.com/api/json', { timeout: 3000 });
+        if (!response.ok) throw new Error('freeipapi.com rejected request');
         const data = await response.json();
         return {
-          ip: data.ip,
-          city: 'Local Loopback',
-          region: 'Kerala',
-          country: 'IN',
-          lat: 10.8505,
-          lng: 76.2711,
+          ip: data.ipAddress,
+          city: data.cityName || 'Kochi',
+          region: data.regionName || 'Kerala',
+          country: data.countryCode || 'IN',
+          lat: data.latitude || 9.9312,
+          lng: data.longitude || 76.2673,
           isp: 'Local ISP'
         };
       } catch (err2) {
+        console.warn("All keyless Geo APIs failed, running local default fallback:", err2);
         return {
           ip: '127.0.0.1 (Localhost)',
-          city: 'Offline Loop',
+          city: 'Kerala Loopback',
           region: 'Kerala',
           country: 'IN',
           lat: 10.8505,
