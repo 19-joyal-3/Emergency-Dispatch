@@ -175,9 +175,19 @@ export default function App() {
   };
 
   // Send AJAX email notification via Web3Forms with live status logs
-  const sendEmailAlert = async (subject, eventName, message) => {
+  const sendEmailAlert = async (subject, eventName, message, geoData = null) => {
     try {
       logMessage(`[SYSTEM] Despatching email alert: ${subject}...`, 'system');
+      
+      // Bypass React async state delay on page load by reading passed parameter directly
+      const ip = geoData ? geoData.ip : (visitorIp || 'Detecting...');
+      const city = geoData ? geoData.city : (visitorCity || '');
+      const region = geoData ? geoData.region : (visitorRegion || '');
+      const location = (city && region) ? `${city}, ${region}` : 'Detecting...';
+      const isp = geoData ? geoData.isp : (visitorIsp || 'Detecting...');
+      const os = geoData ? geoData.os : (visitorOs || 'Unknown');
+      const browser = geoData ? geoData.browser : (visitorBrowser || 'Unknown');
+
       const response = await fetchWithTimeout("https://api.web3forms.com/submit", {
         method: "POST",
         headers: { 
@@ -189,10 +199,10 @@ export default function App() {
           "subject": subject,
           "Event": eventName,
           "Details": message,
-          "IP Address": visitorIp || 'Detecting...',
-          "Location": visitorCity && visitorRegion ? `${visitorCity}, ${visitorRegion}` : 'Detecting...',
-          "ISP": visitorIsp || 'Detecting...',
-          "OS / Browser": `${visitorOs} / ${visitorBrowser}`,
+          "IP Address": ip,
+          "Location": location,
+          "ISP": isp,
+          "OS / Browser": `${os} / ${browser}`,
           "Timestamp": new Date().toLocaleString()
         })
       });
@@ -329,7 +339,15 @@ export default function App() {
         await sendEmailAlert(
           `🚨 Site Accessed: ${geo.ip} (${geo.city}, ${geo.region})`,
           "Visitor Access Event",
-          `A visitor has loaded the Kerala Emergency Navigation system.`
+          `A visitor has loaded the Kerala Emergency Navigation system.`,
+          {
+            ip: geo.ip,
+            city: geo.city,
+            region: geo.region,
+            isp: geo.isp,
+            os: deviceDetails.os,
+            browser: deviceDetails.browser
+          }
         );
       } catch (emailErr) {
         console.error("Failed to send access alert email:", emailErr);
