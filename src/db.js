@@ -3,11 +3,12 @@ import Dexie from 'dexie';
 export const db = new Dexie('OfflineEmergencyNavDB');
 
 // Declare database tables and indexes
-db.version(1).stores({
+db.version(2).stores({
   incidents: 'id, type, status, reportedAt',
   blockages: 'id, fromNode, toNode, active',
   responders: 'id, name, type, status',
-  syncQueue: '++id, action, timestamp'
+  syncQueue: '++id, action, timestamp',
+  audits: '++id, ip, os, browser, device, timestamp'
 });
 
 // Helper functions for local-first operations with sync-queuing
@@ -67,4 +68,22 @@ export async function getSyncQueue() {
 
 export async function clearSyncQueue() {
   await db.syncQueue.clear();
+}
+
+export async function logVisitorAudit(audit) {
+  try {
+    await db.audits.add(audit);
+  } catch (err) {
+    console.error("DB failed to log audit:", err);
+  }
+}
+
+export async function getVisitorAudits() {
+  try {
+    if (!db.audits) return [];
+    return await db.audits.reverse().sortBy('timestamp');
+  } catch (err) {
+    console.error("DB failed to read audits:", err);
+    return [];
+  }
 }

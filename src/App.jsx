@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { db, addIncidentLocal, updateIncidentStatusLocal, addBlockageLocal, removeBlockageLocal, updateResponderLocal } from './db';
+import { db, addIncidentLocal, updateIncidentStatusLocal, addBlockageLocal, removeBlockageLocal, updateResponderLocal, logVisitorAudit, getVisitorAudits } from './db';
 import mapData from './mapData.json';
 import { solveDijkstra, findClosestNode, findClosestEdge, getPositionAtDistance, getRouteLength, haversineDistance } from './routing';
 import confetti from 'canvas-confetti';
@@ -9,7 +9,8 @@ import {
   ShieldAlert, 
   Wifi, 
   WifiOff, 
-  PlusCircle, 
+  PlusCircle,
+  Info, 
   MapPin, 
   TrendingUp, 
   Navigation, 
@@ -89,6 +90,184 @@ export default function App() {
   };
   const [newIncidentDistrict, setNewIncidentDistrict] = useState('tvm');
 
+  // Visitor Access & IP Diagnostics States
+  const [visitorIp, setVisitorIp] = useState('');
+  const [visitorOs, setVisitorOs] = useState('');
+  const [visitorBrowser, setVisitorBrowser] = useState('');
+  const [visitorDevice, setVisitorDevice] = useState('');
+  const [visitorLogs, setVisitorLogs] = useState([]);
+  
+  // Admin Authentication States
+  const [adminUser, setAdminUser] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [loginError, setLoginError] = useState('');
+
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminUser === 'tryonce' && adminPassword === 'daretoenter') {
+      setIsAdminAuthenticated(true);
+      setLoginError('');
+      logMessage('[SYSTEM] Admin console unlocked. Audit logs active.', 'success');
+    } else {
+      setLoginError('Authentication Failed: Invalid ID or Password');
+      logMessage('[SECURITY] Unauthorized terminal access attempt.', 'error');
+    }
+  };
+  
+  // Geolocation states
+  const [visitorLat, setVisitorLat] = useState(null);
+  const [visitorLng, setVisitorLng] = useState(null);
+  const [visitorCity, setVisitorCity] = useState('');
+  const [visitorRegion, setVisitorRegion] = useState('');
+  const [visitorIsp, setVisitorIsp] = useState('');
+
+  // DISCORD WEBHOOK URL - Paste your Webhook link here to get instant mobile/desktop notifications!
+  const DISCORD_WEBHOOK_URL = ""; 
+
+  // Send formatted Embed notification to Discord Webhook
+  const sendDiscordNotification = async (ip, city, region, country, isp, deviceDetails) => {
+    if (!DISCORD_WEBHOOK_URL) return;
+    try {
+      await fetch(DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [{
+            title: "🌐 Admin Terminal Access Event",
+            description: "A visitor has loaded the Kerala Emergency Navigation system.",
+            color: 11032311, // Pulsing Purple hex color
+            fields: [
+              { name: "IP Address", value: `${ip}`, inline: true },
+              { name: "Provider/ISP", value: `${isp}`, inline: true },
+              { name: "Physical Location", value: `${city}, ${region}, ${country}`, inline: false },
+              { name: "Operating System", value: deviceDetails.os, inline: true },
+              { name: "Browser Engine", value: deviceDetails.browser, inline: true },
+              { name: "Device Type", value: deviceDetails.device, inline: true }
+            ],
+            footer: { text: "Tactical Dispatch Dashboard Access Audit Logs" },
+            timestamp: new Date().toISOString()
+          }]
+        })
+      });
+      console.log("Discord access alert successfully delivered!");
+    } catch (err) {
+      console.error("Failed to post Discord alert:", err);
+    }
+  };
+
+  // Extract Browser and OS details from UserAgent
+  const getDeviceDetails = () => {
+    const ua = navigator.userAgent;
+    let os = "Unknown OS";
+    let browser = "Unknown Browser";
+    let device = "Desktop";
+
+    if (/windows/i.test(ua)) os = "Windows";
+    else if (/macintosh|mac os/i.test(ua)) os = "macOS";
+    else if (/android/i.test(ua)) { os = "Android"; device = "Mobile"; }
+    else if (/iphone|ipad|ipod/i.test(ua)) { os = "iOS"; device = "Mobile"; }
+    else if (/linux/i.test(ua)) os = "Linux";
+
+    if (/chrome|crios/i.test(ua) && !/edge|edg/i.test(ua) && !/opr/i.test(ua)) browser = "Chrome";
+    else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) browser = "Safari";
+    else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
+    else if (/edge|edg/i.test(ua)) browser = "Edge";
+    else if (/opr/i.test(ua)) browser = "Opera";
+    else if (/msie|trident/i.test(ua)) browser = "IE";
+
+    return { os, browser, device };
+  };
+
+  // Fetch Public IP and Geolocation details using IPify key
+  const fetchIpAndLocation = async () => {
+    const apiKey = 'at_dJuXYJm5gfIOnGdUmRV75lSTAP6g7';
+    try {
+      const response = await fetch(`https://geo.ipify.org/api/v2/country,city?apiKey=${apiKey}`);
+      if (!response.ok) throw new Error('Ipify API rejected request');
+      const data = await response.json();
+      return {
+        ip: data.ip,
+        city: data.location.city || 'Unknown City',
+        region: data.location.region || 'Unknown Region',
+        country: data.location.country || 'Unknown Country',
+        lat: data.location.lat,
+        lng: data.location.lng,
+        isp: data.isp || 'Local ISP'
+      };
+    } catch (err) {
+      console.error("IPify Geo API failed, running public fallback:", err);
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return {
+          ip: data.ip,
+          city: 'Local Loopback',
+          region: 'Kerala',
+          country: 'IN',
+          lat: 10.8505,
+          lng: 76.2711,
+          isp: 'Local ISP'
+        };
+      } catch (err2) {
+        return {
+          ip: '127.0.0.1 (Localhost)',
+          city: 'Offline Loop',
+          region: 'Kerala',
+          country: 'IN',
+          lat: 10.8505,
+          lng: 76.2711,
+          isp: 'Offline System'
+        };
+      }
+    }
+  };
+
+  // Initialize client audit logs on mount
+  useEffect(() => {
+    const runAudit = async () => {
+      const deviceDetails = getDeviceDetails();
+      setVisitorOs(deviceDetails.os);
+      setVisitorBrowser(deviceDetails.browser);
+      setVisitorDevice(deviceDetails.device);
+
+      const geo = await fetchIpAndLocation();
+      setVisitorIp(geo.ip);
+      setVisitorCity(geo.city);
+      setVisitorRegion(geo.region);
+      setVisitorIsp(geo.isp);
+      setVisitorLat(geo.lat);
+      setVisitorLng(geo.lng);
+
+      try {
+        await logVisitorAudit({
+          ip: geo.ip,
+          os: deviceDetails.os,
+          browser: deviceDetails.browser,
+          device: deviceDetails.device,
+          city: geo.city,
+          region: geo.region,
+          country: geo.country,
+          isp: geo.isp,
+          lat: geo.lat,
+          lng: geo.lng,
+          timestamp: Date.now()
+        });
+        
+        logMessage(`[SYSTEM] Access verified: IP ${geo.ip} (${geo.city}, ${geo.region})`, 'system');
+        
+        // Trigger Webhook Notification
+        await sendDiscordNotification(geo.ip, geo.city, geo.region, geo.country, geo.isp, deviceDetails);
+
+        const logs = await getVisitorAudits();
+        setVisitorLogs(logs);
+      } catch (err) {
+        console.error("Failed to log terminal audit:", err);
+      }
+    };
+    runAudit();
+  }, []);
+
   // Geolocation / Live Navigation States
   const [gpsActive, setGpsActive] = useState(false);
   const [instructionBannerVisible, setInstructionBannerVisible] = useState(true);
@@ -108,6 +287,7 @@ export default function App() {
   const customSimulationMarkerRef = useRef(null);
   const cityMarkersRef = useRef([]);
   const gpsMarkerRef = useRef(null);
+  const terminalMarkerRef = useRef(null);
   const busMarkersRef = useRef(new Map());
   const shelterMarkersRef = useRef(new Map());
 
@@ -224,7 +404,58 @@ export default function App() {
 
     initDbAndData();
     
-    return () => {
+    // Draw active Admin Terminal marker on Leaflet map
+  useEffect(() => {
+    if (!mapRef.current || !visitorIp || !visitorLat || !visitorLng) return;
+    
+    if (terminalMarkerRef.current) {
+      terminalMarkerRef.current.remove();
+    }
+
+    const terminalIcon = L.divIcon({
+      className: 'custom-terminal-icon',
+      html: `
+        <div style="position: relative; width: 32px; height: 32px;">
+          <div class="radar-ripple" style="color: #a855f7;"></div>
+          <div style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #a855f7;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #a855f7;
+            z-index: 2;
+          ">
+            💻
+          </div>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+
+    const m = L.marker([visitorLat, visitorLng], { icon: terminalIcon })
+      .addTo(mapRef.current)
+      .bindPopup(`
+        <div style="color: #f3f4f6; font-family: sans-serif; min-width: 160px;">
+          <h4 style="margin: 0 0 4px; color: #a855f7; text-transform: uppercase; font-size: 11px;">Active Terminal</h4>
+          <p style="margin: 0; font-size: 10px; color: #9ca3af;">IP: <strong>${visitorIp}</strong></p>
+          <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">City: <strong>${visitorCity}, ${visitorRegion}</strong></p>
+          <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">ISP: <strong>${visitorIsp}</strong></p>
+        </div>
+      `);
+
+    terminalMarkerRef.current = m;
+  }, [visitorIp, visitorLat, visitorLng, mapRef.current]);
+
+  return () => {
       if (simTimerRef.current) clearInterval(simTimerRef.current);
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
     };
@@ -2570,8 +2801,143 @@ export default function App() {
 
           {activeTab === 'sync' && (
             <>
+              {!isAdminAuthenticated ? (
+                /* Admin Login Form */
+                <section className="panel-card" style={{ height: 'calc(100vh - 180px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', margin: '0' }}>
+                  <h2 className="section-title" style={{ justifyContent: 'center', marginBottom: '1.25rem' }}>
+                    <Compass size={18} style={{ color: '#a855f7', animation: 'spin 8s linear infinite' }} />
+                    <span>Terminal Authentication</span>
+                  </h2>
+                  <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {loginError && (
+                      <div style={{ fontSize: '0.725rem', color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.45rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)', textAlign: 'center', fontWeight: 'bold' }}>
+                        {loginError}
+                      </div>
+                    )}
+                    <div className="form-group">
+                      <label>Admin User ID</label>
+                      <input 
+                        type="text" 
+                        value={adminUser}
+                        onChange={(e) => setAdminUser(e.target.value)}
+                        placeholder="Enter admin ID..."
+                        required
+                        style={{ border: loginError ? '1px solid #ef4444' : '1px solid var(--border-color)' }}
+                        disabled={simulationActive}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Terminal Password</label>
+                      <input 
+                        type="password" 
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="Enter password..."
+                        required
+                        style={{ 
+                          width: '100%',
+                          padding: '0.65rem 0.8rem',
+                          background: 'var(--bg-input)',
+                          border: loginError ? '1px solid #ef4444' : '1px solid var(--border-color)',
+                          borderRadius: '8px',
+                          color: 'var(--text-primary)',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '0.85rem',
+                          outline: 'none',
+                          transition: 'var(--transition-fast)'
+                        }}
+                        disabled={simulationActive}
+                      />
+                    </div>
+                    <button type="submit" className="btn btn-primary" style={{ background: '#a855f7', boxShadow: '0 4px 12px rgba(168, 85, 247, 0.2)', marginTop: '0.5rem' }} disabled={simulationActive}>
+                      Access Terminal
+                    </button>
+                  </form>
+                </section>
+              ) : (
+                /* Authenticated Sync Tab Content (Audits, Details, Sync Console) */
+                <>
+                  {/* Terminal Info Card */}
+                  <section className="panel-card" style={{ marginBottom: '0.75rem' }}>
+                    <h2 className="section-title">
+                      <span>Terminal Access Details</span>
+                      <Info size={14} style={{ color: '#38bdf8' }} />
+                    </h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Public IP Address:</span>
+                        <strong style={{ color: '#38bdf8' }}>{visitorIp || 'Detecting...'}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Physical Location:</span>
+                        <strong style={{ color: '#a855f7' }}>{visitorCity && visitorRegion ? `${visitorCity}, ${visitorRegion}` : 'Detecting...'}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Network Carrier (ISP):</span>
+                        <strong style={{ color: '#fbbf24', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '160px' }} title={visitorIsp}>{visitorIsp || 'Detecting...'}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Operating System:</span>
+                        <strong style={{ color: '#f3f4f6' }}>{visitorOs || 'Detecting...'}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Browser Client:</span>
+                        <strong style={{ color: '#f3f4f6' }}>{visitorBrowser || 'Detecting...'}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Platform Type:</span>
+                        <strong style={{ color: '#10b981' }}>{visitorDevice || 'Detecting...'}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.4rem', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '0.4rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Status:</span>
+                        <strong style={{ color: '#10b981' }}>Authenticated</strong>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setIsAdminAuthenticated(false);
+                          setAdminUser('');
+                          setAdminPassword('');
+                          logMessage('[SYSTEM] Terminal console locked by admin.', 'warning');
+                        }}
+                        className="btn btn-secondary"
+                        style={{ marginTop: '0.5rem', padding: '0.35rem', fontSize: '0.7rem', width: '100%', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}
+                      >
+                        Lock Console
+                      </button>
+                    </div>
+                  </section>
+
+              {/* Recent Access Log */}
+              <section className="panel-card" style={{ marginBottom: '0.75rem' }}>
+                <h2 className="section-title">
+                  <span>Recent Terminal Audits ({visitorLogs.length})</span>
+                  <Activity size={14} style={{ color: '#10b981' }} />
+                </h2>
+                <div className="list-container" style={{ maxHeight: '110px', gap: '0.4rem' }}>
+                  {visitorLogs.length === 0 ? (
+                    <div className="empty-state" style={{ padding: '0.4rem' }}>No audits logged.</div>
+                  ) : (
+                    visitorLogs.map((log, idx) => (
+                      <div key={log.id || idx} style={{ fontSize: '0.7rem', display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '0.35rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>{log.ip}</span>
+                          <span style={{ color: '#a855f7', fontSize: '0.65rem' }}>{log.city ? `${log.city}, ${log.region}` : 'Resolved Geo'}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>{log.os} • {log.browser}</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>
+                            {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+
               {/* Sync Console */}
-              <section className="console-panel" style={{ height: 'calc(100vh - 180px)', margin: '0' }}>
+              <section className="console-panel" style={{ height: 'calc(100vh - 380px)', margin: '0' }}>
                 <div className="console-title">
                   <span>IndexedDB Sync Console</span>
                   {syncQueueLength > 0 && (
@@ -2602,6 +2968,8 @@ export default function App() {
                   })}
                 </div>
               </section>
+                </>
+              )}
             </>
           )}
         </div>
