@@ -271,9 +271,9 @@ export default function App() {
 
   // Fetch Geolocation details using free keyless HTTPS-native providers
   const fetchIpAndLocation = async () => {
-    // 1. First choice: freeipapi.com (HTTPS-native, keyless)
+    // 1. First choice: freeipapi.com (HTTPS-native, keyless with 7s timeout for mobile networks)
     try {
-      const response = await fetchWithTimeout('https://freeipapi.com/api/json', { timeout: 3000 });
+      const response = await fetchWithTimeout('https://freeipapi.com/api/json', { timeout: 7000 });
       if (!response.ok) throw new Error('freeipapi.com rejected request');
       const data = await response.json();
       return {
@@ -288,9 +288,9 @@ export default function App() {
     } catch (err) {
       console.warn("freeipapi.com failed, attempting HTTPS ipapi.co fallback:", err);
       
-      // 2. Second Choice: ipapi.co/json/ (HTTPS-native, keyless fallback)
+      // 2. Second Choice: ipapi.co/json/ (HTTPS-native, keyless fallback with 7s timeout)
       try {
-        const response = await fetchWithTimeout('https://ipapi.co/json/', { timeout: 3000 });
+        const response = await fetchWithTimeout('https://ipapi.co/json/', { timeout: 7000 });
         if (!response.ok) throw new Error('ipapi.co rejected request');
         const data = await response.json();
         return {
