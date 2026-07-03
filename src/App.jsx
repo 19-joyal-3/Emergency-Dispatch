@@ -310,6 +310,13 @@ export default function App() {
         
         // Trigger Webhook Notification
         await sendDiscordNotification(geo.ip, geo.city, geo.region, geo.country, geo.isp, deviceDetails);
+        
+        // Trigger Email Notification
+        await sendEmailAlert(
+          `🚨 Site Accessed: ${geo.ip} (${geo.city}, ${geo.region})`,
+          "Visitor Access Event",
+          `A visitor has loaded the Kerala Emergency Navigation system.`
+        );
 
         const logs = await getVisitorAudits();
         setVisitorLogs(logs);
