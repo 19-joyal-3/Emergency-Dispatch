@@ -137,16 +137,7 @@ export default function App() {
     setActiveTab('planner');
   };
 
-  useEffect(() => {
-    const tourFinished = localStorage.getItem('emergency_nav_tour_finished');
-    if (!tourFinished) {
-      const t = setTimeout(() => {
-        setShowTour(true);
-        setTourStep(0);
-      }, 1500);
-      return () => clearTimeout(t);
-    }
-  }, []);
+
 
   // App connection state
   const [isOnline, setIsOnline] = useState(true);
