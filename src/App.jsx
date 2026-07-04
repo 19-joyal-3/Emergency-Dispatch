@@ -50,6 +50,11 @@ export default function App() {
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
 
+  // Map Environment HUD States
+  const [mapTheme, setMapTheme] = useState('dark'); // 'light' or 'dark'
+  const [weatherEffect, setWeatherEffect] = useState('mist'); // 'clear', 'rain', 'mist'
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+
   const TOUR_STEPS = [
     {
       title: "Welcome to Dispatch Hub",
@@ -651,6 +656,8 @@ export default function App() {
         html: `
           <div style="position: relative; width: 32px; height: 32px;">
             <div class="radar-ripple" style="color: #a855f7;"></div>
+            <div class="radar-ripple ripple-2" style="color: #c084fc;"></div>
+            <div class="radar-ripple ripple-3" style="color: #e9d5ff;"></div>
             <div style="
               position: absolute;
               top: 0;
@@ -955,6 +962,8 @@ export default function App() {
       const iconHtml = `
         <div style="position: relative; width: 32px; height: 32px;">
           <div class="radar-ripple" style="color: ${color};"></div>
+          <div class="radar-ripple ripple-2" style="color: ${color};"></div>
+          <div class="radar-ripple ripple-3" style="color: ${color};"></div>
           <div style="
             position: absolute;
             top: 0;
@@ -3257,7 +3266,7 @@ export default function App() {
       {/* Main Interactive Map Viewport */}
       <main id="onboarding-map" className={`map-viewport ${showTour && tourStep === 2 ? 'onboarding-highlight' : ''}`}>
         {/* Interactive Leaflet Element */}
-        <div ref={mapContainerRef} className="map-container"></div>
+        <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : ''}`}></div>
         
         {/* Google Maps Style Navigation HUD Overlay */}
         {isNavigating && gpsCoords && (
@@ -3515,6 +3524,145 @@ export default function App() {
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
                 Ordinary Stop | Boarding & Alighting
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Ambient Weather Particle Overlay */}
+        {weatherEffect !== 'clear' && (
+          <div className={`weather-overlay ${weatherEffect}`}></div>
+        )}
+
+        {/* Map Environment HUD Panel */}
+        <div className="map-settings-container" style={{
+          position: 'absolute',
+          top: '1.25rem',
+          right: '1.25rem',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: '0.5rem'
+        }}>
+          <button
+            type="button"
+            className="map-settings-btn"
+            onClick={() => setShowSettingsPanel(!showSettingsPanel)}
+            title="Configure Map Environment HUD"
+            style={{
+              background: 'rgba(15, 23, 42, 0.85)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(168, 85, 247, 0.4)',
+              color: '#c084fc',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              transition: 'all 0.2s',
+              fontSize: '16px',
+              outline: 'none'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.border = '1px solid rgba(168, 85, 247, 0.8)';
+              e.currentTarget.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.border = '1px solid rgba(168, 85, 247, 0.4)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
+            }}
+          >
+            ⚙️
+          </button>
+          
+          {showSettingsPanel && (
+            <div className="map-settings-panel" style={{
+              background: 'rgba(15, 23, 42, 0.9)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(168, 85, 247, 0.3)',
+              borderRadius: '12px',
+              padding: '0.75rem 1rem',
+              width: '200px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              animation: 'tourFadeIn 0.2s ease',
+              color: '#cbd5e1'
+            }}>
+              <h4 style={{ margin: 0, fontSize: '0.8rem', textTransform: 'uppercase', color: '#c084fc', letterSpacing: '0.05em', fontWeight: 800 }}>
+                Environment HUD
+              </h4>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>MAP THEME</label>
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  <button 
+                    type="button"
+                    className="btn"
+                    style={{ 
+                      flex: 1, 
+                      padding: '4px 8px', 
+                      fontSize: '0.75rem', 
+                      border: '1px solid rgba(255,255,255,0.05)', 
+                      background: mapTheme === 'light' ? '#a855f7' : 'rgba(255,255,255,0.03)',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setMapTheme('light')}
+                  >
+                    ☀️ Day
+                  </button>
+                  <button 
+                    type="button"
+                    className="btn"
+                    style={{ 
+                      flex: 1, 
+                      padding: '4px 8px', 
+                      fontSize: '0.75rem', 
+                      border: '1px solid rgba(255,255,255,0.05)', 
+                      background: mapTheme === 'dark' ? '#a855f7' : 'rgba(255,255,255,0.03)',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setMapTheme('dark')}
+                  >
+                    🌙 Tactical
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>WEATHER EFFECTS</label>
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  {['clear', 'rain', 'mist'].map(fx => (
+                    <button 
+                      key={fx}
+                      type="button"
+                      className="btn"
+                      style={{
+                        flex: 1,
+                        padding: '4px 2px',
+                        fontSize: '0.7rem',
+                        textTransform: 'capitalize',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        background: weatherEffect === fx ? '#a855f7' : 'rgba(255,255,255,0.03)',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setWeatherEffect(fx)}
+                    >
+                      {fx}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
