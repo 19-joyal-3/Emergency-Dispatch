@@ -1384,3 +1384,96 @@ select:focus, input[type="text"]:focus, textarea:focus {
     opacity: 1;
   }
 }
+
+
+/* ==========================================
+   PREMIUM SCI-FI GLASSMORPHISM OVERHAUL
+   ========================================== */
+
+/* 1. Nebula Ambient Backdrop */
+body::before {
+  content: '';
+  position: fixed;
+  top: -20%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(circle at 15% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 45%),
+              radial-gradient(circle at 85% 80%, rgba(56, 189, 248, 0.12) 0%, transparent 45%),
+              #050811;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* 2. Overhauled Glassmorphism Cards */
+.panel-card {
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid rgba(168, 85, 247, 0.15) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45) !important;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease !important;
+}
+
+.panel-card:hover {
+  transform: translateY(-5px) !important;
+  background: rgba(23, 33, 53, 0.75) !important;
+  border-color: rgba(168, 85, 247, 0.45) !important;
+  box-shadow: 0 15px 40px 0 rgba(168, 85, 247, 0.18), 0 0 20px rgba(56, 189, 248, 0.12) !important;
+}
+
+/* 3. Modern Console Form Fields */
+input, select, textarea {
+  background: rgba(2, 6, 23, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  color: #f1f5f9 !important;
+  padding: 0.6rem 0.8rem !important;
+  transition: all 0.25s ease !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+  outline: none !important;
+}
+
+/* 4. Glassmorphic Navigation Toolbar */
+.tab-toolbar {
+  background: rgba(10, 15, 30, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  border-right: 1px solid rgba(168, 85, 247, 0.2) !important;
+}
+
+/* Active buttons styling */
+.tab-btn.active {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(56, 189, 248, 0.08)) !important;
+  border-left: 3px solid #a855f7 !important;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.25) !important;
+  color: #c084fc !important;
+}
+
+/* 5. HUD Guidance Overlays */
+.nav-banner-top {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(168, 85, 247, 0.3) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6) !important;
+}
+
+.nav-details-bottom {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* 6. Leaflet Map Controls Glow */
+.leaflet-bar {
+  border: 1px solid rgba(168, 85, 247, 0.25) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55) !important;
+  border-radius: 8px !important;
+}
