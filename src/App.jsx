@@ -28,7 +28,8 @@ import {
   Locate,
   Bus,
   Footprints,
-  Car
+  Car,
+  HelpCircle
 } from 'lucide-react';
 
 const INITIAL_RESPONDERS = [
@@ -45,6 +46,103 @@ const getResponderEmoji = (type) => {
 };
 
 export default function App() {
+  // Onboarding Tour States & Handlers
+  const [showTour, setShowTour] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+
+  const TOUR_STEPS = [
+    {
+      title: "Welcome to Dispatch Hub",
+      subtitle: "Kerala Highway emergency system guide",
+      body: "This tactical dashboard coordinates real-time emergency dispatches, safe camps, and road closures. Let's take a quick 1-minute tour to see how to use it!",
+      icon: "🚒"
+    },
+    {
+      title: "Dijkstra Route Planner",
+      subtitle: "Tab 1: Highway Path Solver",
+      body: "Select a departure point and destination along NH 544. Click 'Navigate' to solve the fastest path. The Dijkstra solver automatically routes vehicles around active road blockages!",
+      icon: "🧭"
+    },
+    {
+      title: "Interactive Incident Map",
+      subtitle: "Viewport: Live Mapping & Geolocation",
+      body: "Double-click anywhere on the map to file an emergency incident or report a road closure. You will see responder units traveling and active operators globally in real-time.",
+      icon: "🗺️"
+    },
+    {
+      title: "Emergency Dispatch Panel",
+      subtitle: "Tab 3: Response Dispatcher",
+      body: "Report new incidents here. You can inspect active accidents, upload proof photos from the scene, and click 'Dispatch' to route nearby emergency vehicles instantly.",
+      icon: "🚨"
+    },
+    {
+      title: "Evacuation Safe Hubs",
+      subtitle: "Tab 4: Safe Camps & Capacity",
+      body: "Monitor and update relief camp capacities, locate safe zones, and track resources/population in evacuation safe hubs during flood or landslide emergencies.",
+      icon: "🏕️"
+    },
+    {
+      title: "Cloud Sync Console",
+      subtitle: "Tab 5: System Admin Logs",
+      body: "Log in with User ID: 'tryonce' / Password: 'daretoenter' to access audit logs, view other active operators on the map, and synchronize incidents globally in real-time!",
+      icon: "💻"
+    }
+  ];
+
+  const handleTourNext = () => {
+    const nextStep = tourStep + 1;
+    if (nextStep < TOUR_STEPS.length) {
+      setTourStep(nextStep);
+      // Auto-switch tabs to corresponding panel to display targeted elements
+      if (nextStep === 1) setActiveTab('planner');
+      if (nextStep === 2) setActiveTab('planner');
+      if (nextStep === 3) setActiveTab('alerts');
+      if (nextStep === 4) setActiveTab('shelters');
+      if (nextStep === 5) setActiveTab('sync');
+    } else {
+      handleTourEnd();
+    }
+  };
+
+  const handleTourPrev = () => {
+    const prevStep = tourStep - 1;
+    if (prevStep >= 0) {
+      setTourStep(prevStep);
+      if (prevStep === 1) setActiveTab('planner');
+      if (prevStep === 2) setActiveTab('planner');
+      if (prevStep === 3) setActiveTab('alerts');
+      if (prevStep === 4) setActiveTab('shelters');
+      if (prevStep === 5) setActiveTab('sync');
+    }
+  };
+
+  const handleTourEnd = () => {
+    setShowTour(false);
+    localStorage.setItem('emergency_nav_tour_finished', 'true');
+    confetti({
+      particleCount: 120,
+      spread: 80,
+      origin: { y: 0.6 }
+    });
+  };
+
+  const startOnboardingTour = () => {
+    setShowTour(true);
+    setTourStep(0);
+    setActiveTab('planner');
+  };
+
+  useEffect(() => {
+    const tourFinished = localStorage.getItem('emergency_nav_tour_finished');
+    if (!tourFinished) {
+      const t = setTimeout(() => {
+        setShowTour(true);
+        setTourStep(0);
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
   // App connection state
   const [isOnline, setIsOnline] = useState(true);
   const [syncQueueLength, setSyncQueueLength] = useState(0);
@@ -2217,7 +2315,38 @@ export default function App() {
             <span className="tab-label">Sync</span>
           </button>
         </div>
-        <div className="toolbar-footer">
+        <div className="toolbar-footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', paddingBottom: '10px' }}>
+          <button 
+            type="button"
+            className="tour-trigger-btn"
+            onClick={startOnboardingTour}
+            title="Start Onboarding Tour Guide"
+            style={{
+              background: 'rgba(168, 85, 247, 0.1)',
+              border: '1px solid rgba(168, 85, 247, 0.3)',
+              color: '#c084fc',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              transition: 'all 0.2s',
+              outline: 'none',
+              marginBottom: '4px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)';
+              e.currentTarget.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(168, 85, 247, 0.1)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <HelpCircle size={18} />
+          </button>
           <span className={`network-dot ${isOnline ? 'online' : 'offline'}`}></span>
         </div>
       </nav>
@@ -2260,7 +2389,7 @@ export default function App() {
           </div>
         </section>
 
-        <div className="sidebar-content">
+        <div id="onboarding-sidebar-content" className={`sidebar-content ${showTour && tourStep !== 0 && tourStep !== 2 ? 'onboarding-highlight' : ''}`}>
           {activeTab === 'planner' && (
             <>
               {/* Tactical Route Planner Card */}
@@ -3117,7 +3246,7 @@ export default function App() {
         </div>
       </aside>
       {/* Main Interactive Map Viewport */}
-      <main className="map-viewport">
+      <main id="onboarding-map" className={`map-viewport ${showTour && tourStep === 2 ? 'onboarding-highlight' : ''}`}>
         {/* Interactive Leaflet Element */}
         <div ref={mapContainerRef} className="map-container"></div>
         
@@ -3427,6 +3556,46 @@ export default function App() {
           </button>
         )}
       </main>
+
+      {/* Onboarding Tour Modal Overlay */}
+      {showTour && (
+        <div className="tour-overlay">
+          <div className={`tour-card ${tourStep === 0 ? 'centered' : ''}`}>
+            <div className="tour-header">
+              <div className="tour-icon">
+                {TOUR_STEPS[tourStep].icon}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <h3 className="tour-title" style={{ margin: 0 }}>{TOUR_STEPS[tourStep].title}</h3>
+                <span style={{ fontSize: '0.72rem', color: '#c084fc', fontWeight: 600 }}>
+                  {TOUR_STEPS[tourStep].subtitle}
+                </span>
+              </div>
+            </div>
+            
+            <div className="tour-body">
+              {TOUR_STEPS[tourStep].body}
+            </div>
+            
+            <div className="tour-footer">
+              <span className="tour-progress">Step {tourStep + 1} of {TOUR_STEPS.length}</span>
+              <div className="tour-actions">
+                <button type="button" className="tour-btn skip" onClick={handleTourEnd}>
+                  Skip
+                </button>
+                {tourStep > 0 && (
+                  <button type="button" className="tour-btn prev" onClick={handleTourPrev}>
+                    Back
+                  </button>
+                )}
+                <button type="button" className="tour-btn next" onClick={handleTourNext}>
+                  {tourStep === TOUR_STEPS.length - 1 ? 'Finish' : 'Next'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
