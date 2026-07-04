@@ -1319,3 +1319,68 @@ select:focus, input[type="text"]:focus, textarea:focus {
     opacity: 1;
   }
 }
+
+
+/* ==========================================
+   Micro-Animations and Transitions Additions
+   ========================================== */
+
+/* Network dot indicator pulses */
+.network-dot.online {
+  background-color: #10b981 !important;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-online 1.8s infinite !important;
+}
+
+.network-dot.offline {
+  background-color: #ef4444 !important;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: pulse-offline 1.4s infinite !important;
+}
+
+@keyframes pulse-online {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes pulse-offline {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Slide entry transitions for the top/bottom navigation panels */
+.nav-banner-top {
+  animation: slideInDown 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.nav-details-bottom {
+  animation: slideInUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes slideInDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Sidebar Tab switch card fade-and-slide entries */
+.sidebar-content .panel-card {
+  animation: panelFadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+@keyframes panelFadeIn {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

@@ -886,6 +886,23 @@ export default function App() {
         className: 'leaflet-road-tooltip'
       });
 
+      // Hover feedback to make road lines feel alive
+      polyline.on('mouseover', () => {
+        polyline.setStyle({
+          color: isBlocked ? '#f87171' : '#c084fc',
+          weight: isBlocked ? 6 : 5,
+          opacity: 0.95
+        });
+      });
+
+      polyline.on('mouseout', () => {
+        polyline.setStyle({
+          color: color,
+          weight: weight,
+          opacity: opacity
+        });
+      });
+
       polyline.on('click', async (e) => {
         L.DomEvent.stopPropagation(e);
         await toggleRoadBlockage(edge);
