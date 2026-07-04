@@ -1277,10 +1277,6 @@ select:focus, input[type="text"]:focus, textarea:focus {
    Fine-Tuned Hover and Motion Transitions
    ========================================== */
 
-/* Smooth sliding for moving vehicle markers */
-.custom-responder-icon, .custom-bus-icon {
-  transition: transform 0.12s linear !important;
-}
 
 /* Float-up hover scaling for interactive map nodes */
 .custom-div-icon, .custom-terminal-icon {
