@@ -925,7 +925,7 @@ export default function App() {
         const cityIcon = L.divIcon({
           className: 'custom-city-icon',
           html: `
-            <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
               <div style="width: 8px; height: 8px; background: white; border: 2px solid #0f172a; border-radius: 50%;"></div>
               <div style="
                 background: rgba(15, 23, 42, 0.9);
@@ -945,7 +945,60 @@ export default function App() {
           iconAnchor: [30, 4]
         });
 
-        const marker = L.marker([node.lat, node.lng], { icon: cityIcon, interactive: false }).addTo(mapRef.current);
+        const marker = L.marker([node.lat, node.lng], { icon: cityIcon, interactive: true })
+          .addTo(mapRef.current)
+          .bindPopup(`
+            <div style="color: #f3f4f6; font-family: sans-serif; font-size: 11px; min-width: 140px;">
+              <h4 style="margin: 0 0 4px; color: #38bdf8; font-weight: bold;">${node.name}</h4>
+              <p style="margin: 0 0 8px; color: #9ca3af; font-size: 10px;">Select node action:</p>
+              <div style="display: flex; gap: 4px;">
+                <button id="set-start-${nodeId}" style="
+                  background: #a855f7; 
+                  color: white; 
+                  border: none; 
+                  padding: 4px 6px; 
+                  border-radius: 4px; 
+                  font-weight: bold;
+                  font-size: 10px;
+                  cursor: pointer;
+                  flex: 1;
+                ">Start Here</button>
+                <button id="set-end-${nodeId}" style="
+                  background: #38bdf8; 
+                  color: #0b0f19; 
+                  border: none; 
+                  padding: 4px 6px; 
+                  border-radius: 4px; 
+                  font-weight: bold;
+                  font-size: 10px;
+                  cursor: pointer;
+                  flex: 1;
+                ">End Here</button>
+              </div>
+            </div>
+          `);
+
+        marker.on('popupopen', () => {
+          const btnStart = document.getElementById(`set-start-${nodeId}`);
+          if (btnStart) {
+            btnStart.onclick = () => {
+              setSelectedStartNode(nodeId);
+              setActiveTab('planner');
+              logMessage(`Departure point set to ${node.name}`, 'info');
+              mapRef.current?.closePopup();
+            };
+          }
+          const btnEnd = document.getElementById(`set-end-${nodeId}`);
+          if (btnEnd) {
+            btnEnd.onclick = () => {
+              setSelectedEndNode(nodeId);
+              setActiveTab('planner');
+              logMessage(`Destination point set to ${node.name}`, 'info');
+              mapRef.current?.closePopup();
+            };
+          }
+        });
+
         cityMarkersRef.current.push(marker);
       }
     });
