@@ -84,7 +84,7 @@ export default function App() {
     {
       title: "Cloud Sync Console",
       subtitle: "Tab 5: System Admin Logs",
-      body: "Log in with User ID: 'tryonce' / Password: 'daretoenter' to access audit logs, view other active operators on the map, and synchronize incidents globally in real-time!",
+      body: "Log in with your authorized Operator ID and Password to access secure audit logs, view other active operators on the map, and synchronize incidents globally in real-time!",
       icon: "💻"
     }
   ];
