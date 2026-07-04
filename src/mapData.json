@@ -132,6 +132,216 @@
       "lng": 76.5422,
       "name": "Alathur",
       "type": "city"
+    },
+    "neyyattinkara": {
+      "name": "Neyyattinkara",
+      "lat": 8.4032,
+      "lng": 77.0864,
+      "type": "city"
+    },
+    "varkala": {
+      "name": "Varkala",
+      "lat": 8.7303,
+      "lng": 76.7135,
+      "type": "city"
+    },
+    "punalur": {
+      "name": "Punalur",
+      "lat": 9.0142,
+      "lng": 76.9248,
+      "type": "city"
+    },
+    "karunagappally": {
+      "name": "Karunagappally",
+      "lat": 9.0534,
+      "lng": 76.5367,
+      "type": "city"
+    },
+    "kayamkulam": {
+      "name": "Kayamkulam",
+      "lat": 9.1722,
+      "lng": 76.5012,
+      "type": "city"
+    },
+    "haripad": {
+      "name": "Haripad",
+      "lat": 9.2882,
+      "lng": 76.4356,
+      "type": "city"
+    },
+    "cherthala": {
+      "name": "Cherthala",
+      "lat": 9.6845,
+      "lng": 76.3292,
+      "type": "city"
+    },
+    "adoor": {
+      "name": "Adoor",
+      "lat": 9.1554,
+      "lng": 76.7323,
+      "type": "city"
+    },
+    "thiruvalla": {
+      "name": "Thiruvalla",
+      "lat": 9.3835,
+      "lng": 76.574,
+      "type": "city"
+    },
+    "changanassery": {
+      "name": "Changanassery",
+      "lat": 9.4447,
+      "lng": 76.5385,
+      "type": "city"
+    },
+    "pala": {
+      "name": "Pala",
+      "lat": 9.7106,
+      "lng": 76.6856,
+      "type": "city"
+    },
+    "vaikom": {
+      "name": "Vaikom",
+      "lat": 9.7478,
+      "lng": 76.3957,
+      "type": "city"
+    },
+    "thodupuzha": {
+      "name": "Thodupuzha",
+      "lat": 9.8972,
+      "lng": 76.7188,
+      "type": "city"
+    },
+    "adimali": {
+      "name": "Adimali",
+      "lat": 10.0214,
+      "lng": 76.9535,
+      "type": "city"
+    },
+    "muvattupuzha": {
+      "name": "Muvattupuzha",
+      "lat": 9.9794,
+      "lng": 76.5828,
+      "type": "city"
+    },
+    "perumbavoor": {
+      "name": "Perumbavoor",
+      "lat": 10.1142,
+      "lng": 76.4828,
+      "type": "city"
+    },
+    "aluva": {
+      "name": "Aluva",
+      "lat": 10.1076,
+      "lng": 76.3496,
+      "type": "city"
+    },
+    "angamaly": {
+      "name": "Angamaly",
+      "lat": 10.1982,
+      "lng": 76.386,
+      "type": "city"
+    },
+    "chalakudy": {
+      "name": "Chalakudy",
+      "lat": 10.3064,
+      "lng": 76.3353,
+      "type": "city"
+    },
+    "irinjalakuda": {
+      "name": "Irinjalakuda",
+      "lat": 10.3392,
+      "lng": 76.2008,
+      "type": "city"
+    },
+    "chavakkad": {
+      "name": "Chavakkad",
+      "lat": 10.5902,
+      "lng": 76.0242,
+      "type": "city"
+    },
+    "shoranur": {
+      "name": "Shoranur",
+      "lat": 10.7601,
+      "lng": 76.2731,
+      "type": "city"
+    },
+    "ottapalam": {
+      "name": "Ottapalam",
+      "lat": 10.7766,
+      "lng": 76.3852,
+      "type": "city"
+    },
+    "mannarkkad": {
+      "name": "Mannarkkad",
+      "lat": 10.9856,
+      "lng": 76.4428,
+      "type": "city"
+    },
+    "perinthalmanna": {
+      "name": "Perinthalmanna",
+      "lat": 10.9764,
+      "lng": 76.2238,
+      "type": "city"
+    },
+    "manjeri": {
+      "name": "Manjeri",
+      "lat": 11.1218,
+      "lng": 76.1206,
+      "type": "city"
+    },
+    "tirur": {
+      "name": "Tirur",
+      "lat": 10.9022,
+      "lng": 75.9248,
+      "type": "city"
+    },
+    "vatakara": {
+      "name": "Vatakara",
+      "lat": 11.6084,
+      "lng": 75.5925,
+      "type": "city"
+    },
+    "quilandy": {
+      "name": "Quilandy",
+      "lat": 11.4398,
+      "lng": 75.6961,
+      "type": "city"
+    },
+    "thamarassery": {
+      "name": "Thamarassery",
+      "lat": 11.4168,
+      "lng": 75.9404,
+      "type": "city"
+    },
+    "sulthan_bathery": {
+      "name": "Sulthan Bathery",
+      "lat": 11.5976,
+      "lng": 76.2576,
+      "type": "city"
+    },
+    "mananthavady": {
+      "name": "Mananthavady",
+      "lat": 11.8022,
+      "lng": 76.0028,
+      "type": "city"
+    },
+    "thalassery": {
+      "name": "Thalassery",
+      "lat": 11.7494,
+      "lng": 75.4894,
+      "type": "city"
+    },
+    "payyannur": {
+      "name": "Payyannur",
+      "lat": 12.1022,
+      "lng": 75.2018,
+      "type": "city"
+    },
+    "kanhangad": {
+      "name": "Kanhangad",
+      "lat": 12.3122,
+      "lng": 75.0934,
+      "type": "city"
     }
   },
   "edges": [
@@ -684,6 +894,1086 @@
         [
           11.8745,
           75.3704
+        ]
+      ]
+    },
+    {
+      "from": "neyyattinkara",
+      "to": "tvm",
+      "name": "NH 66 (Neyyattinkara - TVM)",
+      "distance": 16,
+      "geometry": [
+        [
+          8.4032,
+          77.0864
+        ],
+        [
+          8.466932084324727,
+          77.00638003947448
+        ],
+        [
+          8.5241,
+          76.9366
+        ]
+      ]
+    },
+    {
+      "from": "varkala",
+      "to": "tvm",
+      "name": "Coastal Hwy (Varkala - TVM)",
+      "distance": 42,
+      "geometry": [
+        [
+          8.7303,
+          76.7135
+        ],
+        [
+          8.631966448599554,
+          76.82525840491833
+        ],
+        [
+          8.5241,
+          76.9366
+        ]
+      ]
+    },
+    {
+      "from": "varkala",
+      "to": "kollam",
+      "name": "NH 66 Link (Varkala - Kollam)",
+      "distance": 28,
+      "geometry": [
+        [
+          8.7303,
+          76.7135
+        ],
+        [
+          8.81157662949615,
+          76.65823016386446
+        ],
+        [
+          8.8932,
+          76.6141
+        ]
+      ]
+    },
+    {
+      "from": "punalur",
+      "to": "kollam",
+      "name": "NH 744 (Punalur - Kollam)",
+      "distance": 45,
+      "geometry": [
+        [
+          9.0142,
+          76.9248
+        ],
+        [
+          8.956406352387058,
+          76.77581420139832
+        ],
+        [
+          8.8932,
+          76.6141
+        ]
+      ]
+    },
+    {
+      "from": "punalur",
+      "to": "adoor",
+      "name": "SH 5 (Punalur - Adoor)",
+      "distance": 30,
+      "geometry": [
+        [
+          9.0142,
+          76.9248
+        ],
+        [
+          9.088673277013532,
+          76.82593269595775
+        ],
+        [
+          9.1554,
+          76.7323
+        ]
+      ]
+    },
+    {
+      "from": "karunagappally",
+      "to": "kollam",
+      "name": "NH 66 (Karunagappally - Kollam)",
+      "distance": 24,
+      "geometry": [
+        [
+          9.0534,
+          76.5367
+        ],
+        [
+          8.976614801150898,
+          76.57093741725207
+        ],
+        [
+          8.8932,
+          76.6141
+        ]
+      ]
+    },
+    {
+      "from": "karunagappally",
+      "to": "kayamkulam",
+      "name": "NH 66 (Karunagappally - Kayamkulam)",
+      "distance": 14,
+      "geometry": [
+        [
+          9.0534,
+          76.5367
+        ],
+        [
+          9.1087824830678,
+          76.52361788550193
+        ],
+        [
+          9.1722,
+          76.5012
+        ]
+      ]
+    },
+    {
+      "from": "kayamkulam",
+      "to": "haripad",
+      "name": "NH 66 (Kayamkulam - Haripad)",
+      "distance": 15,
+      "geometry": [
+        [
+          9.1722,
+          76.5012
+        ],
+        [
+          9.23021235328341,
+          76.46324796000334
+        ],
+        [
+          9.2882,
+          76.4356
+        ]
+      ]
+    },
+    {
+      "from": "kayamkulam",
+      "to": "adoor",
+      "name": "KP Road (Kayamkulam - Adoor)",
+      "distance": 29,
+      "geometry": [
+        [
+          9.1722,
+          76.5012
+        ],
+        [
+          9.157294607309357,
+          76.61863278662591
+        ],
+        [
+          9.1554,
+          76.7323
+        ]
+      ]
+    },
+    {
+      "from": "haripad",
+      "to": "alappuzha",
+      "name": "NH 66 (Haripad - Alappuzha)",
+      "distance": 33,
+      "geometry": [
+        [
+          9.2882,
+          76.4356
+        ],
+        [
+          9.393161709078052,
+          76.38421899902704
+        ],
+        [
+          9.4981,
+          76.3388
+        ]
+      ]
+    },
+    {
+      "from": "cherthala",
+      "to": "alappuzha",
+      "name": "NH 66 (Cherthala - Alappuzha)",
+      "distance": 22,
+      "geometry": [
+        [
+          9.6845,
+          76.3292
+        ],
+        [
+          9.584151149054405,
+          76.33490404173043
+        ],
+        [
+          9.4981,
+          76.3388
+        ]
+      ]
+    },
+    {
+      "from": "cherthala",
+      "to": "kochi",
+      "name": "NH 66 (Cherthala - Kochi)",
+      "distance": 34,
+      "geometry": [
+        [
+          9.6845,
+          76.3292
+        ],
+        [
+          9.803367915587922,
+          76.30229896165685
+        ],
+        [
+          9.9312,
+          76.2673
+        ]
+      ]
+    },
+    {
+      "from": "adoor",
+      "to": "pathanamthitta",
+      "name": "SH 1 (Adoor - Pathanamthitta)",
+      "distance": 26,
+      "geometry": [
+        [
+          9.1554,
+          76.7323
+        ],
+        [
+          9.217445063172404,
+          76.75771179535576
+        ],
+        [
+          9.2648,
+          76.787
+        ]
+      ]
+    },
+    {
+      "from": "thiruvalla",
+      "to": "pathanamthitta",
+      "name": "TK Road (Thiruvalla - Pathanamthitta)",
+      "distance": 30,
+      "geometry": [
+        [
+          9.3835,
+          76.574
+        ],
+        [
+          9.321321395877627,
+          76.67984715639943
+        ],
+        [
+          9.2648,
+          76.787
+        ]
+      ]
+    },
+    {
+      "from": "thiruvalla",
+      "to": "changanassery",
+      "name": "MC Road (Thiruvalla - Changanassery)",
+      "distance": 10,
+      "geometry": [
+        [
+          9.3835,
+          76.574
+        ],
+        [
+          9.417585168517318,
+          76.56217891782447
+        ],
+        [
+          9.4447,
+          76.5385
+        ]
+      ]
+    },
+    {
+      "from": "changanassery",
+      "to": "kottayam",
+      "name": "MC Road (Changanassery - Kottayam)",
+      "distance": 18,
+      "geometry": [
+        [
+          9.4447,
+          76.5385
+        ],
+        [
+          9.513130609631189,
+          76.5279466649049
+        ],
+        [
+          9.5916,
+          76.5222
+        ]
+      ]
+    },
+    {
+      "from": "pala",
+      "to": "kottayam",
+      "name": "KK Road Link (Pala - Kottayam)",
+      "distance": 28,
+      "geometry": [
+        [
+          9.7106,
+          76.6856
+        ],
+        [
+          9.650696531430961,
+          76.60743230579533
+        ],
+        [
+          9.5916,
+          76.5222
+        ]
+      ]
+    },
+    {
+      "from": "pala",
+      "to": "thodupuzha",
+      "name": "SH 8 (Pala - Thodupuzha)",
+      "distance": 28,
+      "geometry": [
+        [
+          9.7106,
+          76.6856
+        ],
+        [
+          9.797162455074615,
+          76.69537623626502
+        ],
+        [
+          9.8972,
+          76.7188
+        ]
+      ]
+    },
+    {
+      "from": "vaikom",
+      "to": "kottayam",
+      "name": "SH 15 (Vaikom - Kottayam)",
+      "distance": 38,
+      "geometry": [
+        [
+          9.7478,
+          76.3957
+        ],
+        [
+          9.666661034461871,
+          76.45785720755056
+        ],
+        [
+          9.5916,
+          76.5222
+        ]
+      ]
+    },
+    {
+      "from": "vaikom",
+      "to": "kochi",
+      "name": "SH 15 (Vaikom - Kochi)",
+      "distance": 32,
+      "geometry": [
+        [
+          9.7478,
+          76.3957
+        ],
+        [
+          9.835334551036205,
+          76.32529808234693
+        ],
+        [
+          9.9312,
+          76.2673
+        ]
+      ]
+    },
+    {
+      "from": "thodupuzha",
+      "to": "muvattupuzha",
+      "name": "SH 8 (Thodupuzha - Muvattupuzha)",
+      "distance": 20,
+      "geometry": [
+        [
+          9.8972,
+          76.7188
+        ],
+        [
+          9.94141750938171,
+          76.65794244965672
+        ],
+        [
+          9.9794,
+          76.5828
+        ]
+      ]
+    },
+    {
+      "from": "adimali",
+      "to": "muvattupuzha",
+      "name": "NH 85 (Adimali - Muvattupuzha)",
+      "distance": 52,
+      "geometry": [
+        [
+          10.0214,
+          76.9535
+        ],
+        [
+          9.99988085707576,
+          76.76129146551449
+        ],
+        [
+          9.9794,
+          76.5828
+        ]
+      ]
+    },
+    {
+      "from": "adimali",
+      "to": "munnar",
+      "name": "NH 85 (Adimali - Munnar)",
+      "distance": 30,
+      "geometry": [
+        [
+          10.0214,
+          76.9535
+        ],
+        [
+          10.051245024202103,
+          77.0124688159623
+        ],
+        [
+          10.0889,
+          77.0595
+        ]
+      ]
+    },
+    {
+      "from": "muvattupuzha",
+      "to": "kochi",
+      "name": "NH 85 (Muvattupuzha - Kochi)",
+      "distance": 36,
+      "geometry": [
+        [
+          9.9794,
+          76.5828
+        ],
+        [
+          9.957629653198435,
+          76.42391525425182
+        ],
+        [
+          9.9312,
+          76.2673
+        ]
+      ]
+    },
+    {
+      "from": "perumbavoor",
+      "to": "muvattupuzha",
+      "name": "MC Road (Perumbavoor - Muvattupuzha)",
+      "distance": 22,
+      "geometry": [
+        [
+          10.1142,
+          76.4828
+        ],
+        [
+          10.040410852688435,
+          76.52925318312428
+        ],
+        [
+          9.9794,
+          76.5828
+        ]
+      ]
+    },
+    {
+      "from": "perumbavoor",
+      "to": "aluva",
+      "name": "AM Road (Perumbavoor - Aluva)",
+      "distance": 15,
+      "geometry": [
+        [
+          10.1142,
+          76.4828
+        ],
+        [
+          10.10737499812536,
+          76.41658261984117
+        ],
+        [
+          10.1076,
+          76.3496
+        ]
+      ]
+    },
+    {
+      "from": "aluva",
+      "to": "kochi",
+      "name": "NH 544 (Aluva - Kochi)",
+      "distance": 20,
+      "geometry": [
+        [
+          10.1076,
+          76.3496
+        ],
+        [
+          10.015126203823279,
+          76.31381146118792
+        ],
+        [
+          9.9312,
+          76.2673
+        ]
+      ]
+    },
+    {
+      "from": "aluva",
+      "to": "angamaly",
+      "name": "NH 544 (Aluva - Angamaly)",
+      "distance": 15,
+      "geometry": [
+        [
+          10.1076,
+          76.3496
+        ],
+        [
+          10.1515690459059,
+          76.36170548225401
+        ],
+        [
+          10.1982,
+          76.386
+        ]
+      ]
+    },
+    {
+      "from": "angamaly",
+      "to": "chalakudy",
+      "name": "NH 544 (Angamaly - Chalakudy)",
+      "distance": 16,
+      "geometry": [
+        [
+          10.1982,
+          76.386
+        ],
+        [
+          10.255169153271419,
+          76.35459491269931
+        ],
+        [
+          10.3064,
+          76.3353
+        ]
+      ]
+    },
+    {
+      "from": "chalakudy",
+      "to": "thrissur",
+      "name": "NH 544 (Chalakudy - Thrissur)",
+      "distance": 30,
+      "geometry": [
+        [
+          10.3064,
+          76.3353
+        ],
+        [
+          10.41636403369632,
+          76.27703938848572
+        ],
+        [
+          10.5276,
+          76.2144
+        ]
+      ]
+    },
+    {
+      "from": "irinjalakuda",
+      "to": "chalakudy",
+      "name": "SH 51 (Irinjalakuda - Chalakudy)",
+      "distance": 18,
+      "geometry": [
+        [
+          10.3392,
+          76.2008
+        ],
+        [
+          10.317223603308447,
+          76.27441555327916
+        ],
+        [
+          10.3064,
+          76.3353
+        ]
+      ]
+    },
+    {
+      "from": "irinjalakuda",
+      "to": "thrissur",
+      "name": "SH 51 (Irinjalakuda - Thrissur)",
+      "distance": 22,
+      "geometry": [
+        [
+          10.3392,
+          76.2008
+        ],
+        [
+          10.435229111561533,
+          76.20432008794432
+        ],
+        [
+          10.5276,
+          76.2144
+        ]
+      ]
+    },
+    {
+      "from": "chavakkad",
+      "to": "guruvayur",
+      "name": "Inner Hwy (Chavakkad - Guruvayur)",
+      "distance": 5,
+      "geometry": [
+        [
+          10.5902,
+          76.0242
+        ],
+        [
+          10.59311608536723,
+          76.03214907934493
+        ],
+        [
+          10.596,
+          76.037
+        ]
+      ]
+    },
+    {
+      "from": "chavakkad",
+      "to": "thrissur",
+      "name": "SH 49 (Chavakkad - Thrissur)",
+      "distance": 26,
+      "geometry": [
+        [
+          10.5902,
+          76.0242
+        ],
+        [
+          10.565120012195896,
+          76.12183572974634
+        ],
+        [
+          10.5276,
+          76.2144
+        ]
+      ]
+    },
+    {
+      "from": "shoranur",
+      "to": "thrissur",
+      "name": "SH 22 (Shoranur - Thrissur)",
+      "distance": 33,
+      "geometry": [
+        [
+          10.7601,
+          76.2731
+        ],
+        [
+          10.638788475626894,
+          76.24499314324876
+        ],
+        [
+          10.5276,
+          76.2144
+        ]
+      ]
+    },
+    {
+      "from": "shoranur",
+      "to": "ottapalam",
+      "name": "SH 23 (Shoranur - Ottapalam)",
+      "distance": 14,
+      "geometry": [
+        [
+          10.7601,
+          76.2731
+        ],
+        [
+          10.762945593135413,
+          76.33167845784995
+        ],
+        [
+          10.7766,
+          76.3852
+        ]
+      ]
+    },
+    {
+      "from": "ottapalam",
+      "to": "palakkad",
+      "name": "SH 23 (Ottapalam - Palakkad)",
+      "distance": 34,
+      "geometry": [
+        [
+          10.7766,
+          76.3852
+        ],
+        [
+          10.78062778850802,
+          76.51554354184091
+        ],
+        [
+          10.7867,
+          76.6548
+        ]
+      ]
+    },
+    {
+      "from": "mannarkkad",
+      "to": "palakkad",
+      "name": "NH 966 (Mannarkkad - Palakkad)",
+      "distance": 40,
+      "geometry": [
+        [
+          10.9856,
+          76.4428
+        ],
+        [
+          10.88719488456153,
+          76.54354236163576
+        ],
+        [
+          10.7867,
+          76.6548
+        ]
+      ]
+    },
+    {
+      "from": "mannarkkad",
+      "to": "perinthalmanna",
+      "name": "NH 966 (Mannarkkad - Perinthalmanna)",
+      "distance": 27,
+      "geometry": [
+        [
+          10.9856,
+          76.4428
+        ],
+        [
+          10.985225009378583,
+          76.3369431735413
+        ],
+        [
+          10.9764,
+          76.2238
+        ]
+      ]
+    },
+    {
+      "from": "perinthalmanna",
+      "to": "malappuram",
+      "name": "NH 966 (Perinthalmanna - Malappuram)",
+      "distance": 19,
+      "geometry": [
+        [
+          10.9764,
+          76.2238
+        ],
+        [
+          11.018090627793812,
+          76.14236613655103
+        ],
+        [
+          11.0722,
+          76.074
+        ]
+      ]
+    },
+    {
+      "from": "manjeri",
+      "to": "malappuram",
+      "name": "SH 72 (Manjeri - Malappuram)",
+      "distance": 12,
+      "geometry": [
+        [
+          11.1218,
+          76.1206
+        ],
+        [
+          11.103013330003646,
+          76.10244110826916
+        ],
+        [
+          11.0722,
+          76.074
+        ]
+      ]
+    },
+    {
+      "from": "manjeri",
+      "to": "kozhibode",
+      "name": "SH 28 (Manjeri - Kozhikode)",
+      "distance": 45,
+      "geometry": [
+        [
+          11.1218,
+          76.1206
+        ],
+        [
+          11.188083880982482,
+          75.95461593072827
+        ],
+        [
+          11.2588,
+          75.7804
+        ]
+      ]
+    },
+    {
+      "from": "tirur",
+      "to": "malappuram",
+      "name": "SH 72 (Tirur - Malappuram)",
+      "distance": 26,
+      "geometry": [
+        [
+          10.9022,
+          75.9248
+        ],
+        [
+          10.986532256749307,
+          75.9991675987613
+        ],
+        [
+          11.0722,
+          76.074
+        ]
+      ]
+    },
+    {
+      "from": "thamarassery",
+      "to": "kozhibode",
+      "name": "NH 766 (Thamarassery - Kozhikode)",
+      "distance": 30,
+      "geometry": [
+        [
+          11.4168,
+          75.9404
+        ],
+        [
+          11.340352307195364,
+          75.8577389670607
+        ],
+        [
+          11.2588,
+          75.7804
+        ]
+      ]
+    },
+    {
+      "from": "thamarassery",
+      "to": "wayanad",
+      "name": "NH 766 Churam (Thamarassery - Wayanad)",
+      "distance": 32,
+      "geometry": [
+        [
+          11.4168,
+          75.9404
+        ],
+        [
+          11.515503836924314,
+          76.00959345160157
+        ],
+        [
+          11.605,
+          76.083
+        ]
+      ]
+    },
+    {
+      "from": "sulthan_bathery",
+      "to": "wayanad",
+      "name": "NH 766 (Sulthan Bathery - Wayanad)",
+      "distance": 25,
+      "geometry": [
+        [
+          11.5976,
+          76.2576
+        ],
+        [
+          11.601355008659354,
+          76.16610396811912
+        ],
+        [
+          11.605,
+          76.083
+        ]
+      ]
+    },
+    {
+      "from": "mananthavady",
+      "to": "wayanad",
+      "name": "SH 14 (Mananthavady - Wayanad)",
+      "distance": 28,
+      "geometry": [
+        [
+          11.8022,
+          76.0028
+        ],
+        [
+          11.702355361714757,
+          76.04054830354707
+        ],
+        [
+          11.605,
+          76.083
+        ]
+      ]
+    },
+    {
+      "from": "quilandy",
+      "to": "kozhibode",
+      "name": "NH 66 (Quilandy - Kozhikode)",
+      "distance": 24,
+      "geometry": [
+        [
+          11.4398,
+          75.6961
+        ],
+        [
+          11.345073595050609,
+          75.74390283328628
+        ],
+        [
+          11.2588,
+          75.7804
+        ]
+      ]
+    },
+    {
+      "from": "vatakara",
+      "to": "quilandy",
+      "name": "NH 66 (Vatakara - Quilandy)",
+      "distance": 22,
+      "geometry": [
+        [
+          11.6084,
+          75.5925
+        ],
+        [
+          11.52943524998926,
+          75.63864191430987
+        ],
+        [
+          11.4398,
+          75.6961
+        ]
+      ]
+    },
+    {
+      "from": "vatakara",
+      "to": "thalassery",
+      "name": "NH 66 (Vatakara - Thalassery)",
+      "distance": 22,
+      "geometry": [
+        [
+          11.6084,
+          75.5925
+        ],
+        [
+          11.671952289726127,
+          75.53352535056649
+        ],
+        [
+          11.7494,
+          75.4894
+        ]
+      ]
+    },
+    {
+      "from": "thalassery",
+      "to": "kannur",
+      "name": "NH 66 (Thalassery - Kannur)",
+      "distance": 21,
+      "geometry": [
+        [
+          11.7494,
+          75.4894
+        ],
+        [
+          11.819403207907408,
+          75.42947684491814
+        ],
+        [
+          11.8745,
+          75.3704
+        ]
+      ]
+    },
+    {
+      "from": "payyannur",
+      "to": "kannur",
+      "name": "NH 66 (Payyannur - Kannur)",
+      "distance": 40,
+      "geometry": [
+        [
+          12.1022,
+          75.2018
+        ],
+        [
+          11.987666657099187,
+          75.29232538191276
+        ],
+        [
+          11.8745,
+          75.3704
+        ]
+      ]
+    },
+    {
+      "from": "payyannur",
+      "to": "kanhangad",
+      "name": "NH 66 (Payyannur - Kanhangad)",
+      "distance": 27,
+      "geometry": [
+        [
+          12.1022,
+          75.2018
+        ],
+        [
+          12.214268903568227,
+          75.1428340815696
+        ],
+        [
+          12.3122,
+          75.0934
+        ]
+      ]
+    },
+    {
+      "from": "kanhangad",
+      "to": "kasaragod",
+      "name": "NH 66 (Kanhangad - Kasaragod)",
+      "distance": 28,
+      "geometry": [
+        [
+          12.3122,
+          75.0934
+        ],
+        [
+          12.41585161226234,
+          75.03670766412492
+        ],
+        [
+          12.5103,
+          74.9852
         ]
       ]
     }
