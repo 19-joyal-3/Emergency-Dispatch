@@ -1791,6 +1791,16 @@ export default function App() {
       // If dispatch simulator is not active, render the tactical path
       if (!simulationActive) {
         drawRoutePolyline(result.geometry);
+        
+        // Auto-center and zoom map to fit the bounds of the newly solved route
+        if (mapRef.current && result.geometry && result.geometry.length > 0) {
+          try {
+            const bounds = L.polyline(result.geometry).getBounds();
+            mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+          } catch (e) {
+            console.error("Error fitting map bounds to path:", e);
+          }
+        }
       }
 
       // Check bus availability along this path
