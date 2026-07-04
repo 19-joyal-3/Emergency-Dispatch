@@ -1477,3 +1477,10 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55) !important;
   border-radius: 8px !important;
 }
+
+
+/* Force native select dropdown options to have solid visible backgrounds and text on Windows Chrome/Edge */
+select option {
+  background-color: #0b0f19 !important;
+  color: #f8fafc !important;
+}
