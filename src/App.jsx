@@ -1578,7 +1578,7 @@ export default function App() {
     
 
     // 1. Tactical Route deviation check
-    if (customRoute && customRoute.geometry) {
+    if (isNavigating && customRoute && customRoute.geometry) {
       let minDistance = Infinity;
       customRoute.geometry.forEach(pt => {
         const dist = haversineDistance(gpsCoords.lat, gpsCoords.lng, pt[0], pt[1]);
@@ -1615,7 +1615,7 @@ export default function App() {
         logMessage(`[NAV-DISPATCH] Deviation: ${minDistance.toFixed(2)} km off-course. Recalculating path to incident...`, 'warning');
       }
     }
-  }, [gpsCoords, gpsActive, customRoute, dispatchRoute, bindGpsToUnit, gpsHeading, selectedResponder]);
+  }, [gpsCoords, gpsActive, customRoute, dispatchRoute, bindGpsToUnit, gpsHeading, selectedResponder, isNavigating, selectedStartNode]);
 
   const handleMapDoubleClick = (lat, lng) => {
     const { id: closestNodeId } = findClosestNode(lat, lng, mapData.nodes);
@@ -2565,8 +2565,15 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => {
+                              // Synchronously configure GPS coordinates to start at the selected departure node
                               if (!gpsActive) {
-                                handleGpsToggle();
+                                const startNode = mapData.nodes[selectedStartNode] || mapData.nodes['vadakkencherry'];
+                                setGpsCoords({ lat: startNode.lat, lng: startNode.lng });
+                                setGpsActive(true);
+                                setMockGpsMode(true);
+                              } else if (mockGpsMode) {
+                                const startNode = mapData.nodes[selectedStartNode] || mapData.nodes['vadakkencherry'];
+                                setGpsCoords({ lat: startNode.lat, lng: startNode.lng });
                               }
                               setIsNavigating(true);
                               logMessage('[NAV] Active turn-by-turn guidance initiated.', 'success');
