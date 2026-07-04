@@ -2314,6 +2314,15 @@ export default function App() {
             {syncQueueLength > 0 && <span className="tab-badge">{syncQueueLength}</span>}
             <span className="tab-label">Sync</span>
           </button>
+          <button 
+            type="button"
+            className={`tab-btn ${activeTab === 'help' ? 'active' : ''}`}
+            onClick={() => setActiveTab('help')}
+            title="User Guide & Help"
+          >
+            <HelpCircle size={18} />
+            <span className="tab-label">Help</span>
+          </button>
         </div>
         <div className="toolbar-footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', paddingBottom: '10px' }}>
           <button 
