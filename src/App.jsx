@@ -1219,88 +1219,16 @@ export default function App() {
     });
   }, [responders, selectedResponder]);
 
-  // Update Simulated Bus Markers (Live Bus Tracker)
+  // Update Simulated Bus Markers (Live Bus Tracker) - Disabled to keep map clean of automated vehicles
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Remove any markers that are no longer in simulatedBuses
-    busMarkersRef.current.forEach((marker, id) => {
-      if (!simulatedBuses.some(b => b.id === id)) {
-        marker.remove();
-        busMarkersRef.current.delete(id);
-      }
+    // Clear all active bus markers from the map
+    busMarkersRef.current.forEach((marker) => {
+      marker.remove();
     });
-
-    // Draw/Update markers
-    simulatedBuses.forEach(bus => {
-      const isTracked = trackedBusId === bus.id;
-      const ringGlow = isTracked ? '0 0 14px #f43f5e' : '0 2px 5px rgba(0,0,0,0.5)';
-      const border = isTracked ? '2.5px solid #f43f5e' : `1.5px solid ${bus.color}`;
-      const scale = isTracked ? 1.2 : 1.0;
-      
-      const busIcon = L.divIcon({
-        className: 'custom-bus-icon-wrapper',
-        html: `
-          <div class="bus-simulation-marker ${isTracked ? 'tracked-active' : ''}" style="
-            transform: rotate(${bus.heading}deg) scale(${scale});
-            border: ${border};
-            box-shadow: ${ringGlow};
-            transition: transform 0.2s linear;
-          ">
-            <span class="bus-icon-text">🚌</span>
-          </div>
-        `,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
-      });
-
-      if (busMarkersRef.current.has(bus.id)) {
-        const m = busMarkersRef.current.get(bus.id);
-        m.setLatLng([bus.lat, bus.lng]);
-        m.setIcon(busIcon);
-      } else {
-        const m = L.marker([bus.lat, bus.lng], { icon: busIcon })
-          .addTo(mapRef.current)
-          .bindPopup(`
-            <div style="color: #f3f4f6; font-family: sans-serif; font-size: 11px;">
-              <h4 style="margin: 0 0 4px; color: #fbbf24;">${bus.name}</h4>
-              <p style="margin: 0 0 4px;">Route: <strong>${bus.route}</strong></p>
-              <p style="margin: 0 0 8px;">Status: <strong style="color: ${bus.status === 'Stopped' ? '#fbbf24' : '#4ade80'};">${bus.status === 'Stopped' ? 'Stopped at Depot' : `En Route (${bus.speed} km/h)`}</strong></p>
-              <button id="track-bus-btn-${bus.id}" style="
-                background: #f43f5e;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                border-radius: 4px;
-                font-weight: bold;
-                cursor: pointer;
-                width: 100%;
-              ">Track Live Position</button>
-            </div>
-          `);
-
-        m.on('popupopen', () => {
-          const btn = document.getElementById(`track-bus-btn-${bus.id}`);
-          if (btn) {
-            btn.onclick = () => {
-              setTrackedBusId(bus.id);
-              logMessage(`Tracking active for ${bus.name}`, 'info');
-              if (mapRef.current) {
-                mapRef.current.setView([bus.lat, bus.lng], 12);
-              }
-              mapRef.current?.closePopup();
-            };
-          }
-        });
-
-        m.on('click', () => {
-          setTrackedBusId(bus.id);
-        });
-
-        busMarkersRef.current.set(bus.id, m);
-      }
-    });
-  }, [simulatedBuses, trackedBusId]);
+    busMarkersRef.current.clear();
+  }, [simulatedBuses]);
 
   // Update Shelter Markers
   useEffect(() => {
