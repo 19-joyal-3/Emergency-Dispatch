@@ -1459,9 +1459,10 @@ export default function App() {
           logMessage(`[GPS] Location update: [${latitude.toFixed(5)}, ${longitude.toFixed(5)}]`, 'system');
         },
         (error) => {
-          logMessage(`[GPS] Tracking failed: ${error.message}. Initiating Mock GPS Mode (click map to test).`, 'warning');
-          // Start with mock GPS at Vadakkencherry
-          setGpsCoords({ lat: 10.5954, lng: 76.4714 });
+          logMessage(`[GPS] Tracking failed: ${error.message}. Initiating Mock GPS Mode at selected Departure Point.`, 'warning');
+          // Start with mock GPS at the current selected start node coordinates!
+          const startNode = mapData.nodes[selectedStartNode] || mapData.nodes['vadakkencherry'];
+          setGpsCoords({ lat: startNode.lat, lng: startNode.lng });
           setGpsActive(true);
           setMockGpsMode(true);
         },
