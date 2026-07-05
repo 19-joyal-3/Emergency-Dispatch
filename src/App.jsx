@@ -2595,22 +2595,46 @@ export default function App() {
       </nav>
 
       {/* 2. active tab sidebar panel */}
-      <aside className="sidebar">
-        <header className="sidebar-header">
-          <h1 className="brand-title">
-            {activeTab === 'planner' && 'Tactical Planner'}
-            {activeTab === 'bustle' && 'Live Bus Tracker'}
-            {activeTab === 'alerts' && 'Emergency Dispatch'}
-            {activeTab === 'shelters' && 'Evacuation Safe Hubs'}
-            {activeTab === 'sync' && 'System Console'}
-          </h1>
-          <div className="brand-subtitle">
-            {activeTab === 'planner' && 'Multi-modal routing & mock navigation'}
-            {activeTab === 'bustle' && 'Live private/KSRTC schedule monitor'}
-            {activeTab === 'alerts' && 'File incidents and coordinate response'}
-            {activeTab === 'shelters' && 'Active camps capacity & relief tracking'}
-            {activeTab === 'sync' && 'Offline sync logs & cluster updates'}
+      <aside className={`sidebar ${activeTab ? 'open' : 'closed'}`}>
+        <header className="sidebar-header" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <div style={{ flex: 1 }}>
+            <h1 className="brand-title">
+              {activeTab === 'planner' && 'Tactical Planner'}
+              {activeTab === 'bustle' && 'Live Bus Tracker'}
+              {activeTab === 'alerts' && 'Emergency Dispatch'}
+              {activeTab === 'shelters' && 'Evacuation Safe Hubs'}
+              {activeTab === 'sync' && 'System Console'}
+              {activeTab === 'help' && 'System Help Guide'}
+            </h1>
+            <div className="brand-subtitle">
+              {activeTab === 'planner' && 'Multi-modal routing & mock navigation'}
+              {activeTab === 'bustle' && 'Live private/KSRTC schedule monitor'}
+              {activeTab === 'alerts' && 'File incidents and coordinate response'}
+              {activeTab === 'shelters' && 'Active camps capacity & relief tracking'}
+              {activeTab === 'sync' && 'Offline sync logs & cluster updates'}
+              {activeTab === 'help' && 'Step-by-step written system manual'}
+            </div>
           </div>
+          <button 
+            type="button"
+            className="sidebar-close-btn"
+            onClick={() => setActiveTab(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              fontSize: '1.25rem',
+              cursor: 'pointer',
+              display: 'none',
+              padding: '0 4px',
+              fontWeight: 'bold',
+              outline: 'none',
+              marginLeft: '0.5rem'
+            }}
+            title="Collapse Sidebar"
+          >
+            ✕
+          </button>
         </header>
 
         <section className="network-bar">
