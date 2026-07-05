@@ -51,9 +51,25 @@ export default function App() {
   const [tourStep, setTourStep] = useState(0);
 
   // Map Environment HUD States
-  const [mapTheme, setMapTheme] = useState('dark'); // 'light' or 'dark'
+  const [mapTheme, setMapTheme] = useState('dark'); // 'light', 'dark', 'satellite', 'terrain'
   const [weatherEffect, setWeatherEffect] = useState('mist'); // 'clear', 'rain', 'mist'
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [showTraffic, setShowTraffic] = useState(false);
+
+  const tileLayerRef = useRef(null);
+
+  const getTileUrl = (theme) => {
+    if (theme === 'light') return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    if (theme === 'satellite') return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    if (theme === 'terrain') return 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+    return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  };
+
+  const getTileAttribution = (theme) => {
+    if (theme === 'satellite') return '&copy; Esri &mdash; Source: Esri, USDA, USGS';
+    if (theme === 'terrain') return 'Map data: &copy; OpenStreetMap | Style: OpenTopoMap';
+    return '&copy; CARTO';
+  };
 
   const TOUR_STEPS = [
     {
@@ -826,10 +842,11 @@ export default function App() {
         doubleClickZoom: false
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
+      const tileLayer = L.tileLayer(getTileUrl(mapTheme), {
+        attribution: getTileAttribution(mapTheme)
       }).addTo(map);
 
+      tileLayerRef.current = tileLayer;
       mapRef.current = map;
       roadsLayerRef.current = L.layerGroup().addTo(map);
       routeLayerRef.current = L.layerGroup().addTo(map);
@@ -849,10 +866,32 @@ export default function App() {
     }
   }, [blockages]);
 
+  // Dynamic Map Theme/Base-Layer Switcher
+  useEffect(() => {
+    if (mapRef.current && tileLayerRef.current) {
+      tileLayerRef.current.setUrl(getTileUrl(mapTheme));
+    }
+  }, [mapTheme]);
+
+  // Re-draw road network when blockages or traffic overlay state updates
+  useEffect(() => {
+    if (mapRef.current) {
+      drawRoadNetwork();
+    }
+  }, [blockages, showTraffic]);
+
   // 3. Draw Road Network
   const drawRoadNetwork = () => {
     if (!mapRef.current || !roadsLayerRef.current) return;
     roadsLayerRef.current.clearLayers();
+
+    const getTrafficColor = (edge) => {
+      // Deterministic hash based on edge name length and distance
+      const hash = (edge.name.length + edge.distance) % 10;
+      if (hash < 6) return '#10b981'; // 60% Green (Free flow)
+      if (hash < 8) return '#f59e0b'; // 20% Orange (Moderate)
+      return '#ef4444'; // 20% Red (Heavy congestion)
+    };
 
     mapData.edges.forEach(edge => {
       const isBlocked = blockages.some(b => 
@@ -860,10 +899,10 @@ export default function App() {
         (b.fromNode === edge.to && b.toNode === edge.from)
       );
 
-      const color = isBlocked ? '#ef4444' : '#334155';
+      const color = isBlocked ? '#ef4444' : (showTraffic ? getTrafficColor(edge) : '#334155');
       const dashArray = isBlocked ? '5, 5' : null;
-      const weight = isBlocked ? 4 : 3;
-      const opacity = isBlocked ? 0.9 : 0.6;
+      const weight = isBlocked ? 4 : (showTraffic ? 4 : 3);
+      const opacity = isBlocked ? 0.9 : (showTraffic ? 0.85 : 0.6);
 
       const polyline = L.polyline(edge.geometry, {
         color: color,
@@ -3664,43 +3703,59 @@ export default function App() {
               </h4>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>MAP THEME</label>
-                <div style={{ display: 'flex', gap: '0.25rem' }}>
-                  <button 
-                    type="button"
-                    className="btn"
-                    style={{ 
-                      flex: 1, 
-                      padding: '4px 8px', 
-                      fontSize: '0.75rem', 
-                      border: '1px solid rgba(255,255,255,0.05)', 
-                      background: mapTheme === 'light' ? '#a855f7' : 'rgba(255,255,255,0.03)',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setMapTheme('light')}
-                  >
-                    ☀️ Day
-                  </button>
-                  <button 
-                    type="button"
-                    className="btn"
-                    style={{ 
-                      flex: 1, 
-                      padding: '4px 8px', 
-                      fontSize: '0.75rem', 
-                      border: '1px solid rgba(255,255,255,0.05)', 
-                      background: mapTheme === 'dark' ? '#a855f7' : 'rgba(255,255,255,0.03)',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setMapTheme('dark')}
-                  >
-                    🌙 Tactical
-                  </button>
+                <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>MAP STYLE</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
+                  {[
+                    { id: 'dark', label: '🌙 Dark' },
+                    { id: 'light', label: '☀️ Light' },
+                    { id: 'satellite', label: '🛰️ Satellite' },
+                    { id: 'terrain', label: '⛰️ Terrain' }
+                  ].map(style => (
+                    <button 
+                      key={style.id}
+                      type="button"
+                      className="btn"
+                      style={{ 
+                        padding: '4px 0', 
+                        fontSize: '0.7rem', 
+                        border: '1px solid rgba(255,255,255,0.05)', 
+                        background: mapTheme === style.id ? '#a855f7' : 'rgba(255,255,255,0.03)',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        borderRadius: '4px'
+                      }}
+                      onClick={() => setMapTheme(style.id)}
+                    >
+                      {style.label}
+                    </button>
+                  ))}
                 </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>TRAFFIC OVERLAY</label>
+                <button 
+                  type="button"
+                  className="btn"
+                  style={{
+                    padding: '6px 0',
+                    fontSize: '0.7rem',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    background: showTraffic ? '#10b981' : 'rgba(255,255,255,0.03)',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.25rem'
+                  }}
+                  onClick={() => setShowTraffic(!showTraffic)}
+                >
+                  🚦 {showTraffic ? 'Live Traffic: ON' : 'Live Traffic: OFF'}
+                </button>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
