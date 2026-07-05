@@ -2146,6 +2146,64 @@ export default function App() {
     logMessage('[SIMULATION] Travel simulation cancelled by operator.', 'warning');
   };
 
+  // Auto-Find Closest Responder
+  const handleAutoDispatch = () => {
+    if (!selectedIncident || responders.length === 0) return;
+    
+    const idleResponders = responders.filter(r => r.status === 'idle');
+    if (idleResponders.length === 0) {
+      logMessage("No idle responders available at the moment.", "warning");
+      return;
+    }
+    
+    let closest = null;
+    let minDistance = Infinity;
+    
+    idleResponders.forEach(r => {
+      const dist = haversineDistance(selectedIncident.lat, selectedIncident.lng, r.lat, r.lng);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closest = r;
+      }
+    });
+    
+    if (closest) {
+      setSelectedResponder(closest);
+      logMessage(`Auto-selected closest responder: ${closest.name} (${minDistance.toFixed(1)} km away)`, "info");
+    }
+  };
+
+  // Relocate all idle responders to the closest city node (nearest station) to the incident when selected
+  useEffect(() => {
+    if (!selectedIncident || responders.length === 0) return;
+    
+    const { id: closestNodeId } = findClosestNode(selectedIncident.lat, selectedIncident.lng, mapData.nodes);
+    const closestNode = mapData.nodes[closestNodeId];
+    
+    if (closestNode) {
+      let relocatedAny = false;
+      const promises = responders
+        .filter(r => r.status === 'idle')
+        .map(r => {
+          const dist = haversineDistance(r.lat, r.lng, closestNode.lat, closestNode.lng);
+          // Only update if it is not already at the closest node to avoid recursive state loops
+          if (dist > 0.05) {
+            relocatedAny = true;
+            logMessage(`Stationing standby ${r.name} at nearest unit: ${closestNode.name}`, 'info');
+            return updateResponderLocal(r.id, {
+              lat: closestNode.lat,
+              lng: closestNode.lng
+            });
+          }
+          return Promise.resolve();
+        });
+
+      if (relocatedAny) {
+        Promise.all(promises).then(() => reloadLocalData());
+      }
+    }
+  }, [selectedIncident, responders]);
+
   // Submit standard responder dispatch
   const handleResponderDispatchSubmit = async () => {
     if (!dispatchRoute || !selectedResponder || !selectedIncident) return;
