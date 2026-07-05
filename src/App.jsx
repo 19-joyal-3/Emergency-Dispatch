@@ -3144,21 +3144,13 @@ export default function App() {
                             </div>
                           ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                              <div style={{ color: '#fb923c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <div style={{ color: '#ef4444', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                 <span>⚠️ Unverified Scene:</span>
                                 <span style={{ textTransform: 'capitalize' }}>{aiVerificationResult.label} ({aiVerificationResult.confidence}%)</span>
                               </div>
-                              <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>
-                                Image does not seem to contain an accident, vehicle, or hazard.
+                              <div style={{ color: '#f87171', fontSize: '0.65rem', fontWeight: 'bold' }}>
+                                Submission Blocked: Uploaded image must display emergency threat cues (Flood, Landslide, Traffic, Fire, or Crash).
                               </div>
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', color: '#cbd5e1', marginTop: '0.15rem' }}>
-                                <input 
-                                  type="checkbox" 
-                                  checked={overrideAiVerification} 
-                                  onChange={(e) => setOverrideAiVerification(e.target.checked)}
-                                />
-                                <span>Override AI warnings (Real photo)</span>
-                              </label>
                             </div>
                           )}
                         </div>
@@ -3174,7 +3166,8 @@ export default function App() {
                       simulationActive || 
                       !proofImage || 
                       modelStatus === 'classifying' || 
-                      (aiVerificationResult && !aiVerificationResult.success && !overrideAiVerification)
+                      !aiVerificationResult || 
+                      !aiVerificationResult.success
                     }
                   >
                     File Incident Report
