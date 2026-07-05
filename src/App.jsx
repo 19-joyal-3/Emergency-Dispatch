@@ -229,37 +229,67 @@ export default function App() {
       try {
         const predictions = await mobilenetModel.classify(tempImg);
         
-        // Keywords corresponding to emergencies/accidents/disasters/vehicles
-        const emergencyKeywords = [
-          'crash', 'wreck', 'fire', 'flame', 'smoke', 'ambulance', 'truck', 'car',
-          'vehicle', 'water', 'flood', 'landslide', 'mudslide', 'damage', 'collision',
-          'jeep', 'bus', 'emergency', 'blaze', 'bonfire', 'river', 'rain', 'storm', 'destroy',
-          'snowplow', 'trailer', 'tractor', 'jeep', 'cab', 'cabriolet', 'racer', 'limo'
+        const threatCategories = [
+          {
+            name: "Flood Threat",
+            keywords: ['flood', 'water', 'lake', 'river', 'stream', 'canal', 'waterfall', 'dam', 'seashore', 'sandbar', 'fountain', 'ocean', 'sea'],
+            emoji: "🌊"
+          },
+          {
+            name: "Landslide Threat",
+            keywords: ['cliff', 'rock', 'stone', 'earth', 'mud', 'slope', 'alp', 'mountain', 'valley', 'geological', 'dirt', 'sand', 'rubble', 'gravel'],
+            emoji: "⛰️"
+          },
+          {
+            name: "Traffic Threat",
+            keywords: ['traffic', 'cab', 'taxi', 'minivan', 'bus', 'limo', 'racer', 'car', 'vehicle', 'truck', 'trailer', 'intersection', 'street', 'highway', 'roadway', 'parking', 'freeway'],
+            emoji: "🚦"
+          },
+          {
+            name: "Fire Threat",
+            keywords: ['fire', 'flame', 'smoke', 'blaze', 'bonfire', 'matchstick', 'candle', 'stove', 'volcano', 'ash', 'furnace'],
+            emoji: "🔥"
+          },
+          {
+            name: "Medical/Crash Threat",
+            keywords: ['ambulance', 'crash', 'wreck', 'collision', 'stretcher', 'wheelchair', 'hospital', 'nurse', 'medic', 'emergency'],
+            emoji: "🩺"
+          }
         ];
 
-        let matched = false;
-        let topMatch = predictions[0];
+        let matchedThreat = null;
+        let matchedPrediction = null;
 
         for (const pred of predictions) {
           const labelLower = pred.className.toLowerCase();
-          const match = emergencyKeywords.some(kw => labelLower.includes(kw));
-          if (match) {
-            matched = true;
-            topMatch = pred;
-            break;
+          for (const cat of threatCategories) {
+            const match = cat.keywords.some(kw => labelLower.includes(kw));
+            if (match) {
+              matchedThreat = cat;
+              matchedPrediction = pred;
+              break;
+            }
           }
+          if (matchedThreat) break;
         }
 
-        setAiVerificationResult({
-          success: matched,
-          label: topMatch.className,
-          confidence: Math.round(topMatch.probability * 100)
-        });
-
-        if (matched) {
-          logMessage(`🤖 AI Verified Accident Cues: Detected ${topMatch.className} (${Math.round(topMatch.probability * 100)}% confidence).`, 'success');
+        if (matchedThreat) {
+          setAiVerificationResult({
+            success: true,
+            threatName: matchedThreat.name,
+            threatEmoji: matchedThreat.emoji,
+            label: matchedPrediction.className,
+            confidence: Math.round(matchedPrediction.probability * 100)
+          });
+          logMessage(`🤖 AI Verified: ${matchedThreat.emoji} ${matchedThreat.name} (Detected: ${matchedPrediction.className}, Confidence: ${Math.round(matchedPrediction.probability * 100)}%)`, 'success');
         } else {
-          logMessage(`🤖 AI Security Warning: Photo does not contain accident cues (Detected: ${topMatch.className}).`, 'warning');
+          const topMatch = predictions[0];
+          setAiVerificationResult({
+            success: false,
+            label: topMatch.className,
+            confidence: Math.round(topMatch.probability * 100)
+          });
+          logMessage(`🤖 AI Security Warning: Photo did not match threat profiles (Top Match: ${topMatch.className}, Confidence: ${Math.round(topMatch.probability * 100)}%)`, 'warning');
         }
         setModelStatus('ready');
       } catch (err) {
@@ -3103,9 +3133,14 @@ export default function App() {
                       {modelStatus === 'ready' && aiVerificationResult && (
                         <div>
                           {aiVerificationResult.success ? (
-                            <div style={{ color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                              <span>✅ Accident Detected:</span>
-                              <span style={{ textTransform: 'capitalize' }}>{aiVerificationResult.label} ({aiVerificationResult.confidence}%)</span>
+                            <div style={{ color: '#10b981', fontWeight: 'bold', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <span>{aiVerificationResult.threatEmoji} AI Verified:</span>
+                                <span>{aiVerificationResult.threatName}</span>
+                              </div>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem', fontWeight: 'normal' }}>
+                                Detected cues: <strong style={{ textTransform: 'capitalize' }}>{aiVerificationResult.label}</strong> ({aiVerificationResult.confidence}% confidence)
+                              </span>
                             </div>
                           ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
