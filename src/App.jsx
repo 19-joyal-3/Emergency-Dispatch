@@ -187,6 +187,87 @@ export default function App() {
   const [mapClickCoords, setMapClickCoords] = useState(null);
   const [proofImage, setProofImage] = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
+  
+  // AI Incident Photo Verification States
+  const [mobilenetModel, setMobilenetModel] = useState(null);
+  const [modelStatus, setModelStatus] = useState('loading'); // 'loading', 'ready', 'classifying', 'failed'
+  const [aiVerificationResult, setAiVerificationResult] = useState(null);
+  const [overrideAiVerification, setOverrideAiVerification] = useState(false);
+
+  // Load TensorFlow.js and MobileNet scripts dynamically
+  const loadModelScripts = () => {
+    return new Promise((resolve) => {
+      if (window.mobilenet) {
+        resolve();
+        return;
+      }
+      const tfScript = document.createElement('script');
+      tfScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js';
+      tfScript.onload = () => {
+        const mnScript = document.createElement('script');
+        mnScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js';
+        mnScript.onload = () => {
+          resolve();
+        };
+        document.body.appendChild(mnScript);
+      };
+      document.body.appendChild(tfScript);
+    });
+  };
+
+  // Classify uploaded base64 verification photo using MobileNet model
+  const classifyVerificationPhoto = async (dataUrl) => {
+    if (!mobilenetModel) return;
+    
+    setModelStatus('classifying');
+    setAiVerificationResult(null);
+    setOverrideAiVerification(false);
+
+    const tempImg = new Image();
+    tempImg.src = dataUrl;
+    tempImg.onload = async () => {
+      try {
+        const predictions = await mobilenetModel.classify(tempImg);
+        
+        // Keywords corresponding to emergencies/accidents/disasters/vehicles
+        const emergencyKeywords = [
+          'crash', 'wreck', 'fire', 'flame', 'smoke', 'ambulance', 'truck', 'car',
+          'vehicle', 'water', 'flood', 'landslide', 'mudslide', 'damage', 'collision',
+          'jeep', 'bus', 'emergency', 'blaze', 'bonfire', 'river', 'rain', 'storm', 'destroy',
+          'snowplow', 'trailer', 'tractor', 'jeep', 'cab', 'cabriolet', 'racer', 'limo'
+        ];
+
+        let matched = false;
+        let topMatch = predictions[0];
+
+        for (const pred of predictions) {
+          const labelLower = pred.className.toLowerCase();
+          const match = emergencyKeywords.some(kw => labelLower.includes(kw));
+          if (match) {
+            matched = true;
+            topMatch = pred;
+            break;
+          }
+        }
+
+        setAiVerificationResult({
+          success: matched,
+          label: topMatch.className,
+          confidence: Math.round(topMatch.probability * 100)
+        });
+
+        if (matched) {
+          logMessage(`🤖 AI Verified Accident Cues: Detected ${topMatch.className} (${Math.round(topMatch.probability * 100)}% confidence).`, 'success');
+        } else {
+          logMessage(`🤖 AI Security Warning: Photo does not contain accident cues (Detected: ${topMatch.className}).`, 'warning');
+        }
+        setModelStatus('ready');
+      } catch (err) {
+        console.error('TensorFlow classification error:', err);
+        setModelStatus('ready');
+      }
+    };
+  };
 
   const handleProofUpload = (e) => {
     const file = e.target.files[0];
@@ -195,6 +276,7 @@ export default function App() {
     reader.onloadend = () => {
       setProofImage(reader.result);
       setProofPreview(reader.result);
+      classifyVerificationPhoto(reader.result);
     };
     reader.readAsDataURL(file);
   };
@@ -351,6 +433,22 @@ export default function App() {
 
     return { os, browser, device };
   };
+
+  // Initialize TensorFlow Model on startup
+  useEffect(() => {
+    loadModelScripts().then(async () => {
+      try {
+        setModelStatus('loading');
+        const model = await window.mobilenet.load();
+        setMobilenetModel(model);
+        setModelStatus('ready');
+        logMessage('🤖 AI verification model initialized successfully.', 'success');
+      } catch (err) {
+        console.error('Failed to load TensorFlow model:', err);
+        setModelStatus('failed');
+      }
+    });
+  }, []);
 
   // Fetch global visitor audits from serverless KVdb cloud with timeout
   const fetchGlobalVisitorAudits = async () => {
@@ -2980,7 +3078,70 @@ export default function App() {
                     </label>
                   </div>
 
-                  <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }} disabled={simulationActive || !proofImage}>
+                  {/* AI Verification Results Box */}
+                  {proofImage && (
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: '8px',
+                      padding: '0.5rem',
+                      fontSize: '0.7rem',
+                      marginTop: '0.5rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.35rem'
+                    }}>
+                      <div style={{ fontWeight: 'bold', color: '#c084fc', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <span>🤖 AI Photo Classifier</span>
+                        {modelStatus === 'classifying' && <span className="pulse-dot" style={{ background: '#38bdf8' }}></span>}
+                      </div>
+
+                      {modelStatus === 'classifying' && (
+                        <div style={{ color: 'var(--text-secondary)' }}>Scanning verification photo for highway hazard cues...</div>
+                      )}
+
+                      {modelStatus === 'ready' && aiVerificationResult && (
+                        <div>
+                          {aiVerificationResult.success ? (
+                            <div style={{ color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <span>✅ Accident Detected:</span>
+                              <span style={{ textTransform: 'capitalize' }}>{aiVerificationResult.label} ({aiVerificationResult.confidence}%)</span>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              <div style={{ color: '#fb923c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <span>⚠️ Unverified Scene:</span>
+                                <span style={{ textTransform: 'capitalize' }}>{aiVerificationResult.label} ({aiVerificationResult.confidence}%)</span>
+                              </div>
+                              <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>
+                                Image does not seem to contain an accident, vehicle, or hazard.
+                              </div>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', color: '#cbd5e1', marginTop: '0.15rem' }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={overrideAiVerification} 
+                                  onChange={(e) => setOverrideAiVerification(e.target.checked)}
+                                />
+                                <span>Override AI warnings (Real photo)</span>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    style={{ marginTop: '0.5rem' }} 
+                    disabled={
+                      simulationActive || 
+                      !proofImage || 
+                      modelStatus === 'classifying' || 
+                      (aiVerificationResult && !aiVerificationResult.success && !overrideAiVerification)
+                    }
+                  >
                     File Incident Report
                   </button>
                 </form>
