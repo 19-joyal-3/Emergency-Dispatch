@@ -102,6 +102,7 @@ export default function App() {
   const [locationQuery, setLocationQuery] = useState('');
   const [locationResults, setLocationResults] = useState([]);
   const [locationSearchStatus, setLocationSearchStatus] = useState('idle');
+  const [showLocationSearch, setShowLocationSearch] = useState(false);
   const [mapDataStatus, setMapDataStatus] = useState('ready');
   const [soundAlertsEnabled, setSoundAlertsEnabled] = useState(() => getStoredJson('dispatch_sound_alerts', true));
   const [vibrationAlertsEnabled, setVibrationAlertsEnabled] = useState(() => getStoredJson('dispatch_vibration_alerts', true));
@@ -169,6 +170,7 @@ export default function App() {
       .openPopup();
     setLocationResults([]);
     setLocationQuery(result.display_name);
+    setShowLocationSearch(false);
   };
 
   const TOUR_STEPS = [
@@ -4884,8 +4886,19 @@ export default function App() {
       <main id="onboarding-map" className={`map-viewport ${showTour && tourStep === 2 ? 'onboarding-highlight' : ''}`}>
         {/* Interactive Leaflet Element */}
         <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : 'map-light-theme'}`}></div>
-        <div className="map-search-panel">
-          <form onSubmit={searchLocations} className="map-search-form">
+        <div className={`map-search-panel ${showLocationSearch ? 'expanded' : 'collapsed'}`}>
+          <button
+            type="button"
+            className="map-search-toggle"
+            onClick={() => setShowLocationSearch(value => !value)}
+            aria-expanded={showLocationSearch}
+            aria-label={showLocationSearch ? 'Close location search' : 'Open location search'}
+            title={showLocationSearch ? 'Close location search' : 'Search location'}
+          >
+            <Search size={17} />
+            {showLocationSearch && <span>Close</span>}
+          </button>
+          {showLocationSearch && <form onSubmit={searchLocations} className="map-search-form">
             <Search size={14} />
             <input
               value={locationQuery}
@@ -4896,10 +4909,10 @@ export default function App() {
             <button type="submit" aria-label="Search locations" disabled={locationSearchStatus === 'loading'}>
               {locationSearchStatus === 'loading' ? '…' : 'Go'}
             </button>
-          </form>
-          {locationSearchStatus === 'offline' && <div className="map-search-message">Search needs a connection. Bundled Kerala map data remains available.</div>}
-          {locationSearchStatus === 'error' && <div className="map-search-message">Location search failed. Try again.</div>}
-          {locationResults.length > 0 && (
+          </form>}
+          {showLocationSearch && locationSearchStatus === 'offline' && <div className="map-search-message">Search needs a connection. Bundled Kerala map data remains available.</div>}
+          {showLocationSearch && locationSearchStatus === 'error' && <div className="map-search-message">Location search failed. Try again.</div>}
+          {showLocationSearch && locationResults.length > 0 && (
             <div className="map-search-results">
               {locationResults.map(result => (
                 <button type="button" key={`${result.place_id}-${result.lat}`} onClick={() => selectLocationResult(result)}>
