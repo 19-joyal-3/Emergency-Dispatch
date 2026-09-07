@@ -6,6 +6,15 @@ Build the project with `npm run build`, then host the `dist` folder over HTTPS. 
 
 The same web build works on phones, tablets, Windows, and macOS. Native Android/iOS packages can be added later with a mobile wrapper such as Capacitor.
 
+## Dispatch configuration
+
+Set these Vite environment variables at build time when deploying a controlled operations workspace:
+
+- `VITE_AUTH_REQUIRED=true` enables the login gate; pair it with `VITE_ADMIN_USER` and `VITE_ADMIN_PASSWORD`.
+- `VITE_EMERGENCY_POLICE`, `VITE_EMERGENCY_FIRE`, `VITE_EMERGENCY_MEDICAL`, and `VITE_EMERGENCY_DISASTER` set call-button placeholders.
+
+The emergency numbers can also be edited locally from the Alerts panel. Credentials are build-time configuration; enforce authorization again on a backend for production.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

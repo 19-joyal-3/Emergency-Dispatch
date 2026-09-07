@@ -46,6 +46,11 @@ export async function fetchWeather(lat, lng, signal) {
     rainProbability,
     label: WEATHER_LABELS[current.weather_code] || 'Unknown conditions',
     weatherCode: current.weather_code,
-    updatedAt: current.time
+    updatedAt: current.time,
+    severity: current.weather_code >= 95 || rainProbability >= 80
+      ? 'danger'
+      : current.weather_code >= 51 || rainProbability >= 40
+        ? 'caution'
+        : 'safe'
   };
 }

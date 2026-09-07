@@ -46,6 +46,11 @@ import {
   ,Languages
   ,FileText
   ,Presentation
+  ,Search
+  ,Volume2
+  ,Vibrate
+  ,LogIn
+  ,PhoneCall
 } from 'lucide-react';
 
 const INITIAL_RESPONDERS = [
@@ -61,6 +66,27 @@ const getResponderEmoji = (type) => {
   return '🚨';
 };
 
+const DISPATCH_CONFIG = {
+  authRequired: import.meta.env.VITE_AUTH_REQUIRED === 'true',
+  adminUser: import.meta.env.VITE_ADMIN_USER || '',
+  adminPassword: import.meta.env.VITE_ADMIN_PASSWORD || '',
+  emergencyNumbers: {
+    police: import.meta.env.VITE_EMERGENCY_POLICE || '100',
+    fire: import.meta.env.VITE_EMERGENCY_FIRE || '101',
+    medical: import.meta.env.VITE_EMERGENCY_MEDICAL || '108',
+    disaster: import.meta.env.VITE_EMERGENCY_DISASTER || '112'
+  }
+};
+
+const getStoredJson = (key, fallback) => {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || 'null');
+    return value ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export default function App() {
   // Onboarding Tour States & Handlers
   const [showTour, setShowTour] = useState(false);
@@ -73,6 +99,19 @@ export default function App() {
   const [weatherStatus, setWeatherStatus] = useState('loading');
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
+  const [locationQuery, setLocationQuery] = useState('');
+  const [locationResults, setLocationResults] = useState([]);
+  const [locationSearchStatus, setLocationSearchStatus] = useState('idle');
+  const [mapDataStatus, setMapDataStatus] = useState('ready');
+  const [soundAlertsEnabled, setSoundAlertsEnabled] = useState(() => getStoredJson('dispatch_sound_alerts', true));
+  const [vibrationAlertsEnabled, setVibrationAlertsEnabled] = useState(() => getStoredJson('dispatch_vibration_alerts', true));
+  const [autoAssignEnabled, setAutoAssignEnabled] = useState(() => getStoredJson('dispatch_auto_assign', true));
+  const [incidentTypeFilter, setIncidentTypeFilter] = useState('all');
+  const [incidentPriorityFilter, setIncidentPriorityFilter] = useState('all');
+  const [emergencyNumbers, setEmergencyNumbers] = useState(() => getStoredJson('dispatch_emergency_numbers', DISPATCH_CONFIG.emergencyNumbers));
+  const [appAuthenticated, setAppAuthenticated] = useState(() => (
+    !DISPATCH_CONFIG.authRequired || localStorage.getItem('dispatch_authenticated') === 'true'
+  ));
 
   const tileLayerRef = useRef(null);
 
@@ -85,6 +124,51 @@ export default function App() {
     if (!navigator.onLine) return 'Offline mode: local road network view';
     if (theme === 'dark') return '&copy; OpenStreetMap contributors &copy; CARTO';
     return 'Map data: &copy; OpenStreetMap contributors';
+  };
+
+  const persistAlertPreference = (key, value, setter) => {
+    setter(value);
+    localStorage.setItem(key, JSON.stringify(value));
+  };
+
+  const searchLocations = async (event) => {
+    event?.preventDefault();
+    const query = locationQuery.trim();
+    if (!query) {
+      setLocationResults([]);
+      return;
+    }
+    if (!navigator.onLine) {
+      setLocationSearchStatus('offline');
+      setLocationResults([]);
+      logMessage('[MAP] Location search unavailable offline. Use the bundled road network.', 'warning');
+      return;
+    }
+    setLocationSearchStatus('loading');
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=${encodeURIComponent(query)}`);
+      if (!response.ok) throw new Error(`Search returned ${response.status}`);
+      const results = await response.json();
+      setLocationResults(results);
+      setLocationSearchStatus(results.length ? 'ready' : 'empty');
+    } catch (error) {
+      console.warn('Location search failed:', error);
+      setLocationSearchStatus('error');
+      setLocationResults([]);
+    }
+  };
+
+  const selectLocationResult = (result) => {
+    const lat = Number(result.lat);
+    const lng = Number(result.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || !mapRef.current) return;
+    mapRef.current.setView([lat, lng], 14);
+    if (searchMarkerRef.current) searchMarkerRef.current.remove();
+    searchMarkerRef.current = L.marker([lat, lng]).addTo(mapRef.current)
+      .bindPopup(`<strong>${result.display_name}</strong>`)
+      .openPopup();
+    setLocationResults([]);
+    setLocationQuery(result.display_name);
   };
 
   const TOUR_STEPS = [
@@ -411,6 +495,8 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState('');
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [authUser, setAuthUser] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
 
   // Fetch with abort timeout helper
   const fetchWithTimeout = async (resource, options = {}) => {
@@ -432,14 +518,41 @@ export default function App() {
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (adminUser === 'tryonce' && adminPassword === 'daretoenter') {
+    if (DISPATCH_CONFIG.adminUser && DISPATCH_CONFIG.adminPassword &&
+      adminUser === DISPATCH_CONFIG.adminUser && adminPassword === DISPATCH_CONFIG.adminPassword) {
       setIsAdminAuthenticated(true);
       setLoginError('');
       logMessage('[SYSTEM] Admin console unlocked. Audit logs active.', 'success');
     } else {
-      setLoginError('Authentication Failed: Invalid ID or Password');
+      setLoginError(DISPATCH_CONFIG.adminUser
+        ? 'Authentication failed: invalid ID or password.'
+        : 'Admin credentials are not configured. Set VITE_ADMIN_USER and VITE_ADMIN_PASSWORD.');
       logMessage('[SECURITY] Unauthorized terminal access attempt.', 'error');
     }
+  };
+
+  const handleAppLogin = (e) => {
+    e.preventDefault();
+    if (!DISPATCH_CONFIG.adminUser || !DISPATCH_CONFIG.adminPassword) {
+      setLoginError('Authentication is enabled but credentials are not configured. Set VITE_ADMIN_USER and VITE_ADMIN_PASSWORD.');
+      return;
+    }
+    if (authUser === DISPATCH_CONFIG.adminUser && authPassword === DISPATCH_CONFIG.adminPassword) {
+      setAppAuthenticated(true);
+      setLoginError('');
+      localStorage.setItem('dispatch_authenticated', 'true');
+      logMessage('[SYSTEM] Secure dispatch workspace unlocked.', 'success');
+    } else {
+      setLoginError('Authentication failed. Check the configured operator credentials.');
+    }
+  };
+
+  const lockApp = () => {
+    setAppAuthenticated(false);
+    setAuthUser('');
+    setAuthPassword('');
+    localStorage.removeItem('dispatch_authenticated');
+    setActiveTab(null);
   };
   
   // Geolocation states
@@ -683,6 +796,7 @@ export default function App() {
   // Initialize client audit logs on mount
   useEffect(() => {
     const runAudit = async () => {
+      if (DISPATCH_CONFIG.authRequired && !appAuthenticated) return;
       const deviceDetails = getDeviceDetails();
       setVisitorOs(deviceDetails.os);
       setVisitorBrowser(deviceDetails.browser);
@@ -769,13 +883,17 @@ export default function App() {
       }
     };
     runAudit();
-  }, []);
+  }, [appAuthenticated]);
 
   // Geolocation / Live Navigation States
   const [gpsActive, setGpsActive] = useState(false);
   const [instructionBannerVisible, setInstructionBannerVisible] = useState(true);
   const [gpsCoords, setGpsCoords] = useState(null);
   const [weatherRefreshKey, setWeatherRefreshKey] = useState(0);
+  const knownIncidentIdsRef = useRef(new Set());
+  const incidentsHydratedRef = useRef(false);
+  const dataLoadedRef = useRef(false);
+  const searchMarkerRef = useRef(null);
   
   useEffect(() => {
     const fallbackNode = mapData.nodes[selectedStartNode] || mapData.nodes.tvm;
@@ -961,6 +1079,7 @@ export default function App() {
   // 1. Initial Load and DB Seed
   useEffect(() => {
     const initDbAndData = async () => {
+      if (DISPATCH_CONFIG.authRequired && !appAuthenticated) return;
       try {
         const existingResponders = await db.responders.toArray();
         if (existingResponders.length === 0) {
@@ -980,7 +1099,7 @@ export default function App() {
       if (simTimerRef.current) clearInterval(simTimerRef.current);
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
     };
-  }, []);
+  }, [appAuthenticated]);
 
   // 1b. Draw active Admin Terminal markers for all connected sessions on Leaflet map
   useEffect(() => {
@@ -1061,7 +1180,46 @@ export default function App() {
     setBlockages(listBlockages);
     setResponders(listResponders);
     setSyncQueueLength(queue.length);
+    dataLoadedRef.current = true;
   };
+
+  // New incidents notify the operator without relying on a remote push service.
+  useEffect(() => {
+    if (!dataLoadedRef.current) return;
+    if (!incidentsHydratedRef.current) {
+      incidents.forEach(incident => knownIncidentIdsRef.current.add(incident.id));
+      incidentsHydratedRef.current = true;
+      return;
+    }
+    const newIncidents = incidents.filter(incident => !knownIncidentIdsRef.current.has(incident.id));
+    newIncidents.forEach(incident => {
+      knownIncidentIdsRef.current.add(incident.id);
+      if (soundAlertsEnabled) {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            const context = new AudioContextClass();
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            oscillator.frequency.value = incident.priority === 'critical' ? 880 : 660;
+            gain.gain.setValueAtTime(0.0001, context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.35);
+            oscillator.connect(gain).connect(context.destination);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.36);
+            oscillator.onended = () => context.close();
+          }
+        } catch (error) {
+          console.warn('Alert sound could not be played:', error);
+        }
+      }
+      if (vibrationAlertsEnabled && navigator.vibrate) {
+        navigator.vibrate(incident.priority === 'critical' ? [180, 80, 180] : [120, 60, 120]);
+      }
+      logMessage(`[ALERT] New ${incident.priority || 'medium'} priority ${incident.type} emergency received.`, 'warning');
+    });
+  }, [incidents, soundAlertsEnabled, vibrationAlertsEnabled]);
 
   const logMessage = (msg, type = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
@@ -1226,6 +1384,7 @@ export default function App() {
       }
 
       mapRef.current = map;
+      setMapDataStatus('ready');
       roadsLayerRef.current = L.layerGroup().addTo(map);
       routeLayerRef.current = L.layerGroup().addTo(map);
 
@@ -2070,6 +2229,61 @@ export default function App() {
     logMessage('[REPORT] Operations CSV exported.', 'success');
   };
 
+  const downloadIncidentPdf = (incident = null) => {
+    const selectedReports = incident ? [incident] : incidents.filter(item => item.status !== 'resolved');
+    const lines = [
+      'EMERGENCY DISPATCH INCIDENT REPORT',
+      `Generated: ${new Date().toLocaleString()}`,
+      `Workspace: ${businessName || 'Not configured'}`,
+      ''
+    ];
+    selectedReports.forEach((item, index) => {
+      lines.push(
+        `Incident ${index + 1}: ${item.id}`,
+        `Type: ${(item.type || 'unknown').toUpperCase()} | Priority: ${(item.priority || 'medium').toUpperCase()}`,
+        `Status: ${item.status || 'pending'}`,
+        `Reported: ${new Date(item.reportedAt).toLocaleString()}`,
+        `Location: ${item.lat}, ${item.lng}`,
+        `Description: ${item.description || 'No description'}`,
+        `Assigned responder: ${item.assignedResponderName || 'Unassigned'}`,
+        ''
+      );
+    });
+    if (!selectedReports.length) lines.push('No active incidents.');
+    const escapePdf = (value) => String(value).replaceAll('\\', '\\\\').replaceAll('(', '\\(').replaceAll(')', '\\)');
+    const content = `BT\n/F1 11 Tf\n50 760 Td\n${lines.map(line => `(${escapePdf(line)}) Tj\n0 -16 Td`).join('')}ET`;
+    const objects = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+      `<< /Length ${content.length} >>\nstream\n${content}\nendstream`
+    ];
+    let pdf = '%PDF-1.4\n';
+    const offsets = [0];
+    objects.forEach((object, index) => {
+      offsets.push(pdf.length);
+      pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+    });
+    const xref = pdf.length;
+    pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+    offsets.slice(1).forEach(offset => { pdf += `${String(offset).padStart(10, '0')} 00000 n \n`; });
+    pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    const url = URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = incident ? `incident-${incident.id}.pdf` : `dispatch-incidents-${Date.now()}.pdf`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    logMessage(`[REPORT] ${incident ? 'Incident' : 'Operations'} PDF exported.`, 'success');
+  };
+
+  const saveEmergencyNumber = (key, value) => {
+    const nextNumbers = { ...emergencyNumbers, [key]: value };
+    setEmergencyNumbers(nextNumbers);
+    localStorage.setItem('dispatch_emergency_numbers', JSON.stringify(nextNumbers));
+  };
+
   const handleBusinessMapLocation = (lat, lng) => {
     setBusinessLocation({ lat, lng });
     setActiveTab('business');
@@ -2350,10 +2564,28 @@ export default function App() {
       resolvedAt: null,
       priority,
       aiRecommendation,
-      proofImage: proof || null
+      proofImage: proof || null,
+      assignedResponderId: null,
+      assignedResponderName: null
     };
 
     try {
+      if (autoAssignEnabled) {
+        const compatibleTypes = type === 'medical' ? ['medical']
+          : type === 'fire' ? ['fire_engine']
+            : ['rescue_boat'];
+        const available = responders
+          .filter(responder => responder.status === 'idle' && compatibleTypes.includes(responder.type))
+          .sort((a, b) => haversineDistance(newInc.lat, newInc.lng, a.lat, a.lng) -
+            haversineDistance(newInc.lat, newInc.lng, b.lat, b.lng));
+        const assigned = available[0];
+        if (assigned) {
+          newInc.assignedResponderId = assigned.id;
+          newInc.assignedResponderName = assigned.name;
+          await updateResponderLocal(assigned.id, { assignedIncidentId: newInc.id });
+          logMessage(`[DISPATCH] Automatically assigned ${assigned.name} to new ${type} emergency.`, 'success');
+        }
+      }
       await addIncidentLocal(newInc, isOnline);
       logMessage(`[INCIDENT] Reported ${type.toUpperCase()} emergency at coordinates: [${newInc.lat}, ${newInc.lng}]`, 'warning');
       await reloadLocalData();
@@ -3045,6 +3277,36 @@ export default function App() {
     ? (weather.weatherCode >= 95 || weather.rainProbability >= 80 ? 'danger'
       : weather.weatherCode >= 51 || weather.rainProbability >= 40 ? 'caution' : 'safe')
     : 'unknown';
+  const activeIncidents = incidents.filter(incident => (
+    incident.status !== 'resolved' &&
+    (incidentTypeFilter === 'all' || incident.type === incidentTypeFilter) &&
+    (incidentPriorityFilter === 'all' || incident.priority === incidentPriorityFilter)
+  ));
+
+  if (DISPATCH_CONFIG.authRequired && !appAuthenticated) {
+    return (
+      <div className="auth-gate">
+        <section className="auth-card">
+          <ShieldAlert size={34} className="brand-logo" />
+          <h1>Secure Dispatch Workspace</h1>
+          <p>Authentication is required before operational incidents, responders, and locations are shown.</p>
+          <form onSubmit={handleAppLogin}>
+            {loginError && <div className="auth-error">{loginError}</div>}
+            <div className="form-group">
+              <label htmlFor="auth-user">Operator ID</label>
+              <input id="auth-user" value={authUser} onChange={(e) => setAuthUser(e.target.value)} autoComplete="username" required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="auth-password">Password</label>
+              <input id="auth-password" type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} autoComplete="current-password" required />
+            </div>
+            <button type="submit" className="btn btn-primary"><LogIn size={14} /> Unlock workspace</button>
+          </form>
+          <small>Configure VITE_AUTH_REQUIRED, VITE_ADMIN_USER, and VITE_ADMIN_PASSWORD in the deployment environment.</small>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className={`app-container ${activeTab ? 'sidebar-open' : 'map-focused'}`}>
@@ -3171,6 +3433,11 @@ export default function App() {
             <HelpCircle size={18} />
           </button>
           <span className={`network-dot ${isOnline ? 'online' : 'offline'}`}></span>
+          {DISPATCH_CONFIG.authRequired && (
+            <button type="button" className="toolbar-lock-btn" onClick={lockApp} title="Lock dispatch workspace">
+              <LockKeyhole size={14} />
+            </button>
+          )}
         </div>
       </nav>
 
@@ -3778,7 +4045,10 @@ export default function App() {
                       <option>Last 30 days</option>
                     </select>
                   </div>
-                  <button type="button" className="btn btn-secondary" onClick={exportOperationsReport} style={{ padding: '0.5rem 0.65rem' }} title="Export operations CSV"><Download size={14} /> CSV</button>
+                  <div style={{ display: 'flex', gap: '0.35rem' }}>
+                    <button type="button" className="btn btn-secondary" onClick={exportOperationsReport} style={{ padding: '0.5rem 0.65rem' }} title="Export operations CSV"><Download size={14} /> CSV</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => downloadIncidentPdf()} style={{ padding: '0.5rem 0.65rem' }} title="Export active incidents PDF"><FileText size={14} /> PDF</button>
+                  </div>
                 </div>
                 <div style={{ marginTop: '0.5rem', color: 'var(--text-muted)', fontSize: '0.62rem' }}>Exports customer locations and incident activity for the current local workspace.</div>
               </section>
@@ -4142,17 +4412,64 @@ export default function App() {
                 )}
               </section>
 
+              <section className="panel-card" style={{ borderLeft: '3px solid #f59e0b' }}>
+                <h2 className="section-title">
+                  <span>Emergency call shortcuts</span>
+                  <PhoneCall size={14} style={{ color: '#fbbf24' }} />
+                </h2>
+                <div className="emergency-call-grid">
+                  {[
+                    ['police', 'Police'],
+                    ['fire', 'Fire'],
+                    ['medical', 'Medical'],
+                    ['disaster', 'Disaster']
+                  ].map(([key, label]) => (
+                    <a key={key} className="emergency-call-button" href={`tel:${emergencyNumbers[key] || ''}`}>
+                      <Phone size={12} /> {label} <strong>{emergencyNumbers[key] || 'Not set'}</strong>
+                    </a>
+                  ))}
+                </div>
+                <div className="emergency-number-editor">
+                  {[
+                    ['police', 'Police number'],
+                    ['fire', 'Fire number'],
+                    ['medical', 'Medical number'],
+                    ['disaster', 'Disaster number']
+                  ].map(([key, label]) => (
+                    <label key={key}>
+                      {label}
+                      <input type="tel" value={emergencyNumbers[key] || ''} onChange={(event) => saveEmergencyNumber(key, event.target.value)} />
+                    </label>
+                  ))}
+                </div>
+                <div className="field-hint">Numbers are placeholders until your organization configures local services.</div>
+              </section>
+
               {/* Active Incidents Registry */}
               <section className="panel-card">
                 <h2 className="section-title">
-                  <span>Active Emergencies ({incidents.filter(i => i.status !== 'resolved').length})</span>
+                  <span>Active Emergencies ({activeIncidents.length}/{incidents.filter(i => i.status !== 'resolved').length})</span>
                   <ShieldAlert size={14} />
                 </h2>
+                <div className="incident-filter-row">
+                  <select value={incidentTypeFilter} onChange={(event) => setIncidentTypeFilter(event.target.value)} aria-label="Filter incidents by type">
+                    <option value="all">All types</option>
+                    <option value="fire">Fire / landslide</option>
+                    <option value="medical">Medical</option>
+                    <option value="flood">Flood / rescue</option>
+                  </select>
+                  <select value={incidentPriorityFilter} onChange={(event) => setIncidentPriorityFilter(event.target.value)} aria-label="Filter incidents by priority">
+                    <option value="all">All priorities</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                  </select>
+                </div>
                 <div className="list-container">
-                  {incidents.filter(i => i.status !== 'resolved').length === 0 ? (
+                  {activeIncidents.length === 0 ? (
                     <div className="empty-state">No pending emergency alerts.</div>
                   ) : (
-                    incidents.filter(i => i.status !== 'resolved').map(inc => {
+                    activeIncidents.map(inc => {
                       const isActive = selectedIncident && selectedIncident.id === inc.id;
                       let iconClass = 'fire';
                       if (inc.type === 'medical') iconClass = 'medical';
@@ -4227,6 +4544,14 @@ export default function App() {
                                 {new Date(inc.reportedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
+                            <div style={{ marginTop: '0.25rem', color: inc.assignedResponderName ? '#4ade80' : 'var(--text-muted)', fontSize: '0.65rem' }}>
+                              {inc.assignedResponderName ? `Auto-assigned: ${inc.assignedResponderName}` : 'Responder: awaiting assignment'}
+                            </div>
+                            {isActive && (
+                              <button type="button" className="btn btn-secondary" onClick={(event) => { event.stopPropagation(); downloadIncidentPdf(inc); }} style={{ marginTop: '0.4rem', padding: '0.25rem 0.4rem', fontSize: '0.62rem' }}>
+                                <FileText size={11} /> Export incident PDF
+                              </button>
+                            )}
                             {isActive && inc.aiRecommendation && (
                               <div style={{ 
                                 marginTop: '0.4rem', 
@@ -4559,6 +4884,36 @@ export default function App() {
       <main id="onboarding-map" className={`map-viewport ${showTour && tourStep === 2 ? 'onboarding-highlight' : ''}`}>
         {/* Interactive Leaflet Element */}
         <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : 'map-light-theme'}`}></div>
+        <div className="map-search-panel">
+          <form onSubmit={searchLocations} className="map-search-form">
+            <Search size={14} />
+            <input
+              value={locationQuery}
+              onChange={(event) => setLocationQuery(event.target.value)}
+              placeholder="Search location or landmark"
+              aria-label="Search location or landmark"
+            />
+            <button type="submit" aria-label="Search locations" disabled={locationSearchStatus === 'loading'}>
+              {locationSearchStatus === 'loading' ? '…' : 'Go'}
+            </button>
+          </form>
+          {locationSearchStatus === 'offline' && <div className="map-search-message">Search needs a connection. Bundled Kerala map data remains available.</div>}
+          {locationSearchStatus === 'error' && <div className="map-search-message">Location search failed. Try again.</div>}
+          {locationResults.length > 0 && (
+            <div className="map-search-results">
+              {locationResults.map(result => (
+                <button type="button" key={`${result.place_id}-${result.lat}`} onClick={() => selectLocationResult(result)}>
+                  {result.display_name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="map-data-status" title="Map data availability">
+          <span className={`dot ${isOnline ? 'online' : 'offline'}`}></span>
+          {isOnline ? 'Live tiles • local roads ready' : 'Offline • local road data ready'}
+          {mapDataStatus !== 'ready' && ` • ${mapDataStatus}`}
+        </div>
         
         {/* Google Maps Style Navigation HUD Overlay */}
         {isNavigating && gpsCoords && (
@@ -4896,8 +5251,8 @@ export default function App() {
                   <button type="button" onClick={() => setWeatherRefreshKey(value => value + 1)} style={{ background: 'none', border: 'none', color: '#d1d5db', cursor: 'pointer', fontSize: '0.6rem', padding: 0 }}>
                     {weatherStatus === 'loading' ? 'Updating...' : 'Refresh'}
                   </button>
-                  <span style={{ fontSize: '0.6rem', color: weatherSeverity === 'danger' ? '#f87171' : weatherSeverity === 'caution' ? '#fbbf24' : '#4ade80' }}>
-                    {weatherSeverity === 'danger' ? 'Danger' : weatherSeverity === 'caution' ? 'Caution' : weatherSeverity === 'safe' ? 'Safe' : 'Unavailable'}
+                   <span style={{ fontSize: '0.6rem', color: weatherSeverity === 'danger' ? '#f87171' : weatherSeverity === 'caution' ? '#fbbf24' : '#4ade80', fontWeight: 700 }}>
+                    {weatherSeverity === 'danger' ? 'SEVERE' : weatherSeverity === 'caution' ? 'CAUTION' : weatherSeverity === 'safe' ? 'SAFE' : 'UNAVAILABLE'}
                   </span>
                 </div>
                 {weather ? (
@@ -4911,10 +5266,28 @@ export default function App() {
                       <span>🌧️ {weather.rainProbability}%</span>
                       <span>💨 {weather.windSpeed} km/h</span>
                     </div>
+                    <div style={{ marginTop: '0.4rem', fontSize: '0.6rem', color: '#94a3b8' }}>
+                      Updated {weather.updatedAt ? new Date(weather.updatedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '—'} • {weather.severity || weatherSeverity}
+                    </div>
                   </>
                 ) : (
                   <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Loading local conditions...</span>
                 )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', color: '#cbd5e1' }}>
+                  <span><Volume2 size={12} style={{ verticalAlign: 'middle' }} /> New incident sound</span>
+                  <span className="switch"><input type="checkbox" checked={soundAlertsEnabled} onChange={(event) => persistAlertPreference('dispatch_sound_alerts', event.target.checked, setSoundAlertsEnabled)} /><span className="slider"></span></span>
+                </label>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', color: '#cbd5e1' }}>
+                  <span><Vibrate size={12} style={{ verticalAlign: 'middle' }} /> Vibration alerts</span>
+                  <span className="switch"><input type="checkbox" checked={vibrationAlertsEnabled} onChange={(event) => persistAlertPreference('dispatch_vibration_alerts', event.target.checked, setVibrationAlertsEnabled)} /><span className="slider"></span></span>
+                </label>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', color: '#cbd5e1' }}>
+                  <span>Automatic responder assignment</span>
+                  <span className="switch"><input type="checkbox" checked={autoAssignEnabled} onChange={(event) => persistAlertPreference('dispatch_auto_assign', event.target.checked, setAutoAssignEnabled)} /><span className="slider"></span></span>
+                </label>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
