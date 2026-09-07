@@ -1,5 +1,11 @@
 # React + Vite
 
+## Install as an app
+
+Build the project with `npm run build`, then host the `dist` folder over HTTPS. Open the deployed URL in Chrome, Edge, or Safari and choose **Install app** or **Add to Home Screen**. The service worker enables the app shell to continue opening offline after the first online visit.
+
+The same web build works on phones, tablets, Windows, and macOS. Native Android/iOS packages can be added later with a mobile wrapper such as Capacitor.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

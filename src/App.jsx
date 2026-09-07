@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { db, addIncidentLocal, updateIncidentStatusLocal, addBlockageLocal, removeBlockageLocal, updateResponderLocal, logVisitorAudit, getVisitorAudits } from './db';
+import { formatSosMessage, getSosContacts, openSosCall, openSosSms, saveSosContacts } from './sos';
 import mapData from './mapData.json';
 import { solveDijkstra, findClosestNode, findClosestEdge, getPositionAtDistance, getRouteLength, haversineDistance } from './routing';
+import { fetchWeather } from './weatherApi';
 import confetti from 'canvas-confetti';
 import { 
   ShieldAlert, 
@@ -29,7 +31,21 @@ import {
   Bus,
   Footprints,
   Car,
-  HelpCircle
+  HelpCircle,
+  Phone,
+  MessageSquare,
+  Users,
+  Radio,
+  Building2,
+  LockKeyhole,
+  BarChart3,
+  CircleDollarSign,
+  ShieldCheck,
+  Globe2
+  ,Download
+  ,Languages
+  ,FileText
+  ,Presentation
 } from 'lucide-react';
 
 const INITIAL_RESPONDERS = [
@@ -53,22 +69,22 @@ export default function App() {
   // Map Environment HUD States
   const [mapTheme, setMapTheme] = useState('dark'); // 'light', 'dark', 'satellite', 'terrain'
   const [weatherEffect, setWeatherEffect] = useState('mist'); // 'clear', 'rain', 'mist'
+  const [weather, setWeather] = useState(null);
+  const [weatherStatus, setWeatherStatus] = useState('loading');
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
 
   const tileLayerRef = useRef(null);
 
-  const getTileUrl = (theme) => {
-    if (theme === 'light') return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    if (theme === 'satellite') return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-    if (theme === 'terrain') return 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-    return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const getTileUrl = (_theme) => {
+    if (!navigator.onLine) return null;
+    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   };
 
   const getTileAttribution = (theme) => {
-    if (theme === 'satellite') return '&copy; Esri &mdash; Source: Esri, USDA, USGS';
-    if (theme === 'terrain') return 'Map data: &copy; OpenStreetMap | Style: OpenTopoMap';
-    return '&copy; CARTO';
+    if (!navigator.onLine) return 'Offline mode: local road network view';
+    if (theme === 'dark') return '&copy; OpenStreetMap contributors &copy; CARTO';
+    return 'Map data: &copy; OpenStreetMap contributors';
   };
 
   const TOUR_STEPS = [
@@ -156,9 +172,32 @@ export default function App() {
 
 
   // App connection state
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
   const [syncQueueLength, setSyncQueueLength] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [sosContacts, setSosContacts] = useState(() => getSosContacts());
+  const [sosContactName, setSosContactName] = useState('');
+  const [sosContactPhone, setSosContactPhone] = useState('');
+
+  useEffect(() => {
+    const handleConnectionChange = () => {
+      const online = navigator.onLine !== false;
+      setIsOnline(online);
+      if (!online) {
+        logMessage('[SYSTEM] Network lost. Operating in local-only mode.', 'warning');
+      } else {
+        logMessage('[SYSTEM] Network restored. Online services available.', 'success');
+      }
+    };
+
+    window.addEventListener('online', handleConnectionChange);
+    window.addEventListener('offline', handleConnectionChange);
+
+    return () => {
+      window.removeEventListener('online', handleConnectionChange);
+      window.removeEventListener('offline', handleConnectionChange);
+    };
+  }, []);
   const [syncLogs, setSyncLogs] = useState([
     '[SYSTEM] System initialized. Ready for emergency dispatch.',
     '[SYSTEM] Kerala road network graph loaded (NH 544, MC Road, Local connections).'
@@ -197,6 +236,16 @@ export default function App() {
   // Load TensorFlow.js and MobileNet scripts dynamically
   const loadModelScripts = () => {
     return new Promise((resolve) => {
+      if (!navigator.onLine) {
+        setModelStatus('offline');
+        setAiVerificationResult({
+          success: false,
+          label: 'AI verification unavailable offline',
+          confidence: 0
+        });
+        resolve();
+        return;
+      }
       if (window.mobilenet) {
         resolve();
         return;
@@ -211,13 +260,24 @@ export default function App() {
         };
         document.body.appendChild(mnScript);
       };
+      tfScript.onerror = () => {
+        setModelStatus('offline');
+        resolve();
+      };
       document.body.appendChild(tfScript);
     });
   };
 
   // Classify uploaded base64 verification photo using MobileNet model
-  const classifyVerificationPhoto = async (dataUrl) => {
-    if (!mobilenetModel) return;
+  const classifyVerificationPhoto = useCallback(async (dataUrl) => {
+    if (!mobilenetModel) {
+      setAiVerificationResult({
+        success: false,
+        label: 'AI model is still loading',
+        confidence: 0
+      });
+      return;
+    }
     
     setModelStatus('classifying');
     setAiVerificationResult(null);
@@ -232,39 +292,56 @@ export default function App() {
         const threatCategories = [
           {
             name: "Flood Threat",
-            keywords: ['flood', 'water', 'lake', 'river', 'stream', 'canal', 'waterfall', 'dam', 'seashore', 'sandbar', 'fountain', 'ocean', 'sea'],
+            incidentTypes: ['flood'],
+            keywords: ['flood', 'floodwater', 'river', 'stream', 'canal', 'waterfall', 'dam'],
             emoji: "🌊"
           },
           {
             name: "Landslide Threat",
-            keywords: ['cliff', 'rock', 'stone', 'earth', 'mud', 'slope', 'alp', 'mountain', 'valley', 'geological', 'dirt', 'sand', 'rubble', 'gravel'],
+            incidentTypes: ['fire'],
+            keywords: ['landslide', 'rockslide', 'mudslide', 'avalanche', 'debris', 'debris flow', 'boulder', 'cliff', 'rock', 'stone', 'earth', 'mud', 'slope', 'mountain', 'valley', 'volcano', 'quarry', 'badlands', 'soil', 'dirt', 'rubble', 'gravel'],
             emoji: "⛰️"
           },
           {
             name: "Traffic Threat",
-            keywords: ['traffic', 'cab', 'taxi', 'minivan', 'bus', 'limo', 'racer', 'car', 'vehicle', 'truck', 'trailer', 'intersection', 'street', 'highway', 'roadway', 'parking', 'freeway'],
+            incidentTypes: ['medical'],
+            keywords: ['traffic', 'collision', 'crash', 'wreck', 'intersection'],
             emoji: "🚦"
           },
           {
             name: "Fire Threat",
-            keywords: ['fire', 'flame', 'smoke', 'blaze', 'bonfire', 'matchstick', 'candle', 'stove', 'volcano', 'ash', 'furnace'],
+            incidentTypes: ['fire'],
+            keywords: ['fire', 'flame', 'smoke', 'blaze', 'bonfire'],
             emoji: "🔥"
           },
           {
             name: "Medical/Crash Threat",
-            keywords: ['ambulance', 'crash', 'wreck', 'collision', 'stretcher', 'wheelchair', 'hospital', 'nurse', 'medic', 'emergency'],
+            incidentTypes: ['medical'],
+            keywords: ['ambulance', 'crash', 'wreck', 'collision', 'stretcher', 'hospital'],
             emoji: "🩺"
           }
         ];
+
+        const minimumConfidence = 0.55;
+        const explicitLandslideCues = new Set([
+          'landslide', 'rockslide', 'mudslide', 'avalanche', 'debris', 'debris flow', 'boulder', 'rubble'
+        ]);
 
         let matchedThreat = null;
         let matchedPrediction = null;
 
         for (const pred of predictions) {
-          const labelLower = pred.className.toLowerCase();
+          const labelLower = pred.className.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
           for (const cat of threatCategories) {
-            const match = cat.keywords.some(kw => labelLower.includes(kw));
-            if (match) {
+            const matchesIncidentType = cat.incidentTypes.includes(newIncidentType);
+            const match = matchesIncidentType && cat.keywords.some(kw => {
+              const escapedKeyword = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              return new RegExp(`(?:^|\\s)${escapedKeyword}(?:$|\\s)`, 'i').test(labelLower);
+            });
+            const isExplicitLandslideCue = cat.name === 'Landslide Threat' &&
+              cat.keywords.some(keyword => explicitLandslideCues.has(keyword) && labelLower.includes(keyword));
+            const requiredConfidence = isExplicitLandslideCue ? 0.35 : minimumConfidence;
+            if (match && pred.probability >= requiredConfidence) {
               matchedThreat = cat;
               matchedPrediction = pred;
               break;
@@ -294,10 +371,15 @@ export default function App() {
         setModelStatus('ready');
       } catch (err) {
         console.error('TensorFlow classification error:', err);
-        setModelStatus('ready');
+        setAiVerificationResult({
+          success: false,
+          label: 'Unable to verify image',
+          confidence: 0
+        });
+        setModelStatus('failed');
       }
     };
-  };
+  }, [mobilenetModel, newIncidentType]);
 
   const handleProofUpload = (e) => {
     const file = e.target.files[0];
@@ -306,10 +388,15 @@ export default function App() {
     reader.onloadend = () => {
       setProofImage(reader.result);
       setProofPreview(reader.result);
-      classifyVerificationPhoto(reader.result);
     };
     reader.readAsDataURL(file);
   };
+
+  useEffect(() => {
+    if (proofImage && mobilenetModel) {
+      classifyVerificationPhoto(proofImage);
+    }
+  }, [classifyVerificationPhoto, mobilenetModel, proofImage]);
   const [newIncidentDistrict, setNewIncidentDistrict] = useState('tvm');
 
   // Visitor Access & IP Diagnostics States
@@ -367,7 +454,7 @@ export default function App() {
 
   // Send formatted Embed notification to Discord Webhook
   const sendDiscordNotification = async (ip, city, region, country, isp, deviceDetails) => {
-    if (!DISCORD_WEBHOOK_URL) return;
+    if (!DISCORD_WEBHOOK_URL || !navigator.onLine) return;
     try {
       await fetch(DISCORD_WEBHOOK_URL, {
         method: 'POST',
@@ -398,6 +485,8 @@ export default function App() {
 
   // Send AJAX email notification via Web3Forms with live status logs
   const sendEmailAlert = async (subject, eventName, message, geoData = null) => {
+    const web3FormsAccessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+    if (!navigator.onLine || !web3FormsAccessKey) return;
     try {
       logMessage(`[SYSTEM] Despatching email alert: ${subject}...`, 'system');
       
@@ -417,7 +506,7 @@ export default function App() {
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          "access_key": "7f1cd05e-ab0d-424b-964b-4798e2b7c430",
+          "access_key": web3FormsAccessKey,
           "subject": subject,
           "Event": eventName,
           "Details": message,
@@ -466,8 +555,27 @@ export default function App() {
 
   // Initialize TensorFlow Model on startup
   useEffect(() => {
+    if (!navigator.onLine) {
+      setModelStatus('offline');
+      setAiVerificationResult({
+        success: false,
+        label: 'AI verification unavailable offline',
+        confidence: 0
+      });
+      return;
+    }
+
     loadModelScripts().then(async () => {
       try {
+        if (!window.mobilenet || !navigator.onLine) {
+          setModelStatus('offline');
+          setAiVerificationResult({
+            success: false,
+            label: 'AI verification unavailable offline',
+            confidence: 0
+          });
+          return;
+        }
         setModelStatus('loading');
         const model = await window.mobilenet.load();
         setMobilenetModel(model);
@@ -475,7 +583,12 @@ export default function App() {
         logMessage('🤖 AI verification model initialized successfully.', 'success');
       } catch (err) {
         console.error('Failed to load TensorFlow model:', err);
-        setModelStatus('failed');
+        setModelStatus('offline');
+        setAiVerificationResult({
+          success: false,
+          label: 'AI verification unavailable offline',
+          confidence: 0
+        });
       }
     });
   }, []);
@@ -509,6 +622,18 @@ export default function App() {
 
   // Fetch Geolocation details using free keyless HTTPS-native providers
   const fetchIpAndLocation = async () => {
+    if (!navigator.onLine) {
+      return {
+        ip: '127.0.0.1 (Localhost)',
+        city: 'Offline Local',
+        region: 'Kerala',
+        country: 'IN',
+        lat: 10.8505,
+        lng: 76.2711,
+        isp: 'Offline System'
+      };
+    }
+
     // 1. First choice: freeipapi.com (HTTPS-native, keyless with 7s timeout for mobile networks)
     try {
       const response = await fetchWithTimeout('https://freeipapi.com/api/json', { timeout: 7000 });
@@ -571,6 +696,29 @@ export default function App() {
       setVisitorLat(geo.lat);
       setVisitorLng(geo.lng);
 
+      if (!navigator.onLine) {
+        logMessage('[SYSTEM] Offline startup detected. Local audit captured without network calls.', 'warning');
+        try {
+          await logVisitorAudit({
+            ip: geo.ip,
+            os: deviceDetails.os,
+            browser: deviceDetails.browser,
+            device: deviceDetails.device,
+            city: geo.city,
+            region: geo.region,
+            country: geo.country,
+            isp: geo.isp,
+            lat: geo.lat,
+            lng: geo.lng,
+            timestamp: Date.now()
+          });
+          setVisitorLogs(await getVisitorAudits());
+        } catch (err) {
+          console.error('Failed to log local audit:', err);
+        }
+        return;
+      }
+
       // 1. Trigger Email Notification immediately (completely independent of database operations)
       try {
         await sendEmailAlert(
@@ -627,9 +775,55 @@ export default function App() {
   const [gpsActive, setGpsActive] = useState(false);
   const [instructionBannerVisible, setInstructionBannerVisible] = useState(true);
   const [gpsCoords, setGpsCoords] = useState(null);
+  const [weatherRefreshKey, setWeatherRefreshKey] = useState(0);
+  
+  useEffect(() => {
+    const fallbackNode = mapData.nodes[selectedStartNode] || mapData.nodes.tvm;
+    const location = gpsCoords || fallbackNode;
+    const controller = new AbortController();
+    setWeatherStatus('loading');
+
+    fetchWeather(location.lat, location.lng, controller.signal)
+      .then(setWeather)
+      .then(() => setWeatherStatus('ready'))
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          console.error('Failed to load weather:', error);
+          setWeatherStatus('error');
+        }
+      });
+
+    return () => controller.abort();
+  }, [gpsCoords, selectedStartNode, weatherRefreshKey]);
   const [gpsHeading, setGpsHeading] = useState(0);
   const [bindGpsToUnit, setBindGpsToUnit] = useState(false);
   const [mockGpsMode, setMockGpsMode] = useState(false);
+  const [customerTrackingActive, setCustomerTrackingActive] = useState(false);
+  const [trackedCustomerId, setTrackedCustomerId] = useState(null);
+  const [customers, setCustomers] = useState([
+    { id: 'customer_1', name: 'Anita Menon', phone: '•••• 1842', lat: 10.5954, lng: 76.4714, status: 'Moving', speed: 34, source: 'Demo GPS', heading: 90 },
+    { id: 'customer_2', name: 'Rahul Nair', phone: '•••• 6720', lat: 10.5276, lng: 76.2144, status: 'Moving', speed: 18, source: 'Demo GPS', heading: 180 },
+    { id: 'customer_3', name: 'Meera Joseph', phone: '•••• 9031', lat: 9.9312, lng: 76.2673, status: 'Stationary', speed: 0, source: 'Demo GPS', heading: 0 },
+    { id: 'customer_4', name: 'This device', phone: 'Location sharing off', lat: 10.6100, lng: 76.5000, status: 'Offline', speed: 0, source: 'Not sharing', heading: 0, isSelf: true }
+  ]);
+  const [businessRole, setBusinessRole] = useState('Dispatcher');
+  const [businessName, setBusinessName] = useState('');
+  const [businessStoreType, setBusinessStoreType] = useState('Emergency Services');
+  const [businessLocation, setBusinessLocation] = useState(null);
+  const [businessLogo, setBusinessLogo] = useState('');
+  const [businessSetupSaved, setBusinessSetupSaved] = useState(false);
+  const [businessDirectory, setBusinessDirectory] = useState([]);
+  const [interfaceLanguage, setInterfaceLanguage] = useState('English');
+  const [presentationMode, setPresentationMode] = useState(false);
+  const [reportRange, setReportRange] = useState('All activity');
+  const [paymentStatus, setPaymentStatus] = useState('Not started');
+  const [locationRetentionDays, setLocationRetentionDays] = useState(30);
+  const [geofenceAlertsEnabled, setGeofenceAlertsEnabled] = useState(true);
+  const [businessPlan, setBusinessPlan] = useState('Operations');
+  const [geofenceEvents] = useState([
+    { id: 'geo_1', customer: 'Anita Menon', zone: 'NH 544 Response Zone', event: 'Entered', time: '2 min ago', severity: 'info' },
+    { id: 'geo_2', customer: 'Rahul Nair', zone: 'Alathur Safe Area', event: 'Exited', time: '8 min ago', severity: 'warning' }
+  ]);
 
   // Map Refs & Layers
   const mapRef = useRef(null);
@@ -645,6 +839,23 @@ export default function App() {
   const terminalMarkersRef = useRef(new Map());
   const busMarkersRef = useRef(new Map());
   const shelterMarkersRef = useRef(new Map());
+  const customerMarkersRef = useRef(new Map());
+  const businessMarkerRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      const savedBusiness = JSON.parse(localStorage.getItem('emergency_dispatch_business') || 'null');
+      if (!savedBusiness) return;
+      setBusinessName(savedBusiness.name || '');
+      setBusinessStoreType(savedBusiness.storeType || 'Emergency Services');
+      setBusinessLocation(savedBusiness.location || null);
+      setBusinessLogo(savedBusiness.logo || '');
+      setBusinessSetupSaved(Boolean(savedBusiness.name));
+      setBusinessDirectory(savedBusiness.name ? [savedBusiness] : []);
+    } catch (error) {
+      console.error('Failed to load saved business profile:', error);
+    }
+  }, []);
 
   // Evacuation Shelters State
   const [shelters, setShelters] = useState([
@@ -733,11 +944,13 @@ export default function App() {
   const [simulationProgress, setSimulationProgress] = useState(0); // km traveled
   const [currentBusStopName, setCurrentBusStopName] = useState('');
   const simTimerRef = useRef(null);
+  const activeSimulationRouteRef = useRef(null);
+  const pendingCustomRerouteRef = useRef(null);
   
   const watchIdRef = useRef(null);
   
   // Google Maps Style Live Navigation States
-  const [activeTab, setActiveTab] = useState('planner'); // planner, bustle, alerts, shelters, sync
+  const [activeTab, setActiveTab] = useState(null); // planner, bustle, alerts, shelters, sync
   const [isNavigating, setIsNavigating] = useState(false);
   const [nextInstruction, setNextInstruction] = useState("Head toward destination");
   const [nextTurnIcon, setNextTurnIcon] = useState("straight"); // left, right, straight, arrive
@@ -855,6 +1068,37 @@ export default function App() {
     setSyncLogs(prev => [`[${timestamp}] ${msg}`, ...prev].slice(0, 50));
   };
 
+  const addSosContact = (e) => {
+    e.preventDefault();
+    const name = sosContactName.trim();
+    const phone = sosContactPhone.trim();
+    if (!name || !phone) return;
+
+    const nextContacts = [...sosContacts, { id: `sos_${Date.now()}`, name, phone }];
+    setSosContacts(nextContacts);
+    saveSosContacts(nextContacts);
+    setSosContactName('');
+    setSosContactPhone('');
+    logMessage(`[SOS] Saved emergency contact: ${name}`, 'success');
+  };
+
+  const removeSosContact = (id) => {
+    const nextContacts = sosContacts.filter(contact => contact.id !== id);
+    setSosContacts(nextContacts);
+    saveSosContacts(nextContacts);
+  };
+
+  const sendSosSms = (incident, contact) => {
+    const message = formatSosMessage(incident);
+    logMessage(`[SOS] Opening SMS fallback for ${contact.name}. Press Send in the phone app.`, 'warning');
+    openSosSms(contact, message);
+  };
+
+  const callSosContact = (contact) => {
+    logMessage(`[SOS] Opening emergency call fallback for ${contact.name}.`, 'warning');
+    openSosCall(contact);
+  };
+
   // Helper to interpolate coordinates along geometry
   const interpolateCoordinates = (geometry, progress) => {
     if (!geometry || geometry.length === 0) return { lat: 0, lng: 0, heading: 0 };
@@ -970,11 +1214,17 @@ export default function App() {
         doubleClickZoom: false
       });
 
-      const tileLayer = L.tileLayer(getTileUrl(mapTheme), {
-        attribution: getTileAttribution(mapTheme)
-      }).addTo(map);
+      const offlineTileUrl = getTileUrl(mapTheme);
+      if (offlineTileUrl) {
+        const tileLayer = L.tileLayer(offlineTileUrl, {
+          attribution: getTileAttribution(mapTheme)
+        }).addTo(map);
+        tileLayerRef.current = tileLayer;
+      } else {
+        tileLayerRef.current = null;
+        map.getContainer().style.background = 'radial-gradient(circle at center, rgba(30,41,59,0.95), rgba(2,6,23,1))';
+      }
 
-      tileLayerRef.current = tileLayer;
       mapRef.current = map;
       roadsLayerRef.current = L.layerGroup().addTo(map);
       routeLayerRef.current = L.layerGroup().addTo(map);
@@ -991,15 +1241,37 @@ export default function App() {
       map.on('click', (e) => {
         handleMapSingleClick(e.latlng.lat, e.latlng.lng);
       });
+
+      // Right-click selects the exact map point for a new business profile.
+      map.on('contextmenu', (e) => {
+        handleBusinessMapLocation(e.latlng.lat, e.latlng.lng);
+      });
     }
   }, [blockages]);
 
   // Dynamic Map Theme/Base-Layer Switcher
   useEffect(() => {
-    if (mapRef.current && tileLayerRef.current) {
-      tileLayerRef.current.setUrl(getTileUrl(mapTheme));
+    if (!mapRef.current) return;
+
+    const tileUrl = getTileUrl(mapTheme);
+    if (tileUrl) {
+      if (!tileLayerRef.current) {
+        tileLayerRef.current = L.tileLayer(tileUrl, {
+          attribution: getTileAttribution(mapTheme)
+        }).addTo(mapRef.current);
+      } else {
+        tileLayerRef.current.setUrl(tileUrl);
+      }
+      tileLayerRef.current.setOpacity(1);
+      mapRef.current.getContainer().style.background = '';
+    } else {
+      if (tileLayerRef.current) {
+        mapRef.current.removeLayer(tileLayerRef.current);
+        tileLayerRef.current = null;
+      }
+      mapRef.current.getContainer().style.background = 'radial-gradient(circle at center, rgba(30,41,59,0.95), rgba(2,6,23,1))';
     }
-  }, [mapTheme]);
+  }, [mapTheme, isOnline]);
 
   // Re-draw road network when blockages or traffic overlay state updates
   useEffect(() => {
@@ -1596,6 +1868,92 @@ export default function App() {
     }
   }, [gpsActive, gpsCoords, gpsHeading]);
 
+  // 8b. Live customer location markers
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const activeIds = new Set(customers.map(customer => customer.id));
+    customerMarkersRef.current.forEach((marker, customerId) => {
+      if (!activeIds.has(customerId)) {
+        marker.remove();
+        customerMarkersRef.current.delete(customerId);
+      }
+    });
+
+    customers.forEach(customer => {
+      const isSelected = trackedCustomerId === customer.id;
+      const color = customer.isSelf && customerTrackingActive ? '#22c55e' : customer.status === 'Moving' ? '#f59e0b' : '#94a3b8';
+      const customerIcon = L.divIcon({
+        className: 'custom-customer-marker',
+        html: `<div style="position: relative; width: 28px; height: 28px;">
+          <div style="width: 18px; height: 18px; margin: 5px; background: ${color}; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 ${isSelected ? 16 : 8}px ${color};"></div>
+          ${customer.status === 'Moving' ? `<div style="position: absolute; inset: 0; border: 1px solid ${color}; border-radius: 50%; opacity: .45; animation: gps-pulse 1.8s infinite;"></div>` : ''}
+        </div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+      const popup = `<div style="color: #f3f4f6; font-family: sans-serif; font-size: 11px; min-width: 150px;">
+        <h4 style="margin: 0 0 5px; color: ${color};">${customer.name}</h4>
+        <div>${customer.status} ${customer.speed ? `• ${customer.speed} km/h` : ''}</div>
+        <div style="color: #9ca3af; margin-top: 3px;">Source: ${customer.source}</div>
+        <div style="color: #9ca3af;">Updated: just now</div>
+      </div>`;
+
+      if (customerMarkersRef.current.has(customer.id)) {
+        const marker = customerMarkersRef.current.get(customer.id);
+        marker.setLatLng([customer.lat, customer.lng]);
+        marker.setIcon(customerIcon);
+        marker.setPopupContent(popup);
+      } else {
+        const marker = L.marker([customer.lat, customer.lng], { icon: customerIcon, zIndexOffset: isSelected ? 800 : 400 })
+          .addTo(mapRef.current)
+          .bindPopup(popup);
+        customerMarkersRef.current.set(customer.id, marker);
+      }
+    });
+
+    if (trackedCustomerId) {
+      const tracked = customers.find(customer => customer.id === trackedCustomerId);
+      if (tracked) mapRef.current.setView([tracked.lat, tracked.lng], 12);
+    }
+  }, [customers, trackedCustomerId, customerTrackingActive]);
+
+  // Show the selected business location on the map and keep it in sync with the profile.
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (!businessLocation) {
+      businessMarkerRef.current?.remove();
+      businessMarkerRef.current = null;
+      return;
+    }
+
+    const logoMarkup = businessLogo
+      ? `<img src="${businessLogo}" alt="" style="width: 28px; height: 28px; object-fit: contain; border-radius: 5px; background: white; padding: 2px;" />`
+      : '<div style="width: 28px; height: 28px; display: grid; place-items: center; color: white; font-size: 17px;">⌂</div>';
+    const businessIcon = L.divIcon({
+      className: 'custom-business-marker',
+      html: `<div style="width: 36px; height: 36px; display: grid; place-items: center; border: 2px solid #ec4899; border-radius: 9px; background: #111827; box-shadow: 0 0 14px rgba(236,72,153,.75);">${logoMarkup}</div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+    const popup = `<div style="color: #f3f4f6; font-family: sans-serif; font-size: 11px; min-width: 155px;">
+      <h4 style="margin: 0 0 5px; color: #f9a8d4;">${businessName || 'Business location'}</h4>
+      <div style="color: #d1d5db;">${businessStoreType}</div>
+      <div style="color: #9ca3af; margin-top: 4px;">[${businessLocation.lat.toFixed(5)}, ${businessLocation.lng.toFixed(5)}]</div>
+    </div>`;
+
+    if (businessMarkerRef.current) {
+      businessMarkerRef.current.setLatLng([businessLocation.lat, businessLocation.lng]);
+      businessMarkerRef.current.setIcon(businessIcon);
+      businessMarkerRef.current.setPopupContent(popup);
+    } else {
+      businessMarkerRef.current = L.marker([businessLocation.lat, businessLocation.lng], { icon: businessIcon, zIndexOffset: 1200 })
+        .addTo(mapRef.current)
+        .bindPopup(popup);
+    }
+  }, [businessLocation, businessLogo, businessName, businessStoreType]);
+
   // 9. Handle GPS / Geolocation watch
   const handleGpsToggle = () => {
     if (gpsActive) {
@@ -1637,6 +1995,129 @@ export default function App() {
       );
     }
   };
+
+  const handleCustomerLocationToggle = () => {
+    if (customerTrackingActive) {
+      setCustomerTrackingActive(false);
+      setCustomers(prev => prev.map(customer => customer.isSelf
+        ? { ...customer, status: 'Offline', source: 'Not sharing', phone: 'Location sharing off' }
+        : customer));
+      logMessage('[CUSTOMER] Location sharing stopped for this device.', 'info');
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      logMessage('[CUSTOMER] This browser does not support location sharing.', 'error');
+      return;
+    }
+
+    setCustomerTrackingActive(true);
+    logMessage('[CUSTOMER] Requesting consent to share this device location.', 'info');
+    if (!gpsActive) handleGpsToggle();
+  };
+
+  const handleBusinessLogoUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      logMessage('[BUSINESS] Please upload an image file for the logo.', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setBusinessLogo(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleBusinessSetupSubmit = (event) => {
+    event.preventDefault();
+    if (!businessName.trim()) {
+      logMessage('[BUSINESS] Enter a business name before saving.', 'error');
+      return;
+    }
+    setBusinessSetupSaved(true);
+    const locationText = businessLocation ? ` at [${businessLocation.lat.toFixed(5)}, ${businessLocation.lng.toFixed(5)}]` : '';
+    const savedProfile = {
+      name: businessName.trim(),
+      storeType: businessStoreType,
+      location: businessLocation,
+      logo: businessLogo
+    };
+    localStorage.setItem('emergency_dispatch_business', JSON.stringify(savedProfile));
+    setBusinessDirectory([savedProfile]);
+    logMessage(`[BUSINESS] ${businessName.trim()} setup saved as ${businessStoreType}${locationText}.`, 'success');
+  };
+
+  const exportOperationsReport = () => {
+    const rows = [
+      ['Emergency Dispatch Operations Report', reportRange],
+      ['Business', businessName || 'Not configured'],
+      ['Generated', new Date().toISOString()],
+      [],
+      ['Customers', 'Status', 'Source', 'Latitude', 'Longitude'],
+      ...customers.map(customer => [customer.name, customer.status, customer.source, customer.lat, customer.lng]),
+      [],
+      ['Incident ID', 'Type', 'Status', 'Latitude', 'Longitude', 'Reported At'],
+      ...incidents.map(incident => [incident.id, incident.type, incident.status, incident.lat, incident.lng, new Date(incident.reportedAt).toISOString()])
+    ];
+    const csv = rows.map(row => row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `dispatch-report-${Date.now()}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    logMessage('[REPORT] Operations CSV exported.', 'success');
+  };
+
+  const handleBusinessMapLocation = (lat, lng) => {
+    setBusinessLocation({ lat, lng });
+    setActiveTab('business');
+    logMessage(`[BUSINESS] Map location selected: [${lat.toFixed(5)}, ${lng.toFixed(5)}]. Complete the business setup form.`, 'info');
+  };
+
+  const handlePaymentRequest = () => {
+    if (!businessSetupSaved) {
+      logMessage('[PAYMENT] Save business details before continuing to payment.', 'warning');
+      return;
+    }
+    setPaymentStatus('Checkout ready');
+    logMessage(`[PAYMENT] Checkout prepared for ${businessPlan} plan. Connect a payment provider to collect payment.`, 'info');
+  };
+
+  // Keep the current device visible as an explicitly consented customer.
+  useEffect(() => {
+    if (!customerTrackingActive || !gpsCoords) return;
+    setCustomers(prev => prev.map(customer => customer.isSelf
+      ? {
+          ...customer,
+          lat: gpsCoords.lat,
+          lng: gpsCoords.lng,
+          heading: gpsHeading,
+          status: 'Moving',
+          source: mockGpsMode ? 'Mock GPS' : 'Physical GPS',
+          phone: 'Location sharing on'
+        }
+      : customer));
+  }, [customerTrackingActive, gpsCoords, gpsHeading, mockGpsMode]);
+
+  // Demo movement makes the multi-customer view testable before a backend is connected.
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCustomers(prev => prev.map(customer => {
+        if (customer.isSelf || customer.status !== 'Moving') return customer;
+        const distance = 0.00035;
+        const radians = (customer.heading * Math.PI) / 180;
+        return {
+          ...customer,
+          lat: customer.lat + Math.cos(radians) * distance,
+          lng: customer.lng + Math.sin(radians) * distance,
+          heading: (customer.heading + (customer.id === 'customer_2' ? 2 : -1) + 360) % 360
+        };
+      }));
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
 
   
   // Speak navigation instructions when updating
@@ -1819,6 +2300,7 @@ export default function App() {
   // 10. Report Incident
   const deleteIncident = async (id) => {
     try {
+      if (!window.confirm('Dismiss this incident? This action cannot be undone.')) return;
       if (selectedIncident && selectedIncident.id === id) {
         setSelectedIncident(null);
       }
@@ -1884,6 +2366,10 @@ export default function App() {
     e.preventDefault();
     if (!proofImage) {
       logMessage('Failed to file report: Photographical proof is required.', 'error');
+      return;
+    }
+    if (modelStatus !== 'ready' || !aiVerificationResult?.success) {
+      logMessage('Failed to file report: Uploaded image did not pass hazard verification.', 'error');
       return;
     }
 
@@ -2026,6 +2512,55 @@ export default function App() {
       }
     }
   }, [selectedStartNode, selectedEndNode, blockages, simulationActive]);
+
+  // Re-route an active tactical simulation when a newly reported blockage closes its path.
+  useEffect(() => {
+    const activeRoute = activeSimulationRouteRef.current;
+    if (!simulationActive || !activeRoute || !customRoute) return;
+
+    const routeBlocked = blockages.some(blockage =>
+      activeRoute.edges.some(edge =>
+        (blockage.fromNode === edge.from && blockage.toNode === edge.to) ||
+        (blockage.fromNode === edge.to && blockage.toNode === edge.from)
+      )
+    );
+
+    if (!routeBlocked) return;
+
+    const currentPosition = getPositionAtDistance(activeRoute.geometry, simulationProgress);
+    if (!currentPosition) return;
+
+    const { id: rerouteStartNode } = findClosestNode(
+      currentPosition.lat,
+      currentPosition.lng,
+      mapData.nodes
+    );
+
+    if (simTimerRef.current) clearInterval(simTimerRef.current);
+    activeSimulationRouteRef.current = null;
+    pendingCustomRerouteRef.current = {
+      mode: simTransport,
+      startNode: rerouteStartNode,
+      endNode: selectedEndNode
+    };
+    setSimulationActive(false);
+    setSelectedStartNode(rerouteStartNode);
+    logMessage('[NAV-TACTICAL] Hazard detected on the active route. Recalculating from the current position...', 'warning');
+  }, [blockages, customRoute, simulationActive, simulationProgress, simTransport, selectedEndNode]);
+
+  // Wait for Dijkstra to produce the route from the vehicle's current node, then resume it.
+  useEffect(() => {
+    const pendingReroute = pendingCustomRerouteRef.current;
+    if (!pendingReroute || simulationActive || !customRoute) return;
+    if (
+      customRoute.nodes[0] !== pendingReroute.startNode ||
+      customRoute.nodes[customRoute.nodes.length - 1] !== pendingReroute.endNode
+    ) return;
+
+    pendingCustomRerouteRef.current = null;
+    logMessage('[NAV-TACTICAL] Alternate route acquired. Resuming navigation.', 'success');
+    startCustomSimulation(pendingReroute.mode, customRoute, pendingReroute.startNode, pendingReroute.endNode);
+  }, [customRoute, simulationActive]);
 
   // Dispatch Dispatching Route Solver
   useEffect(() => {
@@ -2192,10 +2727,16 @@ export default function App() {
   };
 
   // 14. Animate Custom / Public Transit Route Traversal Simulation
-  const startCustomSimulation = async (mode) => {
-    const route = customRoute;
+  const startCustomSimulation = async (
+    mode,
+    routeOverride = customRoute,
+    startNodeOverride = selectedStartNode,
+    endNodeOverride = selectedEndNode
+  ) => {
+    const route = routeOverride;
     if (!route) return;
 
+    activeSimulationRouteRef.current = route;
     setSimulationActive(true);
     setSimTransport(mode);
     setSimulationProgress(0);
@@ -2213,7 +2754,7 @@ export default function App() {
       speed = 60; // km/h
     }
 
-    logMessage(`[SIMULATION] Starting journey from ${mapData.nodes[selectedStartNode].name} to ${mapData.nodes[selectedEndNode].name} via ${mode.toUpperCase()}...`, 'system');
+    logMessage(`[SIMULATION] Starting journey from ${mapData.nodes[startNodeOverride].name} to ${mapData.nodes[endNodeOverride].name} via ${mode.toUpperCase()}...`, 'system');
 
     // Create a temporary simulation marker
     const startCoord = route.geometry[0];
@@ -2250,7 +2791,8 @@ export default function App() {
           customSimulationMarkerRef.current = null;
         }
 
-        logMessage(`[SIMULATION] Journey complete. Arrived at ${mapData.nodes[selectedEndNode].name}!`, 'success');
+        activeSimulationRouteRef.current = null;
+        logMessage(`[SIMULATION] Journey complete. Arrived at ${mapData.nodes[endNodeOverride].name}!`, 'success');
         confetti({
           particleCount: 70,
           spread: 50,
@@ -2304,6 +2846,8 @@ export default function App() {
     }
     setSimulationActive(false);
     setCurrentBusStopName('');
+    activeSimulationRouteRef.current = null;
+    pendingCustomRerouteRef.current = null;
 
     if (customSimulationMarkerRef.current) {
       customSimulationMarkerRef.current.remove();
@@ -2458,7 +3002,7 @@ export default function App() {
 
   // Sync processor
   const handleSyncToggle = async (e) => {
-    const checked = e.target.checked;
+    const checked = e.target.checked && navigator.onLine;
     setIsOnline(checked);
 
     if (checked && syncQueueLength > 0) {
@@ -2493,8 +3037,17 @@ export default function App() {
     }
   };
 
+  const handleTabToggle = (tab) => {
+    setActiveTab(currentTab => currentTab === tab ? null : tab);
+  };
+
+  const weatherSeverity = weather
+    ? (weather.weatherCode >= 95 || weather.rainProbability >= 80 ? 'danger'
+      : weather.weatherCode >= 51 || weather.rainProbability >= 40 ? 'caution' : 'safe')
+    : 'unknown';
+
   return (
-    <div className="app-container">
+    <div className={`app-container ${activeTab ? 'sidebar-open' : 'map-focused'}`}>
       {/* Sidebar Controls */}
       {/* 1. Tab Toolbar (Futuristic HUD Navigation) */}
       <nav className="tab-toolbar">
@@ -2502,10 +3055,19 @@ export default function App() {
           <ShieldAlert size={26} className="brand-logo" />
         </div>
         <div className="tab-buttons">
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === null ? 'active' : ''}`}
+            onClick={() => setActiveTab(null)}
+            title="Show full-screen map"
+          >
+            <MapPin size={18} />
+            <span className="tab-label">Map View</span>
+          </button>
           <button 
             type="button"
             className={`tab-btn ${activeTab === 'planner' ? 'active' : ''}`}
-            onClick={() => setActiveTab('planner')}
+            onClick={() => handleTabToggle('planner')}
             title="Tactical Route Planner"
           >
             <Navigation size={18} />
@@ -2514,7 +3076,7 @@ export default function App() {
           <button 
             type="button"
             className={`tab-btn ${activeTab === 'bustle' ? 'active' : ''}`}
-            onClick={() => setActiveTab('bustle')}
+            onClick={() => handleTabToggle('bustle')}
             title="Live Bus Tracker (Bustle)"
           >
             <Bus size={18} />
@@ -2522,8 +3084,26 @@ export default function App() {
           </button>
           <button 
             type="button"
+            className={`tab-btn ${activeTab === 'customers' ? 'active' : ''}`}
+            onClick={() => handleTabToggle('customers')}
+            title="Live Customer Tracker"
+          >
+            <Users size={18} />
+            <span className="tab-label">People</span>
+          </button>
+          <button 
+            type="button"
+            className={`tab-btn ${activeTab === 'business' ? 'active' : ''}`}
+            onClick={() => handleTabToggle('business')}
+            title="Business Operations Console"
+          >
+            <Building2 size={18} />
+            <span className="tab-label">Business</span>
+          </button>
+          <button 
+            type="button"
             className={`tab-btn ${activeTab === 'alerts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('alerts')}
+            onClick={() => handleTabToggle('alerts')}
             title="Emergencies & Standby"
           >
             <Flame size={18} />
@@ -2532,7 +3112,7 @@ export default function App() {
           <button 
             type="button"
             className={`tab-btn ${activeTab === 'shelters' ? 'active' : ''}`}
-            onClick={() => setActiveTab('shelters')}
+            onClick={() => handleTabToggle('shelters')}
             title="Evacuation Shelters"
           >
             <Activity size={18} />
@@ -2541,7 +3121,7 @@ export default function App() {
           <button 
             type="button"
             className={`tab-btn ${activeTab === 'sync' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sync')}
+            onClick={() => handleTabToggle('sync')}
             title="Database Sync Console"
           >
             <Wifi size={18} />
@@ -2551,7 +3131,7 @@ export default function App() {
           <button 
             type="button"
             className={`tab-btn ${activeTab === 'help' ? 'active' : ''}`}
-            onClick={() => setActiveTab('help')}
+            onClick={() => handleTabToggle('help')}
             title="User Guide & Help"
           >
             <HelpCircle size={18} />
@@ -2601,6 +3181,8 @@ export default function App() {
             <h1 className="brand-title">
               {activeTab === 'planner' && 'Tactical Planner'}
               {activeTab === 'bustle' && 'Live Bus Tracker'}
+              {activeTab === 'customers' && 'Live Customer Tracker'}
+              {activeTab === 'business' && 'Business Operations'}
               {activeTab === 'alerts' && 'Emergency Dispatch'}
               {activeTab === 'shelters' && 'Evacuation Safe Hubs'}
               {activeTab === 'sync' && 'System Console'}
@@ -2609,6 +3191,8 @@ export default function App() {
             <div className="brand-subtitle">
               {activeTab === 'planner' && 'Multi-modal routing & mock navigation'}
               {activeTab === 'bustle' && 'Live private/KSRTC schedule monitor'}
+              {activeTab === 'customers' && 'Consent-based location sharing monitor'}
+              {activeTab === 'business' && 'Teams, privacy, plans & integrations'}
               {activeTab === 'alerts' && 'File incidents and coordinate response'}
               {activeTab === 'shelters' && 'Active camps capacity & relief tracking'}
               {activeTab === 'sync' && 'Offline sync logs & cluster updates'}
@@ -2920,6 +3504,320 @@ export default function App() {
             </>
           )}
 
+          {activeTab === 'customers' && (
+            <>
+              <section className="panel-card" style={{ borderLeft: customerTrackingActive ? '3px solid #22c55e' : '1px solid var(--border-color)' }}>
+                <h2 className="section-title">
+                  <span>Location Sharing</span>
+                  <Radio size={14} style={{ color: customerTrackingActive ? '#22c55e' : 'var(--text-muted)' }} />
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  <div style={{ fontSize: '0.72rem', lineHeight: 1.45, color: 'var(--text-secondary)' }}>
+                    Only this device can share its GPS after browser permission. Carrier tower data is not exposed to web apps.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCustomerLocationToggle}
+                    className={`btn ${customerTrackingActive ? 'btn-success' : 'btn-secondary'}`}
+                  >
+                    <Locate size={14} />
+                    {customerTrackingActive ? 'Stop Sharing This Device' : 'Share This Device Location'}
+                  </button>
+                  <div style={{ fontSize: '0.65rem', color: customerTrackingActive ? '#4ade80' : 'var(--text-muted)' }}>
+                    {customerTrackingActive ? '● Consent active • location updates are visible to dispatch' : '○ Consent inactive • this device is not being tracked'}
+                  </div>
+                </div>
+              </section>
+
+              <section className="panel-card" style={{ borderLeft: '3px solid #f59e0b' }}>
+                <h2 className="section-title">
+                  <span>Customer Locations ({customers.length})</span>
+                  <Users size={14} style={{ color: '#f59e0b' }} />
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  {customers.map(customer => (
+                    <button
+                      type="button"
+                      key={customer.id}
+                      onClick={() => {
+                        setTrackedCustomerId(customer.id);
+                        mapRef.current?.setView([customer.lat, customer.lng], 13);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.55rem',
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '0.55rem',
+                        color: 'var(--text-primary)',
+                        background: trackedCustomerId === customer.id ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255,255,255,0.03)',
+                        border: trackedCustomerId === customer.id ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid var(--border-color)',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <span style={{ width: 8, height: 8, flex: '0 0 auto', borderRadius: '50%', background: customer.isSelf && customerTrackingActive ? '#22c55e' : customer.status === 'Moving' ? '#f59e0b' : '#94a3b8' }}></span>
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <strong style={{ display: 'block', fontSize: '0.75rem' }}>{customer.name}</strong>
+                        <span style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.62rem' }}>{customer.source} • {customer.status}</span>
+                      </span>
+                      <span style={{ color: '#fbbf24', fontSize: '0.65rem' }}>{customer.speed ? `${customer.speed} km/h` : 'Still'}</span>
+                    </button>
+                  ))}
+                </div>
+                <div style={{ marginTop: '0.65rem', paddingTop: '0.55rem', borderTop: '1px dashed rgba(255,255,255,0.1)', color: 'var(--text-muted)', fontSize: '0.62rem' }}>
+                  Demo GPS records move locally for testing. Replace them with authenticated backend updates for production use.
+                </div>
+              </section>
+            </>
+          )}
+
+          {activeTab === 'business' && (
+            <>
+              <section className="panel-card" style={{ borderLeft: presentationMode ? '3px solid #22c55e' : '3px solid #64748b' }}>
+                <h2 className="section-title">
+                  <span>Workspace Controls</span>
+                  <Presentation size={14} style={{ color: presentationMode ? '#22c55e' : 'var(--text-muted)' }} />
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label><Languages size={11} style={{ verticalAlign: 'middle' }} /> Language</label>
+                    <select value={interfaceLanguage} onChange={(event) => setInterfaceLanguage(event.target.value)}>
+                      <option>English</option>
+                      <option>Malayalam</option>
+                      <option>Hindi</option>
+                    </select>
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.68rem' }}>
+                    Presentation mode
+                    <span className="switch"><input type="checkbox" checked={presentationMode} onChange={(event) => setPresentationMode(event.target.checked)} /><span className="slider"></span></span>
+                  </label>
+                </div>
+                <div style={{ marginTop: '0.55rem', color: 'var(--text-muted)', fontSize: '0.62rem' }}>
+                  Interface: {interfaceLanguage} • {presentationMode ? 'Demo data highlighted' : 'Operations mode'}
+                </div>
+              </section>
+
+              <section className="panel-card" style={{ borderLeft: '3px solid #ec4899' }}>
+                <h2 className="section-title">
+                  <span>Business Setup</span>
+                  <Building2 size={14} style={{ color: '#ec4899' }} />
+                </h2>
+                <form onSubmit={handleBusinessSetupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>Business name</label>
+                    <input
+                      type="text"
+                      value={businessName}
+                      onChange={(event) => setBusinessName(event.target.value)}
+                      placeholder="Enter your business name"
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>Business / store type</label>
+                    <select value={businessStoreType} onChange={(event) => setBusinessStoreType(event.target.value)}>
+                      <option>Emergency Services</option>
+                      <option>Retail Store</option>
+                      <option>Hospital or Clinic</option>
+                      <option>School or College</option>
+                      <option>Transport Company</option>
+                      <option>Security Agency</option>
+                      <option>Event Organizer</option>
+                      <option>Government Organization</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>Business location</label>
+                    {businessLocation ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', padding: '0.55rem 0.65rem', color: '#38bdf8', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.25)', borderRadius: '6px', fontSize: '0.7rem' }}>
+                        <span><MapPin size={12} style={{ verticalAlign: 'middle', marginRight: '0.25rem' }} />[{businessLocation.lat.toFixed(5)}, {businessLocation.lng.toFixed(5)}]</span>
+                        <button type="button" onClick={() => setBusinessLocation(null)} style={{ border: 0, background: 'none', color: '#f87171', cursor: 'pointer', fontSize: '0.65rem' }}>Clear</button>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '0.55rem 0.65rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border-color)', borderRadius: '6px', fontSize: '0.68rem' }}>
+                        Right-click the map to choose the exact business location.
+                      </div>
+                    )}
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>Business logo</label>
+                    <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={handleBusinessLogoUpload} />
+                  </div>
+                  {businessLogo && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+                      <img src={businessLogo} alt="Business logo preview" style={{ width: 42, height: 42, objectFit: 'contain', borderRadius: '5px', background: '#fff' }} />
+                      <span style={{ color: '#4ade80', fontSize: '0.68rem' }}>Logo ready. It will appear beside your business name.</span>
+                    </div>
+                  )}
+                  <button type="submit" className="btn btn-primary">
+                    <CheckCircle2 size={14} /> {businessSetupSaved ? 'Update Business Details' : 'Save Business Details'}
+                  </button>
+                </form>
+              </section>
+
+              {businessSetupSaved && (
+                <section className="panel-card" style={{ borderLeft: '3px solid #22c55e' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                    {businessLogo ? (
+                      <img src={businessLogo} alt={`${businessName} logo`} style={{ width: 52, height: 52, objectFit: 'contain', borderRadius: '7px', background: '#fff' }} />
+                    ) : (
+                      <div style={{ width: 52, height: 52, display: 'grid', placeItems: 'center', borderRadius: '7px', background: 'rgba(34,197,94,0.12)', color: '#4ade80' }}><Building2 size={24} /></div>
+                    )}
+                    <div style={{ minWidth: 0 }}>
+                      <strong style={{ display: 'block', color: '#f3f4f6', fontSize: '0.95rem' }}>{businessName}</strong>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>{businessStoreType} • {businessLocation ? 'Map location saved' : 'Location pending'}</span>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              <section className="panel-card" style={{ borderLeft: '3px solid #14b8a6' }}>
+                <h2 className="section-title">
+                  <span>Business Directory ({businessDirectory.length})</span>
+                  <Building2 size={14} style={{ color: '#14b8a6' }} />
+                </h2>
+                {businessDirectory.length ? businessDirectory.map(profile => (
+                  <div key={`${profile.name}-${profile.location?.lat || 'unknown'}`} style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+                    {profile.logo ? <img src={profile.logo} alt="" style={{ width: 32, height: 32, objectFit: 'contain', background: '#fff', borderRadius: 4 }} /> : <Building2 size={20} style={{ color: '#14b8a6' }} />}
+                    <div style={{ minWidth: 0, flex: 1 }}><strong style={{ display: 'block', fontSize: '0.72rem' }}>{profile.name}</strong><span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>{profile.storeType} • {profile.location ? `${profile.location.lat.toFixed(4)}, ${profile.location.lng.toFixed(4)}` : 'Location pending'}</span></div>
+                    <span style={{ color: '#4ade80', fontSize: '0.6rem' }}>Registered</span>
+                  </div>
+                )) : <div className="empty-state" style={{ padding: '0.45rem' }}>Save a business profile to add it here.</div>}
+              </section>
+
+              <section className="panel-card" style={{ borderLeft: '3px solid #38bdf8' }}>
+                <h2 className="section-title">
+                  <span>Operations Overview</span>
+                  <BarChart3 size={14} style={{ color: '#38bdf8' }} />
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
+                  {[
+                    ['Tracked people', customers.length, '#38bdf8'],
+                    ['Sharing now', customers.filter(customer => customer.source === 'Physical GPS' || customer.source === 'Mock GPS').length, '#22c55e'],
+                    ['Open geofences', geofenceEvents.length, '#f59e0b'],
+                    ['Response units', responders.length, '#a78bfa']
+                  ].map(([label, value, color]) => (
+                    <div key={label} style={{ padding: '0.6rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+                      <strong style={{ display: 'block', color, fontSize: '1.15rem' }}>{value}</strong>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="panel-card" style={{ borderLeft: '3px solid #a78bfa' }}>
+                <h2 className="section-title">
+                  <span>Team Access</span>
+                  <ShieldCheck size={14} style={{ color: '#a78bfa' }} />
+                </h2>
+                <div className="form-group" style={{ marginBottom: '0.55rem' }}>
+                  <label>Current workspace role</label>
+                  <select value={businessRole} onChange={(event) => setBusinessRole(event.target.value)}>
+                    <option>Dispatcher</option>
+                    <option>Operations Manager</option>
+                    <option>Read-only Analyst</option>
+                    <option>Organization Admin</option>
+                  </select>
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                  Role permissions are local demo controls. Production access must be enforced by the backend on every request.
+                </div>
+              </section>
+
+              <section className="panel-card" style={{ borderLeft: '3px solid #22c55e' }}>
+                <h2 className="section-title">
+                  <span>Privacy & Consent</span>
+                  <LockKeyhole size={14} style={{ color: '#22c55e' }} />
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>Location history retention</label>
+                    <select value={locationRetentionDays} onChange={(event) => setLocationRetentionDays(Number(event.target.value))}>
+                      <option value={7}>7 days</option>
+                      <option value={30}>30 days</option>
+                      <option value={90}>90 days</option>
+                    </select>
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.72rem' }}>
+                    Geofence alerts
+                    <span className="switch"><input type="checkbox" checked={geofenceAlertsEnabled} onChange={(event) => setGeofenceAlertsEnabled(event.target.checked)} /><span className="slider"></span></span>
+                  </label>
+                  <div style={{ color: '#4ade80', fontSize: '0.65rem' }}>Consent log: {customerTrackingActive ? 'This device sharing' : 'No device sharing'} • retention: {locationRetentionDays} days</div>
+                </div>
+              </section>
+
+              <section className="panel-card" style={{ borderLeft: '3px solid #f59e0b' }}>
+                <h2 className="section-title">
+                  <span>Geofence Activity</span>
+                  <Globe2 size={14} style={{ color: '#f59e0b' }} />
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                  {geofenceAlertsEnabled ? geofenceEvents.map(event => (
+                    <div key={event.id} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '0.68rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}><strong>{event.customer}</strong><span style={{ color: event.severity === 'warning' ? '#fbbf24' : '#4ade80' }}>{event.event}</span></div>
+                      <div style={{ color: 'var(--text-muted)', marginTop: '0.2rem' }}>{event.zone} • {event.time}</div>
+                    </div>
+                  )) : <div className="empty-state" style={{ padding: '0.4rem' }}>Geofence alerts paused.</div>}
+                </div>
+              </section>
+
+              <section className="panel-card" style={{ borderLeft: '3px solid #38bdf8' }}>
+                <h2 className="section-title">
+                  <span>Reports & Data</span>
+                  <FileText size={14} style={{ color: '#38bdf8' }} />
+                </h2>
+                <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'end' }}>
+                  <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                    <label>Report range</label>
+                    <select value={reportRange} onChange={(event) => setReportRange(event.target.value)}>
+                      <option>All activity</option>
+                      <option>Today</option>
+                      <option>Last 7 days</option>
+                      <option>Last 30 days</option>
+                    </select>
+                  </div>
+                  <button type="button" className="btn btn-secondary" onClick={exportOperationsReport} style={{ padding: '0.5rem 0.65rem' }} title="Export operations CSV"><Download size={14} /> CSV</button>
+                </div>
+                <div style={{ marginTop: '0.5rem', color: 'var(--text-muted)', fontSize: '0.62rem' }}>Exports customer locations and incident activity for the current local workspace.</div>
+              </section>
+
+              <section className="panel-card" style={{ borderLeft: '3px solid #ec4899' }}>
+                <h2 className="section-title">
+                  <span>Plan & Integrations</span>
+                  <CircleDollarSign size={14} style={{ color: '#ec4899' }} />
+                </h2>
+                <div className="form-group" style={{ marginBottom: '0.55rem' }}>
+                  <label>Workspace plan</label>
+                  <select value={businessPlan} onChange={(event) => setBusinessPlan(event.target.value)}>
+                    <option>Starter</option>
+                    <option>Operations</option>
+                    <option>Enterprise</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.6rem', marginBottom: '0.65rem', padding: '0.55rem', background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.22)', borderRadius: '6px' }}>
+                  <div>
+                    <strong style={{ display: 'block', color: '#f9a8d4', fontSize: '0.75rem' }}>{businessPlan} plan</strong>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>{businessPlan === 'Starter' ? '₹999 / month' : businessPlan === 'Operations' ? '₹4,999 / month' : 'Custom pricing'}</span>
+                  </div>
+                  <button type="button" onClick={handlePaymentRequest} className="btn btn-primary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.68rem' }}>
+                    <CircleDollarSign size={12} /> {paymentStatus === 'Checkout ready' ? 'Checkout Ready' : 'Continue to Payment'}
+                  </button>
+                </div>
+                <div style={{ color: paymentStatus === 'Checkout ready' ? '#4ade80' : 'var(--text-muted)', fontSize: '0.62rem', marginBottom: '0.55rem' }}>
+                  Payment status: {paymentStatus}. Connect Razorpay, Stripe, or another provider for real payment collection.
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.68rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Tracked seats</span><strong style={{ color: '#38bdf8' }}>{customers.length} / {businessPlan === 'Starter' ? 25 : businessPlan === 'Operations' ? 250 : 'Unlimited'}</strong></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Mobile client</span><strong style={{ color: '#fbbf24' }}>Pending</strong></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Realtime API</span><strong style={{ color: '#fbbf24' }}>Backend required</strong></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Carrier tower provider</span><strong style={{ color: '#fbbf24' }}>Partner required</strong></div>
+                </div>
+              </section>
+            </>
+          )}
+
           {activeTab === 'bustle' && (
             <>
               {/* Live Bus Tracker Console (Bustle Integration) */}
@@ -3154,6 +4052,12 @@ export default function App() {
                         <div style={{ color: 'var(--text-secondary)' }}>Scanning verification photo for highway hazard cues...</div>
                       )}
 
+                      {modelStatus === 'offline' && (
+                        <div style={{ color: '#fbbf24', fontWeight: 'bold' }}>
+                          AI classifier unavailable offline. Incident is recorded for local operator review.
+                        </div>
+                      )}
+
                       {modelStatus === 'ready' && aiVerificationResult && (
                         <div>
                           {aiVerificationResult.success ? (
@@ -3179,6 +4083,12 @@ export default function App() {
                           )}
                         </div>
                       )}
+
+                      {modelStatus === 'failed' && (
+                        <div style={{ color: '#f87171', fontWeight: 'bold' }}>
+                          This image could not be verified as a recognized hazard or emergency scene. Submission blocked.
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -3197,6 +4107,39 @@ export default function App() {
                     File Incident Report
                   </button>
                 </form>
+              </section>
+
+              <section className="panel-card">
+                <h2 className="section-title">
+                  <span>SOS Fallback Contacts</span>
+                  <Phone size={14} style={{ color: '#f87171' }} />
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', margin: '0 0 0.75rem' }}>
+                  Contacts are stored on this device. SMS opens the phone messaging app with the incident and location prepared.
+                </p>
+                <form onSubmit={addSosContact} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.4rem', alignItems: 'end' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label>Contact name</label>
+                    <input value={sosContactName} onChange={(e) => setSosContactName(e.target.value)} placeholder="Control room" required />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label>Phone number</label>
+                    <input value={sosContactPhone} onChange={(e) => setSosContactPhone(e.target.value)} placeholder="+91 9876543210" type="tel" required />
+                  </div>
+                  <button type="submit" className="btn btn-secondary" style={{ height: '36px' }}>Save</button>
+                </form>
+                {sosContacts.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.75rem' }}>
+                    {sosContacts.map(contact => (
+                      <div key={contact.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '5px', fontSize: '0.72rem' }}>
+                        <span><strong>{contact.name}</strong> <span style={{ color: 'var(--text-secondary)' }}>{contact.phone}</span></span>
+                        <button type="button" onClick={() => removeSosContact(contact.id)} className="btn btn-secondary" style={{ color: '#f87171', padding: '0.2rem 0.4rem' }}>Remove</button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state" style={{ padding: '0.5rem 0 0' }}>Add at least one SOS contact before field testing.</div>
+                )}
               </section>
 
               {/* Active Incidents Registry */}
@@ -3302,6 +4245,38 @@ export default function App() {
                               <div style={{ marginTop: '0.4rem' }}>
                                 <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 'bold', display: 'block', marginBottom: '0.15rem' }}>📷 Photographic Proof:</span>
                                 <img src={inc.proofImage} alt="Incident Proof" style={{ width: '100%', maxHeight: '90px', objectFit: 'cover', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.08)' }} />
+                              </div>
+                            )}
+                            {isActive && sosContacts.length > 0 && (
+                              <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.5rem' }}>
+                                {sosContacts.map(contact => (
+                                  <div key={contact.id} style={{ display: 'flex', gap: '0.25rem', flex: 1 }}>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        sendSosSms(inc, contact);
+                                      }}
+                                      className="btn btn-secondary"
+                                      style={{ flex: 1, padding: '0.3rem', fontSize: '0.65rem', color: '#fca5a5', borderColor: 'rgba(248,113,113,0.35)' }}
+                                      title={`Prepare SOS SMS for ${contact.name}`}
+                                    >
+                                      <MessageSquare size={11} /> SMS
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        callSosContact(contact);
+                                      }}
+                                      className="btn btn-secondary"
+                                      style={{ padding: '0.3rem', color: '#fca5a5', borderColor: 'rgba(248,113,113,0.35)' }}
+                                      title={`Call ${contact.name}`}
+                                    >
+                                      <Phone size={11} />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
                             )}
                           </div>
@@ -3583,7 +4558,7 @@ export default function App() {
       {/* Main Interactive Map Viewport */}
       <main id="onboarding-map" className={`map-viewport ${showTour && tourStep === 2 ? 'onboarding-highlight' : ''}`}>
         {/* Interactive Leaflet Element */}
-        <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : ''}`}></div>
+        <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : 'map-light-theme'}`}></div>
         
         {/* Google Maps Style Navigation HUD Overlay */}
         {isNavigating && gpsCoords && (
@@ -3914,15 +4889,40 @@ export default function App() {
               <h4 style={{ margin: 0, fontSize: '0.8rem', textTransform: 'uppercase', color: '#c084fc', letterSpacing: '0.05em', fontWeight: 800 }}>
                 Environment HUD
               </h4>
-              
+
+              <div style={{ padding: '0.55rem', borderRadius: '6px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.25)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <span style={{ fontSize: '0.65rem', color: '#86efac', fontWeight: 700 }}>LIVE WEATHER</span>
+                  <button type="button" onClick={() => setWeatherRefreshKey(value => value + 1)} style={{ background: 'none', border: 'none', color: '#d1d5db', cursor: 'pointer', fontSize: '0.6rem', padding: 0 }}>
+                    {weatherStatus === 'loading' ? 'Updating...' : 'Refresh'}
+                  </button>
+                  <span style={{ fontSize: '0.6rem', color: weatherSeverity === 'danger' ? '#f87171' : weatherSeverity === 'caution' ? '#fbbf24' : '#4ade80' }}>
+                    {weatherSeverity === 'danger' ? 'Danger' : weatherSeverity === 'caution' ? 'Caution' : weatherSeverity === 'safe' ? 'Safe' : 'Unavailable'}
+                  </span>
+                </div>
+                {weather ? (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+                      <strong style={{ fontSize: '1.35rem', color: '#e0f2fe' }}>{weather.temperature}°C</strong>
+                      <span style={{ fontSize: '0.72rem', color: '#cbd5e1' }}>{weather.label}</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.3rem', marginTop: '0.4rem', fontSize: '0.65rem', color: '#cbd5e1' }}>
+                      <span>💧 {weather.humidity}%</span>
+                      <span>🌧️ {weather.rainProbability}%</span>
+                      <span>💨 {weather.windSpeed} km/h</span>
+                    </div>
+                  </>
+                ) : (
+                  <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Loading local conditions...</span>
+                )}
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>MAP STYLE</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
                   {[
                     { id: 'dark', label: '🌙 Dark' },
                     { id: 'light', label: '☀️ Light' },
-                    { id: 'satellite', label: '🛰️ Satellite' },
-                    { id: 'terrain', label: '⛰️ Terrain' }
                   ].map(style => (
                     <button 
                       key={style.id}

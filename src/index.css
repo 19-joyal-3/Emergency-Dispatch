@@ -1,27 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
-
 :root {
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Premium Dark Palette */
-  --bg-main: #0b0f19;
-  --bg-card: rgba(17, 24, 39, 0.7);
-  --bg-card-hover: rgba(31, 41, 55, 0.8);
-  --bg-input: rgba(3, 7, 18, 0.6);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-glow: rgba(239, 68, 68, 0.2);
+  --bg-main: #05070a;
+  --bg-card: rgba(13, 18, 24, 0.88);
+  --bg-card-hover: rgba(19, 29, 37, 0.94);
+  --bg-input: rgba(2, 8, 13, 0.88);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-glow: rgba(34, 197, 94, 0.24);
 
   /* HSL Tailored Colors */
   --color-primary: 354, 84%, 57%; /* Emergency Red */
-  --color-secondary: 200, 95%, 48%; /* Active Blue */
+  --color-secondary: 142, 71%, 45%; /* Professional Green */
   --color-warning: 38, 92%, 50%; /* Blockage Amber */
   --color-success: 142, 71%, 45%; /* Safe / Synced Green */
   --color-neutral: 215, 25%, 27%; /* Slate */
 
-  --text-primary: #f3f4f6;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -39,7 +37,7 @@
 }
 
 body {
-  background-color: var(--bg-main);
+  background: radial-gradient(circle at 80% 10%, rgba(34, 197, 94, 0.07), transparent 32%), var(--bg-main);
   color: var(--text-primary);
   font-family: var(--font-body);
   overflow: hidden;
@@ -60,12 +58,24 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: 64px 340px 1fr;
   height: 100vh;
   width: 100vw;
-  background-color: var(--bg-main);
+  background: radial-gradient(circle at 80% 10%, rgba(34, 197, 94, 0.07), transparent 32%), var(--bg-main);
+}
+
+.app-container.map-focused {
+  grid-template-columns: 64px 0 1fr;
+}
+
+.app-container.map-focused .sidebar {
+  display: none;
+}
+
+.app-container.map-focused .map-viewport {
+  grid-column: 3;
 }
 
 /* Sidebar Dashboard */
 .sidebar {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 30, 0.98) 100%);
+  background: linear-gradient(180deg, rgba(8, 14, 19, 0.98) 0%, rgba(3, 6, 9, 0.99) 100%);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -470,22 +480,28 @@ select:focus, input[type="text"]:focus, textarea:focus {
 /* Map View Container */
 .map-viewport {
   position: relative;
-  height: 100vh;
+  height: 100%;
+  min-height: 0;
   width: 100%;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 .map-container {
   height: 100%;
+  min-height: 0;
   width: 100%;
-}
-
-/* Tactical Leaflet Tile Overlay for Premium Dark Aesthetics */
-.leaflet-tile-container {
-  filter: invert(100%) hue-rotate(185deg) brightness(85%) contrast(92%) saturate(85%);
 }
 
 .leaflet-container {
   background-color: #0d121f !important;
+}
+
+.map-light-theme .leaflet-tile-container,
+.map-light-theme .leaflet-overlay-pane,
+.map-light-theme .leaflet-marker-pane,
+.map-light-theme .leaflet-shadow-pane {
+  filter: none !important;
 }
 
 /* Map Action Controls Overlay */
@@ -725,7 +741,7 @@ select:focus, input[type="text"]:focus, textarea:focus {
 
 /* Tab Navigation Toolbar Styling */
 .tab-toolbar {
-  background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+  background: linear-gradient(180deg, #030609 0%, #080f14 100%);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -797,13 +813,13 @@ select:focus, input[type="text"]:focus, textarea:focus {
 }
 
 .tab-btn.active {
-  background: rgba(6, 182, 212, 0.08);
-  color: #06b6d4;
-  box-shadow: inset 3px 0 0 #06b6d4;
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  box-shadow: inset 3px 0 0 #22c55e, 0 0 18px rgba(34, 197, 94, 0.08);
 }
 
 .tab-btn.active svg {
-  filter: drop-shadow(0 0 4px #06b6d4);
+  filter: drop-shadow(0 0 5px #22c55e);
 }
 
 .tab-label {
@@ -1508,9 +1524,21 @@ select option {
     position: relative !important;
   }
 
+  .app-container.map-focused .map-viewport,
+  .app-container.sidebar-open .map-viewport {
+    grid-column: auto;
+  }
+
+  .app-container.sidebar-open .sidebar {
+    display: flex !important;
+  }
+
   /* Map takes full viewport height behind overlay cards */
   .map-container {
     height: calc(100vh - 56px) !important;
+    height: calc(100dvh - 56px) !important;
+    max-height: calc(100vh - 56px) !important;
+    max-height: calc(100dvh - 56px) !important;
     width: 100vw !important;
     position: absolute !important;
     top: 0 !important;
@@ -1631,4 +1659,212 @@ select option {
     width: auto !important;
     bottom: 70px !important;
   }
+}
+
+/* UX refinements */
+button,
+select,
+input,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #4ade80;
+  outline-offset: 2px;
+}
+
+.app-container {
+  isolation: isolate;
+}
+
+.sidebar {
+  transition: width 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sidebar-content {
+  scrollbar-gutter: stable;
+}
+
+.tab-btn {
+  min-height: 52px;
+}
+
+.tab-btn:active {
+  transform: scale(0.96);
+}
+
+.map-overlay-card,
+.nav-banner-top,
+.nav-details-bottom,
+.instruction-banner {
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+@media (max-width: 768px) {
+  .tab-btn {
+    min-height: 56px;
+  }
+
+  .tab-label {
+    font-size: 9px;
+  }
+
+  .instruction-banner {
+    padding: 0.6rem 0.8rem !important;
+    border-radius: 12px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Professional black UI theme */
+:root {
+  --bg-main: #050505;
+  --bg-card: rgba(18, 18, 18, 0.96);
+  --bg-card-hover: #202020;
+  --bg-input: #0d0d0d;
+  --border-color: rgba(255, 255, 255, 0.14);
+  --border-glow: rgba(22, 163, 74, 0.24);
+  --text-primary: #ffffff;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+}
+
+body,
+.app-container {
+  background: #050505;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #111111 0%, #050505 100%);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.45);
+}
+
+.tab-toolbar {
+  background: linear-gradient(180deg, #101010 0%, #030303 100%);
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.45);
+}
+
+.tab-btn:hover {
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.panel-card,
+.map-overlay-card,
+.instruction-banner {
+  color: var(--text-primary);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.network-bar,
+.list-item,
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+select,
+input[type="text"],
+textarea {
+  color: var(--text-primary);
+}
+
+.console-panel {
+  background: #111111;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* Clean, high-contrast editorial UI */
+body {
+  letter-spacing: 0.01em;
+}
+
+h1, h2, h3, h4, h5, h6,
+.brand-title,
+.tab-label,
+.console-title,
+label {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.brand-title {
+  color: #ffffff;
+  background: none;
+  -webkit-text-fill-color: initial;
+  font-weight: 900;
+}
+
+.brand-subtitle {
+  color: #64748b;
+}
+
+.panel-card,
+.map-overlay-card,
+.instruction-banner,
+.console-panel {
+  border-radius: 4px;
+  backdrop-filter: none;
+}
+
+.panel-card {
+  padding: 1.15rem;
+}
+
+.btn {
+  border-radius: 3px;
+  min-height: 42px;
+  letter-spacing: 0.08em;
+}
+
+.btn-primary,
+.btn-success {
+  background: #15803d;
+  box-shadow: none;
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+  background: #166534;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-secondary {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.tab-btn {
+  border-radius: 3px;
+}
+
+.tab-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: inset 3px 0 0 #16a34a;
+}
+
+.tab-btn.active svg {
+  filter: none;
+}
+
+input[type="text"],
+select,
+textarea {
+  border-radius: 3px;
+  border-color: rgba(255, 255, 255, 0.2);
 }
