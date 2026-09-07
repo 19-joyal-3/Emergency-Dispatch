@@ -1730,6 +1730,83 @@ textarea:focus-visible {
   }
 }
 
+@media (max-width: 768px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .app-container {
+    height: 100dvh !important;
+    min-height: 100dvh;
+    width: 100%;
+    overflow: hidden !important;
+  }
+
+  .map-viewport {
+    position: absolute !important;
+    inset: 0 0 56px 0;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .map-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .tab-toolbar {
+    overflow: hidden;
+  }
+
+  .tab-buttons {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    justify-content: flex-start !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-buttons::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    flex: 0 0 72px;
+    width: 72px !important;
+    min-width: 72px;
+    min-height: 56px;
+  }
+
+  .sidebar {
+    width: calc(100% - 12px) !important;
+    max-width: none !important;
+    height: calc(100dvh - 56px) !important;
+    overflow: hidden !important;
+  }
+
+  .sidebar-content {
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .panel-card {
+    padding: 0.9rem;
+  }
+
+  .map-overlay-card {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
 /* Professional black UI theme */
 :root {
   --bg-main: #050505;
