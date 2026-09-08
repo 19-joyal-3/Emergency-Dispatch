@@ -503,7 +503,6 @@ export default function App() {
   // Admin Authentication States
   const [adminUser, setAdminUser] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
-  const [adminPasswordConfirmation, setAdminPasswordConfirmation] = useState('');
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [authMode, setAuthMode] = useState('login');
@@ -555,15 +554,11 @@ export default function App() {
       return;
     }
 
-    if (authMode === 'signup' && adminPassword !== adminPasswordConfirmation) {
-      setLoginError('Passwords do not match.');
-      return;
-    }
-
     setAuthLoading(true);
-    const result = authMode === 'signup'
-      ? await supabase.auth.signUp({ email: adminUser.trim(), password: adminPassword })
-      : await supabase.auth.signInWithPassword({ email: adminUser.trim(), password: adminPassword });
+    const result = await supabase.auth.signInWithPassword({
+      email: adminUser.trim(),
+      password: adminPassword
+    });
     setAuthLoading(false);
 
     if (result.error) {
@@ -586,15 +581,8 @@ export default function App() {
       return;
     }
 
-    if (authMode === 'signup') {
-      setAuthNotice('Account created. Check your email to verify your address before signing in.');
-      setAuthMode('login');
-      setAdminPassword('');
-      setAdminPasswordConfirmation('');
-    } else {
-      setIsAdminAuthenticated(true);
-      logMessage('[SYSTEM] Admin console unlocked. Audit logs active.', 'success');
-    }
+    setIsAdminAuthenticated(true);
+    logMessage('[SYSTEM] Admin console unlocked. Audit logs active.', 'success');
   };
 
   const handleAdminLogout = async () => {
@@ -4504,9 +4492,9 @@ export default function App() {
                     <div className="auth-panel-inner">
                       <div className="auth-mobile-brand"><span className="auth-brand-mark"><ShieldCheck size={18} /></span> DISPATCH<span className="auth-brand-accent">HUB</span></div>
                       <p className="auth-eyebrow" style={{ color: '#0284c7', marginBottom: '10px' }}>OPERATOR ACCESS</p>
-                      <h2>{authMode === 'reset' ? 'Reset your password' : authMode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
+                      <h2>{authMode === 'reset' ? 'Reset your password' : 'Welcome back'}</h2>
                       <p className="auth-panel-description">
-                        {authMode === 'reset' ? 'Enter your work email and we will send recovery instructions.' : authMode === 'signup' ? 'Create a secure operator account for your response team.' : 'Sign in to access the emergency dispatch console.'}
+                        {authMode === 'reset' ? 'Enter your work email and we will send recovery instructions.' : 'Sign in to access the emergency dispatch console.'}
                       </p>
                   <form className="auth-form" onSubmit={handleAdminLogin}>
                     {loginError && (
@@ -4536,22 +4524,21 @@ export default function App() {
                         placeholder="At least 8 characters"
                         required
                         minLength="8"
-                        autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
+                        autoComplete="current-password"
                         disabled={authLoading}
                       />
                       <button type="button" className="auth-password-toggle" onClick={() => setPasswordVisible((visible) => !visible)} aria-label={passwordVisible ? 'Hide password' : 'Show password'} disabled={authLoading}>
                         {passwordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>}
-                    {authMode === 'signup' && <><label htmlFor="admin-password-confirmation">Confirm password</label><input id="admin-password-confirmation" type={passwordVisible ? 'text' : 'password'} value={adminPasswordConfirmation} onChange={(e) => setAdminPasswordConfirmation(e.target.value)} placeholder="Re-enter your password" required minLength="8" autoComplete="new-password" disabled={authLoading} /></>}
                     <button type="submit" className="auth-submit" disabled={authLoading}>
-                      {authLoading ? <><Loader2 size={16} className="auth-spinner" /> Working...</> : authMode === 'reset' ? 'Send reset email' : authMode === 'signup' ? 'Create account' : 'Sign in'}
+                      {authLoading ? <><Loader2 size={16} className="auth-spinner" /> Working...</> : authMode === 'reset' ? 'Send reset email' : 'Sign in'}
                     </button>
                     {authMode === 'login' && <button type="button" className="auth-link-button" onClick={() => { setAuthMode('reset'); setLoginError(''); setAuthNotice(''); }}>Forgot password?</button>}
                     <div className="auth-divider">or</div>
                     <p className="auth-switch">
-                      {authMode === 'reset' ? 'Remember your password?' : authMode === 'signup' ? 'Already have an account?' : 'Need an operator account?'}{' '}
-                      <button type="button" onClick={() => { setAuthMode(authMode === 'login' ? 'signup' : 'login'); setLoginError(''); setAuthNotice(''); }}>{authMode === 'login' ? 'Create one' : 'Sign in'}</button>
+                      {authMode === 'reset' ? 'Remember your password?' : 'Need help signing in?'}{' '}
+                      <button type="button" onClick={() => { setAuthMode('login'); setLoginError(''); setAuthNotice(''); }}>{authMode === 'reset' ? 'Sign in' : 'Use password recovery'}</button>
                     </p>
                     <small className="auth-privacy">Access is monitored for operational security. By continuing, you agree to your organization’s access policy.</small>
                   </form>
