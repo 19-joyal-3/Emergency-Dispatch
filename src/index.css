@@ -2161,6 +2161,10 @@ label {
   margin: 0;
 }
 
+.auth-fullscreen .auth-panel {
+  overflow-y: auto;
+}
+
 .auth-visual {
   position: relative;
   display: flex;
@@ -2458,7 +2462,7 @@ label {
   animation: spin 1s linear infinite;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 1100px) {
   .auth-screen {
     display: block;
   }
