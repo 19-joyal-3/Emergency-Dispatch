@@ -818,6 +818,12 @@ select:focus, input[type="text"]:focus, textarea:focus {
   box-shadow: inset 3px 0 0 #22c55e, 0 0 18px rgba(34, 197, 94, 0.08);
 }
 
+.auth-nav-btn {
+  margin-top: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
 .tab-btn.active svg {
   filter: drop-shadow(0 0 5px #22c55e);
 }

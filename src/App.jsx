@@ -3175,6 +3175,15 @@ export default function App() {
             <HelpCircle size={18} />
             <span className="tab-label">Help</span>
           </button>
+          <button
+            type="button"
+            className={`tab-btn auth-nav-btn ${activeTab === 'sync' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sync')}
+            title={isAdminAuthenticated ? 'Open account and sync console' : 'Sign in or create an account'}
+          >
+            {isAdminAuthenticated ? <ShieldCheck size={18} /> : <LockKeyhole size={18} />}
+            <span className="tab-label">{isAdminAuthenticated ? 'Account' : 'Sign in'}</span>
+          </button>
         </div>
         <div className="toolbar-footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', paddingBottom: '10px' }}>
           <button 
