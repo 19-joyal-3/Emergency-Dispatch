@@ -4489,7 +4489,7 @@ export default function App() {
             <>
               {!isAdminAuthenticated ? (
                 /* Admin Login Form */
-                <section className="auth-screen" style={{ minHeight: 'calc(100vh - 180px)', margin: '0' }}>
+                <section className="auth-screen auth-fullscreen" aria-label="Sign in">
                   <div className="auth-visual">
                     <div className="auth-visual-grid" />
                     <div className="auth-brand"><span className="auth-brand-mark"><ShieldCheck size={18} /></span> DISPATCH<span className="auth-brand-accent">HUB</span></div>

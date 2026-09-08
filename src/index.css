@@ -2153,6 +2153,14 @@ label {
   inset: 0;
 }
 
+.auth-fullscreen {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  min-height: 100vh;
+  margin: 0;
+}
+
 .auth-visual {
   position: relative;
   display: flex;
