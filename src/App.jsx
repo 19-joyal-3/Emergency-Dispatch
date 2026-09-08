@@ -279,6 +279,9 @@ export default function App() {
         logMessage('[SYSTEM] Network lost. Operating in local-only mode.', 'warning');
       } else {
         logMessage('[SYSTEM] Network restored. Online services available.', 'success');
+        window.setTimeout(() => {
+          syncQueuedActions();
+        }, 0);
       }
     };
 
@@ -3034,6 +3037,22 @@ export default function App() {
   };
 
   // Sync processor
+  const syncQueuedActions = async () => {
+    if (!navigator.onLine || isSyncing) return;
+    const queue = await db.syncQueue.toArray();
+    if (queue.length === 0) return;
+
+    setIsSyncing(true);
+    logMessage(`[SYNC] Connectivity restored. Processing ${queue.length} queued local actions...`, 'system');
+    for (let i = 0; i < queue.length; i += 1) {
+      logMessage(`[SYNC] [${i + 1}/${queue.length}] Prepared local action: ${queue[i].action}`, 'info');
+    }
+    await db.syncQueue.clear();
+    setSyncQueueLength(0);
+    setIsSyncing(false);
+    logMessage('[SYNC] Local queue cleared after connectivity recovery.', 'success');
+  };
+
   const handleSyncToggle = async (e) => {
     const checked = e.target.checked && navigator.onLine;
     setIsOnline(checked);
@@ -3042,17 +3061,7 @@ export default function App() {
       setIsSyncing(true);
       logMessage(`[SYNC] Connectivity restored. Replicating ${syncQueueLength} queued transactions...`, 'system');
 
-      const queue = await db.syncQueue.toArray();
-      
-      for (let i = 0; i < queue.length; i++) {
-        const item = queue[i];
-        await new Promise(resolve => setTimeout(resolve, 800));
-        logMessage(`[SYNC] [${i+1}/${queue.length}] Uploaded local action: ${item.action}`, 'info');
-      }
-
-      await db.syncQueue.clear();
-      setSyncQueueLength(0);
-      setIsSyncing(false);
+      await syncQueuedActions();
       logMessage('[SYNC] Database synchronized.', 'success');
 
       confetti({
