@@ -8,12 +8,21 @@ The same web build works on phones, tablets, Windows, and macOS. Native Android/
 
 ## Dispatch configuration
 
-Set these Vite environment variables at build time when deploying a controlled operations workspace:
+Set `VITE_API_BASE_URL` at build time to the HTTPS base URL of the backend authentication and dispatch API. For the terminal login, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (the publishable/anon key only). The current project URL is already the default; only the publishable key is required for local development. Never expose or use a Supabase secret/service-role key in the frontend.
 
-- `VITE_AUTH_REQUIRED=true` enables the login gate; pair it with `VITE_ADMIN_USER` and `VITE_ADMIN_PASSWORD`.
+The backend must expose `POST /auth/login` and `POST /auth/register`. Registration accepts `{ "name": "Full name", "username": "email", "password": "..." }`; login accepts `{ "username": "email", "password": "..." }`. Validate credentials server-side, return a short-lived session token after login, and authorize all protected dispatch and notification operations. Registration should assign a restricted default role and enforce email verification/rate limits. Keep provider secrets and audit storage server-side.
 - `VITE_EMERGENCY_POLICE`, `VITE_EMERGENCY_FIRE`, `VITE_EMERGENCY_MEDICAL`, and `VITE_EMERGENCY_DISASTER` set call-button placeholders.
 
-The emergency numbers can also be edited locally from the Alerts panel. Credentials are build-time configuration; enforce authorization again on a backend for production.
+The emergency numbers can also be edited locally from the Alerts panel. Configure email, webhook, database, and notification secrets only on the backend; never expose them through `VITE_*` variables.
+
+Create a `.env.local` file:
+
+```env
+VITE_SUPABASE_URL=https://yvoykxyksxtcupwwnovb.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+```
+
+Supabase's built-in email service has a low email rate limit. For local testing, either wait for the limit to reset, create users directly in **Authentication → Users**, or disable **Confirm email** under **Authentication → Providers → Email**. For production, configure a custom SMTP provider instead of disabling confirmation.
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 

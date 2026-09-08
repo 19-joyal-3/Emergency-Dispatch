@@ -11,6 +11,14 @@ db.version(2).stores({
   audits: '++id, ip, os, browser, device, timestamp'
 });
 
+db.version(3).stores({
+  incidents: 'id, type, status, reportedAt',
+  blockages: 'id, fromNode, toNode, active',
+  responders: 'id, name, type, status',
+  syncQueue: '++id, action, timestamp',
+  audits: '++id, os, browser, device, timestamp'
+}).upgrade((transaction) => transaction.table('audits').clear());
+
 // Helper functions for local-first operations with sync-queuing
 export async function addIncidentLocal(incident, isOnline) {
   await db.incidents.add(incident);

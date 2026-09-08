@@ -1,6 +1,6 @@
 {
-  "name": "Kerala Emergency Dispatch",
-  "short_name": "Dispatch Hub",
+  "name": "Vanguard Geo",
+  "short_name": "Vanguard Geo",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

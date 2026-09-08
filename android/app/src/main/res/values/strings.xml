@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Vanguard Geo</string>
+    <string name="title_activity_main">Vanguard Geo</string>
+    <string name="package_name">com.yourorganization.emergencydispatch</string>
+    <string name="custom_url_scheme">com.yourorganization.emergencydispatch</string>
+</resources>

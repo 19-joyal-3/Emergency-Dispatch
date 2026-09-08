@@ -6,6 +6,7 @@ import { formatSosMessage, getSosContacts, openSosCall, openSosSms, saveSosConta
 import mapData from './mapData.json';
 import { solveDijkstra, findClosestNode, findClosestEdge, getPositionAtDistance, getRouteLength, haversineDistance } from './routing';
 import { fetchWeather } from './weatherApi';
+import { isSupabaseConfigured, supabase } from './supabase';
 import confetti from 'canvas-confetti';
 import { 
   ShieldAlert, 
@@ -49,8 +50,11 @@ import {
   ,Search
   ,Volume2
   ,Vibrate
-  ,LogIn
   ,PhoneCall
+  ,Eye
+  ,EyeOff
+  ,Loader2
+  ,LogOut
 } from 'lucide-react';
 
 const INITIAL_RESPONDERS = [
@@ -66,10 +70,15 @@ const getResponderEmoji = (type) => {
   return '🚨';
 };
 
+const escapeHtml = (value) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#039;');
+
 const DISPATCH_CONFIG = {
-  authRequired: import.meta.env.VITE_AUTH_REQUIRED === 'true',
-  adminUser: import.meta.env.VITE_ADMIN_USER || '',
-  adminPassword: import.meta.env.VITE_ADMIN_PASSWORD || '',
+  apiBaseUrl: (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, ''),
   emergencyNumbers: {
     police: import.meta.env.VITE_EMERGENCY_POLICE || '100',
     fire: import.meta.env.VITE_EMERGENCY_FIRE || '101',
@@ -110,9 +119,6 @@ export default function App() {
   const [incidentTypeFilter, setIncidentTypeFilter] = useState('all');
   const [incidentPriorityFilter, setIncidentPriorityFilter] = useState('all');
   const [emergencyNumbers, setEmergencyNumbers] = useState(() => getStoredJson('dispatch_emergency_numbers', DISPATCH_CONFIG.emergencyNumbers));
-  const [appAuthenticated, setAppAuthenticated] = useState(() => (
-    !DISPATCH_CONFIG.authRequired || localStorage.getItem('dispatch_authenticated') === 'true'
-  ));
 
   const tileLayerRef = useRef(null);
 
@@ -166,7 +172,7 @@ export default function App() {
     mapRef.current.setView([lat, lng], 14);
     if (searchMarkerRef.current) searchMarkerRef.current.remove();
     searchMarkerRef.current = L.marker([lat, lng]).addTo(mapRef.current)
-      .bindPopup(`<strong>${result.display_name}</strong>`)
+      .bindPopup(`<strong>${escapeHtml(result.display_name)}</strong>`)
       .openPopup();
     setLocationResults([]);
     setLocationQuery(result.display_name);
@@ -486,7 +492,6 @@ export default function App() {
   const [newIncidentDistrict, setNewIncidentDistrict] = useState('tvm');
 
   // Visitor Access & IP Diagnostics States
-  const [visitorIp, setVisitorIp] = useState('');
   const [visitorOs, setVisitorOs] = useState('');
   const [visitorBrowser, setVisitorBrowser] = useState('');
   const [visitorDevice, setVisitorDevice] = useState('');
@@ -495,156 +500,113 @@ export default function App() {
   // Admin Authentication States
   const [adminUser, setAdminUser] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
+  const [adminPasswordConfirmation, setAdminPasswordConfirmation] = useState('');
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const [authUser, setAuthUser] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
+  const [authMode, setAuthMode] = useState('login');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authNotice, setAuthNotice] = useState('');
+  const [authCooldown, setAuthCooldown] = useState(0);
 
-  // Fetch with abort timeout helper
-  const fetchWithTimeout = async (resource, options = {}) => {
-    const { timeout = 3000 } = options;
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-    try {
-      const response = await fetch(resource, {
-        ...options,
-        signal: controller.signal
-      });
-      clearTimeout(id);
-      return response;
-    } catch (err) {
-      clearTimeout(id);
-      throw err;
-    }
-  };
+  useEffect(() => {
+    if (!supabase) return undefined;
 
-  const handleAdminLogin = (e) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAdminAuthenticated(Boolean(session));
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdminAuthenticated(Boolean(session));
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
-    if (DISPATCH_CONFIG.adminUser && DISPATCH_CONFIG.adminPassword &&
-      adminUser === DISPATCH_CONFIG.adminUser && adminPassword === DISPATCH_CONFIG.adminPassword) {
-      setIsAdminAuthenticated(true);
-      setLoginError('');
-      logMessage('[SYSTEM] Admin console unlocked. Audit logs active.', 'success');
-    } else {
-      setLoginError(DISPATCH_CONFIG.adminUser
-        ? 'Authentication failed: invalid ID or password.'
-        : 'Admin credentials are not configured. Set VITE_ADMIN_USER and VITE_ADMIN_PASSWORD.');
-      logMessage('[SECURITY] Unauthorized terminal access attempt.', 'error');
-    }
-  };
+    setLoginError('');
+    setAuthNotice('');
 
-  const handleAppLogin = (e) => {
-    e.preventDefault();
-    if (!DISPATCH_CONFIG.adminUser || !DISPATCH_CONFIG.adminPassword) {
-      setLoginError('Authentication is enabled but credentials are not configured. Set VITE_ADMIN_USER and VITE_ADMIN_PASSWORD.');
+    if (authCooldown > 0) {
+      setLoginError(`Please wait ${authCooldown} seconds before trying again.`);
       return;
     }
-    if (authUser === DISPATCH_CONFIG.adminUser && authPassword === DISPATCH_CONFIG.adminPassword) {
-      setAppAuthenticated(true);
-      setLoginError('');
-      localStorage.setItem('dispatch_authenticated', 'true');
-      logMessage('[SYSTEM] Secure dispatch workspace unlocked.', 'success');
-    } else {
-      setLoginError('Authentication failed. Check the configured operator credentials.');
+
+    if (!supabase || !isSupabaseConfigured) {
+      setLoginError('Supabase is not configured. Add VITE_SUPABASE_PUBLISHABLE_KEY and restart the app.');
+      return;
     }
-  };
 
-  const lockApp = () => {
-    setAppAuthenticated(false);
-    setAuthUser('');
-    setAuthPassword('');
-    localStorage.removeItem('dispatch_authenticated');
-    setActiveTab(null);
-  };
-  
-  // Geolocation states
-  const [visitorLat, setVisitorLat] = useState(null);
-  const [visitorLng, setVisitorLng] = useState(null);
-  const [visitorCity, setVisitorCity] = useState('');
-  const [visitorRegion, setVisitorRegion] = useState('');
-  const [visitorIsp, setVisitorIsp] = useState('');
-
-  // DISCORD WEBHOOK URL - Paste your Webhook link here to get instant mobile/desktop notifications!
-  const DISCORD_WEBHOOK_URL = ""; 
-
-  // Send formatted Embed notification to Discord Webhook
-  const sendDiscordNotification = async (ip, city, region, country, isp, deviceDetails) => {
-    if (!DISCORD_WEBHOOK_URL || !navigator.onLine) return;
-    try {
-      await fetch(DISCORD_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          embeds: [{
-            title: "🌐 Admin Terminal Access Event",
-            description: "A visitor has loaded the Kerala Emergency Navigation system.",
-            color: 11032311, // Pulsing Purple hex color
-            fields: [
-              { name: "IP Address", value: `${ip}`, inline: true },
-              { name: "Provider/ISP", value: `${isp}`, inline: true },
-              { name: "Physical Location", value: `${city}, ${region}, ${country}`, inline: false },
-              { name: "Operating System", value: deviceDetails.os, inline: true },
-              { name: "Browser Engine", value: deviceDetails.browser, inline: true },
-              { name: "Device Type", value: deviceDetails.device, inline: true }
-            ],
-            footer: { text: "Tactical Dispatch Dashboard Access Audit Logs" },
-            timestamp: new Date().toISOString()
-          }]
-        })
+    if (authMode === 'reset') {
+      setAuthLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(adminUser.trim(), {
+        redirectTo: window.location.origin
       });
-      console.log("Discord access alert successfully delivered!");
-    } catch (err) {
-      console.error("Failed to post Discord alert:", err);
-    }
-  };
-
-  // Send AJAX email notification via Web3Forms with live status logs
-  const sendEmailAlert = async (subject, eventName, message, geoData = null) => {
-    const web3FormsAccessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-    if (!navigator.onLine || !web3FormsAccessKey) return;
-    try {
-      logMessage(`[SYSTEM] Despatching email alert: ${subject}...`, 'system');
-      
-      // Bypass React async state delay on page load by reading passed parameter directly
-      const ip = geoData ? geoData.ip : (visitorIp || 'Detecting...');
-      const city = geoData ? geoData.city : (visitorCity || '');
-      const region = geoData ? geoData.region : (visitorRegion || '');
-      const location = (city && region) ? `${city}, ${region}` : 'Detecting...';
-      const isp = geoData ? geoData.isp : (visitorIsp || 'Detecting...');
-      const os = geoData ? geoData.os : (visitorOs || 'Unknown');
-      const browser = geoData ? geoData.browser : (visitorBrowser || 'Unknown');
-
-      const response = await fetchWithTimeout("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          "access_key": web3FormsAccessKey,
-          "subject": subject,
-          "Event": eventName,
-          "Details": message,
-          "IP Address": ip,
-          "Location": location,
-          "ISP": isp,
-          "OS / Browser": `${os} / ${browser}`,
-          "Timestamp": new Date().toLocaleString()
-        })
-      });
-      
-      const result = await response.json();
-      if (response.ok && result.success) {
-        logMessage(`[SYSTEM] Email Sent: ${result.message || 'Notification delivered successfully!'}`, 'success');
-      } else {
-        logMessage(`[ERROR] Web3Forms rejected: ${result.message || 'Check access key status.'}`, 'error');
+      setAuthLoading(false);
+      if (error) {
+        setLoginError(error.message);
+        return;
       }
-    } catch (err) {
-      logMessage(`[ERROR] Network failed to send email: ${err.message}`, 'error');
-      console.error("Failed to send email alert:", err);
+      setAuthNotice('Password reset instructions sent. Check your email.');
+      return;
+    }
+
+    if (authMode === 'signup' && adminPassword !== adminPasswordConfirmation) {
+      setLoginError('Passwords do not match.');
+      return;
+    }
+
+    setAuthLoading(true);
+    const result = authMode === 'signup'
+      ? await supabase.auth.signUp({ email: adminUser.trim(), password: adminPassword })
+      : await supabase.auth.signInWithPassword({ email: adminUser.trim(), password: adminPassword });
+    setAuthLoading(false);
+
+    if (result.error) {
+      const errorMessage = result.error.message.toLowerCase();
+      if (errorMessage.includes('rate limit') || errorMessage.includes('email rate')) {
+        setLoginError('Supabase email rate limit reached. Wait about an hour, or disable email confirmation for local testing in Supabase Authentication settings.');
+        setAuthCooldown(60);
+        const cooldownTimer = window.setInterval(() => {
+          setAuthCooldown((seconds) => {
+            if (seconds <= 1) {
+              window.clearInterval(cooldownTimer);
+              return 0;
+            }
+            return seconds - 1;
+          });
+        }, 1000);
+      } else {
+        setLoginError(result.error.message);
+      }
+      return;
+    }
+
+    if (authMode === 'signup') {
+      setAuthNotice('Account created. Check your email to verify your address before signing in.');
+      setAuthMode('login');
+      setAdminPassword('');
+      setAdminPasswordConfirmation('');
+    } else {
+      setIsAdminAuthenticated(true);
+      logMessage('[SYSTEM] Admin console unlocked. Audit logs active.', 'success');
     }
   };
 
+  const handleAdminLogout = async () => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setLoginError(error.message);
+      return;
+    }
+    setIsAdminAuthenticated(false);
+    setAdminPassword('');
+    setAuthMode('login');
+  };
+
+  // Geolocation states
   // Extract Browser and OS details from UserAgent
   const getDeviceDetails = () => {
     const ua = navigator.userAgent;
@@ -708,176 +670,21 @@ export default function App() {
     });
   }, []);
 
-  // Fetch global visitor audits from serverless KVdb cloud with timeout
-  const fetchGlobalVisitorAudits = async () => {
-    try {
-      const response = await fetchWithTimeout('https://kvdb.io/WU7tRgWs3eh9gR77c1ajYi/terminal_audits', { timeout: 3000 });
-      if (!response.ok) return [];
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    } catch (err) {
-      console.warn("Failed to fetch global audits:", err);
-      return [];
-    }
-  };
-
-  // Save global visitor audits to serverless KVdb cloud with timeout
-  const saveGlobalVisitorAudits = async (auditsList) => {
-    try {
-      await fetchWithTimeout('https://kvdb.io/WU7tRgWs3eh9gR77c1ajYi/terminal_audits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(auditsList),
-        timeout: 3000
-      });
-    } catch (err) {
-      console.error("Failed to save global audits to KVdb:", err);
-    }
-  };
-
-  // Fetch Geolocation details using free keyless HTTPS-native providers
-  const fetchIpAndLocation = async () => {
-    if (!navigator.onLine) {
-      return {
-        ip: '127.0.0.1 (Localhost)',
-        city: 'Offline Local',
-        region: 'Kerala',
-        country: 'IN',
-        lat: 10.8505,
-        lng: 76.2711,
-        isp: 'Offline System'
-      };
-    }
-
-    // 1. First choice: freeipapi.com (HTTPS-native, keyless with 7s timeout for mobile networks)
-    try {
-      const response = await fetchWithTimeout('https://freeipapi.com/api/json', { timeout: 7000 });
-      if (!response.ok) throw new Error('freeipapi.com rejected request');
-      const data = await response.json();
-      return {
-        ip: data.ipAddress,
-        city: data.cityName || 'Kochi',
-        region: data.regionName || 'Kerala',
-        country: data.countryCode || 'IN',
-        lat: data.latitude || 9.9312,
-        lng: data.longitude || 76.2673,
-        isp: data.asnOrganization || 'Local ISP'
-      };
-    } catch (err) {
-      console.warn("freeipapi.com failed, attempting HTTPS ipapi.co fallback:", err);
-      
-      // 2. Second Choice: ipapi.co/json/ (HTTPS-native, keyless fallback with 7s timeout)
-      try {
-        const response = await fetchWithTimeout('https://ipapi.co/json/', { timeout: 7000 });
-        if (!response.ok) throw new Error('ipapi.co rejected request');
-        const data = await response.json();
-        return {
-          ip: data.ip,
-          city: data.city || 'Kochi',
-          region: data.region || 'Kerala',
-          country: data.country_name || 'IN',
-          lat: data.latitude || 9.9312,
-          lng: data.longitude || 76.2673,
-          isp: data.org || 'Network Provider'
-        };
-      } catch (err2) {
-        console.warn("All HTTPS keyless Geo APIs failed, running local default fallback:", err2);
-        return {
-          ip: '127.0.0.1 (Localhost)',
-          city: 'Kerala Loopback',
-          region: 'Kerala',
-          country: 'IN',
-          lat: 10.8505,
-          lng: 76.2711,
-          isp: 'Offline System'
-        };
-      }
-    }
-  };
-
-  // Initialize client audit logs on mount
+  // Keep a minimal local device audit without collecting IP addresses or precise location.
   useEffect(() => {
     const runAudit = async () => {
-      if (DISPATCH_CONFIG.authRequired && !appAuthenticated) return;
       const deviceDetails = getDeviceDetails();
       setVisitorOs(deviceDetails.os);
       setVisitorBrowser(deviceDetails.browser);
       setVisitorDevice(deviceDetails.device);
-
-      const geo = await fetchIpAndLocation();
-      setVisitorIp(geo.ip);
-      setVisitorCity(geo.city);
-      setVisitorRegion(geo.region);
-      setVisitorIsp(geo.isp);
-      setVisitorLat(geo.lat);
-      setVisitorLng(geo.lng);
-
-      if (!navigator.onLine) {
-        logMessage('[SYSTEM] Offline startup detected. Local audit captured without network calls.', 'warning');
-        try {
-          await logVisitorAudit({
-            ip: geo.ip,
-            os: deviceDetails.os,
-            browser: deviceDetails.browser,
-            device: deviceDetails.device,
-            city: geo.city,
-            region: geo.region,
-            country: geo.country,
-            isp: geo.isp,
-            lat: geo.lat,
-            lng: geo.lng,
-            timestamp: Date.now()
-          });
-          setVisitorLogs(await getVisitorAudits());
-        } catch (err) {
-          console.error('Failed to log local audit:', err);
-        }
-        return;
-      }
-
-      // 1. Trigger Email Notification immediately (completely independent of database operations)
-      try {
-        await sendEmailAlert(
-          `🚨 Site Accessed: ${geo.ip} (${geo.city}, ${geo.region})`,
-          "Visitor Access Event",
-          `A visitor has loaded the Kerala Emergency Navigation system.`,
-          {
-            ip: geo.ip,
-            city: geo.city,
-            region: geo.region,
-            isp: geo.isp,
-            os: deviceDetails.os,
-            browser: deviceDetails.browser
-          }
-        );
-      } catch (emailErr) {
-        console.error("Failed to send access alert email:", emailErr);
-      }
-
-      // 2. Perform background database audits logging
       try {
         const newAudit = {
-          ip: geo.ip,
           os: deviceDetails.os,
           browser: deviceDetails.browser,
           device: deviceDetails.device,
-          city: geo.city,
-          region: geo.region,
-          country: geo.country,
-          isp: geo.isp,
-          lat: geo.lat,
-          lng: geo.lng,
           timestamp: Date.now()
         };
-
-        // Log locally in IndexedDB as backup
         await logVisitorAudit(newAudit);
-        
-        logMessage(`[SYSTEM] Access verified: IP ${geo.ip} (${geo.city}, ${geo.region})`, 'system');
-        
-        // Trigger Webhook Notification
-        await sendDiscordNotification(geo.ip, geo.city, geo.region, geo.country, geo.isp, deviceDetails);
-        
         const logs = await getVisitorAudits();
         setVisitorLogs(logs);
       } catch (err) {
@@ -885,7 +692,7 @@ export default function App() {
       }
     };
     runAudit();
-  }, [appAuthenticated]);
+  }, []);
 
   // Geolocation / Live Navigation States
   const [gpsActive, setGpsActive] = useState(false);
@@ -1081,7 +888,6 @@ export default function App() {
   // 1. Initial Load and DB Seed
   useEffect(() => {
     const initDbAndData = async () => {
-      if (DISPATCH_CONFIG.authRequired && !appAuthenticated) return;
       try {
         const existingResponders = await db.responders.toArray();
         if (existingResponders.length === 0) {
@@ -1101,7 +907,7 @@ export default function App() {
       if (simTimerRef.current) clearInterval(simTimerRef.current);
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
     };
-  }, [appAuthenticated]);
+  }, []);
 
   // 1b. Draw active Admin Terminal markers for all connected sessions on Leaflet map
   useEffect(() => {
@@ -1655,10 +1461,10 @@ export default function App() {
 
       const popupHtml = `
         <div style="color: #f3f4f6; font-family: sans-serif; min-width: 150px;">
-          <h4 style="margin: 0 0 4px; color: ${color}; text-transform: uppercase;">${inc.type} Incident</h4>
-          <p style="margin: 0 0 8px; font-size: 12px; color: #9ca3af;">${inc.description}</p>
-          <div style="font-size: 11px; margin-bottom: 8px;">Status: <span style="font-weight:bold; color:${color}">${inc.status}</span></div>
-          <button id="pop-dispatch-${inc.id}" style="
+          <h4 style="margin: 0 0 4px; color: ${color}; text-transform: uppercase;">${escapeHtml(inc.type)} Incident</h4>
+          <p style="margin: 0 0 8px; font-size: 12px; color: #9ca3af;">${escapeHtml(inc.description)}</p>
+          <div style="font-size: 11px; margin-bottom: 8px;">Status: <span style="font-weight:bold; color:${color}">${escapeHtml(inc.status)}</span></div>
+          <button id="pop-dispatch-${escapeHtml(inc.id)}" style="
             background: ${color}; 
             color: white; 
             border: none; 
@@ -1670,7 +1476,7 @@ export default function App() {
             width: 100%;
             margin-bottom: 4px;
           ">Dispatch Responder</button>
-          <button id="pop-delete-${inc.id}" style="
+          <button id="pop-delete-${escapeHtml(inc.id)}" style="
             background: rgba(239, 68, 68, 0.1); 
             color: #ef4444; 
             border: 1px solid rgba(239, 68, 68, 0.3); 
@@ -3163,13 +2969,6 @@ export default function App() {
 
     logMessage(`[DISPATCH] unit ${selectedResponder.name} dispatched to incident. Route simulation initiated.`, 'system');
 
-    // Send Email Notification
-    sendEmailAlert(
-      `🚒 Responder Dispatched: ${selectedResponder.name}`,
-      "Emergency Unit Dispatched",
-      `Unit ${selectedResponder.name} dispatched to emergency location for incident: ${selectedIncident.type.toUpperCase()} (${selectedIncident.desc || 'No description'}).`
-    );
-
     const speedKmh = selectedResponder.speed;
     const speedKms = speedKmh / 3600;
     
@@ -3284,31 +3083,6 @@ export default function App() {
     (incidentTypeFilter === 'all' || incident.type === incidentTypeFilter) &&
     (incidentPriorityFilter === 'all' || incident.priority === incidentPriorityFilter)
   ));
-
-  if (DISPATCH_CONFIG.authRequired && !appAuthenticated) {
-    return (
-      <div className="auth-gate">
-        <section className="auth-card">
-          <ShieldAlert size={34} className="brand-logo" />
-          <h1>Secure Dispatch Workspace</h1>
-          <p>Authentication is required before operational incidents, responders, and locations are shown.</p>
-          <form onSubmit={handleAppLogin}>
-            {loginError && <div className="auth-error">{loginError}</div>}
-            <div className="form-group">
-              <label htmlFor="auth-user">Operator ID</label>
-              <input id="auth-user" value={authUser} onChange={(e) => setAuthUser(e.target.value)} autoComplete="username" required />
-            </div>
-            <div className="form-group">
-              <label htmlFor="auth-password">Password</label>
-              <input id="auth-password" type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} autoComplete="current-password" required />
-            </div>
-            <button type="submit" className="btn btn-primary"><LogIn size={14} /> Unlock workspace</button>
-          </form>
-          <small>Configure VITE_AUTH_REQUIRED, VITE_ADMIN_USER, and VITE_ADMIN_PASSWORD in the deployment environment.</small>
-        </section>
-      </div>
-    );
-  }
 
   return (
     <div className={`app-container ${activeTab ? 'sidebar-open' : 'map-focused'}`}>
@@ -3435,11 +3209,6 @@ export default function App() {
             <HelpCircle size={18} />
           </button>
           <span className={`network-dot ${isOnline ? 'online' : 'offline'}`}></span>
-          {DISPATCH_CONFIG.authRequired && (
-            <button type="button" className="toolbar-lock-btn" onClick={lockApp} title="Lock dispatch workspace">
-              <LockKeyhole size={14} />
-            </button>
-          )}
         </div>
       </nav>
 
@@ -4711,56 +4480,74 @@ export default function App() {
             <>
               {!isAdminAuthenticated ? (
                 /* Admin Login Form */
-                <section className="panel-card" style={{ height: 'calc(100vh - 180px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', margin: '0' }}>
-                  <h2 className="section-title" style={{ justifyContent: 'center', marginBottom: '1.25rem' }}>
-                    <Compass size={18} style={{ color: '#a855f7', animation: 'spin 8s linear infinite' }} />
-                    <span>Terminal Authentication</span>
-                  </h2>
-                  <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <section className="auth-screen" style={{ minHeight: 'calc(100vh - 180px)', margin: '0' }}>
+                  <div className="auth-visual">
+                    <div className="auth-visual-grid" />
+                    <div className="auth-brand"><span className="auth-brand-mark"><ShieldCheck size={18} /></span> DISPATCH<span className="auth-brand-accent">HUB</span></div>
+                    <div className="auth-visual-copy">
+                      <p className="auth-eyebrow">SECURE OPERATIONS CONSOLE</p>
+                      <h1>Ready when<br /><span>every second</span> counts.</h1>
+                      <p>Coordinate emergency response with a secure workspace built for teams that cannot afford delays.</p>
+                    </div>
+                    <div className="auth-status"><span /> Systems operational • Encrypted connection</div>
+                  </div>
+                  <div className="auth-panel">
+                    <div className="auth-panel-inner">
+                      <div className="auth-mobile-brand"><span className="auth-brand-mark"><ShieldCheck size={18} /></span> DISPATCH<span className="auth-brand-accent">HUB</span></div>
+                      <p className="auth-eyebrow" style={{ color: '#0284c7', marginBottom: '10px' }}>OPERATOR ACCESS</p>
+                      <h2>{authMode === 'reset' ? 'Reset your password' : authMode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
+                      <p className="auth-panel-description">
+                        {authMode === 'reset' ? 'Enter your work email and we will send recovery instructions.' : authMode === 'signup' ? 'Create a secure operator account for your response team.' : 'Sign in to access the emergency dispatch console.'}
+                      </p>
+                  <form className="auth-form" onSubmit={handleAdminLogin}>
                     {loginError && (
-                      <div style={{ fontSize: '0.725rem', color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.45rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)', textAlign: 'center', fontWeight: 'bold' }}>
+                      <div className="auth-error">
                         {loginError}
                       </div>
                     )}
-                    <div className="form-group">
-                      <label>Admin User ID</label>
+                    {authNotice && <div className="auth-notice">{authNotice}</div>}
+                    <label htmlFor="admin-email">Work email</label>
                       <input 
-                        type="text" 
+                        id="admin-email"
+                        type="email" 
                         value={adminUser}
                         onChange={(e) => setAdminUser(e.target.value)}
-                        placeholder="Enter admin ID..."
+                        placeholder="name@organization.org"
                         required
-                        style={{ border: loginError ? '1px solid #ef4444' : '1px solid var(--border-color)' }}
-                        disabled={simulationActive}
+                        autoComplete="email"
+                        disabled={authLoading}
                       />
-                    </div>
-                    <div className="form-group">
-                      <label>Terminal Password</label>
+                    {authMode !== 'reset' && <label htmlFor="admin-password">Password</label>}
+                    {authMode !== 'reset' && <div className="auth-password-field">
                       <input 
-                        type="password" 
+                        id="admin-password"
+                        type={passwordVisible ? 'text' : 'password'} 
                         value={adminPassword}
                         onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="Enter password..."
+                        placeholder="At least 8 characters"
                         required
-                        style={{ 
-                          width: '100%',
-                          padding: '0.65rem 0.8rem',
-                          background: 'var(--bg-input)',
-                          border: loginError ? '1px solid #ef4444' : '1px solid var(--border-color)',
-                          borderRadius: '8px',
-                          color: 'var(--text-primary)',
-                          fontFamily: 'var(--font-body)',
-                          fontSize: '0.85rem',
-                          outline: 'none',
-                          transition: 'var(--transition-fast)'
-                        }}
-                        disabled={simulationActive}
+                        minLength="8"
+                        autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
+                        disabled={authLoading}
                       />
-                    </div>
-                    <button type="submit" className="btn btn-primary" style={{ background: '#a855f7', boxShadow: '0 4px 12px rgba(168, 85, 247, 0.2)', marginTop: '0.5rem' }} disabled={simulationActive}>
-                      Access Terminal
+                      <button type="button" className="auth-password-toggle" onClick={() => setPasswordVisible((visible) => !visible)} aria-label={passwordVisible ? 'Hide password' : 'Show password'} disabled={authLoading}>
+                        {passwordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>}
+                    {authMode === 'signup' && <><label htmlFor="admin-password-confirmation">Confirm password</label><input id="admin-password-confirmation" type={passwordVisible ? 'text' : 'password'} value={adminPasswordConfirmation} onChange={(e) => setAdminPasswordConfirmation(e.target.value)} placeholder="Re-enter your password" required minLength="8" autoComplete="new-password" disabled={authLoading} /></>}
+                    <button type="submit" className="auth-submit" disabled={authLoading}>
+                      {authLoading ? <><Loader2 size={16} className="auth-spinner" /> Working...</> : authMode === 'reset' ? 'Send reset email' : authMode === 'signup' ? 'Create account' : 'Sign in'}
                     </button>
+                    {authMode === 'login' && <button type="button" className="auth-link-button" onClick={() => { setAuthMode('reset'); setLoginError(''); setAuthNotice(''); }}>Forgot password?</button>}
+                    <div className="auth-divider">or</div>
+                    <p className="auth-switch">
+                      {authMode === 'reset' ? 'Remember your password?' : authMode === 'signup' ? 'Already have an account?' : 'Need an operator account?'}{' '}
+                      <button type="button" onClick={() => { setAuthMode(authMode === 'login' ? 'signup' : 'login'); setLoginError(''); setAuthNotice(''); }}>{authMode === 'login' ? 'Create one' : 'Sign in'}</button>
+                    </p>
+                    <small className="auth-privacy">Access is monitored for operational security. By continuing, you agree to your organization’s access policy.</small>
                   </form>
+                    </div>
+                  </div>
                 </section>
               ) : (
                 /* Authenticated Sync Tab Content (Audits, Details, Sync Console) */
@@ -4769,20 +4556,23 @@ export default function App() {
                   <section className="panel-card" style={{ marginBottom: '0.75rem' }}>
                     <h2 className="section-title">
                       <span>Terminal Access Details</span>
-                      <Info size={14} style={{ color: '#38bdf8' }} />
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Info size={14} style={{ color: '#38bdf8' }} />
+                        <button type="button" className="auth-link-button" onClick={handleAdminLogout}><LogOut size={14} /> Sign out</button>
+                      </span>
                     </h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.75rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>Public IP Address:</span>
-                        <strong style={{ color: '#38bdf8' }}>{visitorIp || 'Detecting...'}</strong>
+                        <strong style={{ color: '#38bdf8' }}>Not collected</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>Physical Location:</span>
-                        <strong style={{ color: '#a855f7' }}>{visitorCity && visitorRegion ? `${visitorCity}, ${visitorRegion}` : 'Detecting...'}</strong>
+                        <strong style={{ color: '#a855f7' }}>Not collected</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>Network Carrier (ISP):</span>
-                        <strong style={{ color: '#fbbf24', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '160px' }} title={visitorIsp}>{visitorIsp || 'Detecting...'}</strong>
+                        <strong style={{ color: '#fbbf24' }}>Not collected</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>Operating System:</span>
