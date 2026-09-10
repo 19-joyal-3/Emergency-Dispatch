@@ -3214,14 +3214,15 @@ export default function App() {
         <header className="sidebar-header" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <div style={{ flex: 1 }}>
             <h1 className="brand-title">
-              {activeTab === 'planner' && 'Tactical Planner'}
-              {activeTab === 'bustle' && 'Live Bus Tracker'}
-              {activeTab === 'customers' && 'Live Customer Tracker'}
-              {activeTab === 'business' && 'Business Operations'}
-              {activeTab === 'alerts' && 'Emergency Dispatch'}
-              {activeTab === 'shelters' && 'Evacuation Safe Hubs'}
-              {activeTab === 'sync' && 'System Console'}
-              {activeTab === 'help' && 'System Help Guide'}
+              {activeTab === 'planner' ? 'Tactical Planner'
+                : activeTab === 'bustle' ? 'Live Bus Tracker'
+                  : activeTab === 'customers' ? 'Live Customer Tracker'
+                    : activeTab === 'business' ? 'Business Operations'
+                      : activeTab === 'alerts' ? 'Emergency Dispatch'
+                        : activeTab === 'shelters' ? 'Evacuation Safe Hubs'
+                          : activeTab === 'sync' ? 'System Console'
+                            : activeTab === 'help' ? 'System Help Guide'
+                              : 'Kerala Emergency Dispatch'}
             </h1>
             <div className="brand-subtitle">
               {activeTab === 'planner' && 'Multi-modal routing & mock navigation'}
