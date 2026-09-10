@@ -1182,6 +1182,17 @@ export default function App() {
         map.getContainer().style.background = 'radial-gradient(circle at center, rgba(30,41,59,0.95), rgba(2,6,23,1))';
       }
 
+      const setMapImageAlt = () => {
+        map.getContainer().querySelectorAll('img').forEach((image) => {
+          if (!image.alt) {
+            image.alt = image.classList.contains('leaflet-tile') ? 'Map tile' : 'Map marker';
+          }
+        });
+      };
+      const mapImageObserver = new MutationObserver(setMapImageAlt);
+      mapImageObserver.observe(map.getContainer(), { childList: true, subtree: true });
+      setMapImageAlt();
+
       mapRef.current = map;
       setMapDataStatus('ready');
       roadsLayerRef.current = L.layerGroup().addTo(map);
@@ -1204,6 +1215,8 @@ export default function App() {
       map.on('contextmenu', (e) => {
         handleBusinessMapLocation(e.latlng.lat, e.latlng.lng);
       });
+
+      return () => mapImageObserver.disconnect();
     }
   }, [blockages]);
 
