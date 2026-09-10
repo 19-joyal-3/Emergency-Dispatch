@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Kerala Emergency Dispatch</title>
+  <desc id="desc">Offline-first emergency navigation and responder coordination dashboard.</desc>
+  <rect width="1200" height="630" fill="#06121f"/>
+  <circle cx="990" cy="120" r="260" fill="#0f766e" opacity=".35"/>
+  <circle cx="180" cy="540" r="300" fill="#15803d" opacity=".28"/>
+  <path d="M600 105l170 62v135c0 132-73 198-170 239-97-41-170-107-170-239V167l170-62z" fill="#15803d" stroke="#86efac" stroke-width="8"/>
+  <path d="M600 190l92 34v78c0 71-39 109-92 136-53-27-92-65-92-136v-78l92-34z" fill="#06121f" opacity=".85"/>
+  <path d="M600 220v160M520 300h160" stroke="#f0fdf4" stroke-width="18" stroke-linecap="round"/>
+  <text x="600" y="500" fill="#f8fafc" font-family="Arial, sans-serif" font-size="52" font-weight="700" text-anchor="middle">Kerala Emergency Dispatch</text>
+  <text x="600" y="555" fill="#bbf7d0" font-family="Arial, sans-serif" font-size="25" text-anchor="middle">Offline-first navigation and responder coordination</text>
+</svg>

@@ -9,6 +9,8 @@ This frontend must be deployed as a **Render Static Site**, not a sleeping Rende
 
 The static CDN serves `/robots.txt` and `/sitemap.xml` directly, which keeps Google Search crawling from failing during web-service cold starts. If a Render service already exists, create or migrate it as a Static Site and attach the same custom domain before requesting indexing again.
 
+Public site: https://emergency-dispatch-2.onrender.com/
+
 ## Install as an app
 
 Build the project with `npm run build`, then host the `dist` folder over HTTPS. Open the deployed URL in Chrome, Edge, or Safari and choose **Install app** or **Add to Home Screen**. The service worker enables the app shell to continue opening offline after the first online visit.

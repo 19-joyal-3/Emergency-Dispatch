@@ -18,7 +18,8 @@
     <meta property="og:title" content="Kerala Emergency Dispatch" />
     <meta property="og:description" content="Offline-first emergency navigation, incident tracking, and responder coordination for Kerala." />
     <meta property="og:url" content="https://emergency-dispatch-2.onrender.com/" />
-    <meta property="og:image" content="https://emergency-dispatch-2.onrender.com/favicon.svg" />
+    <meta property="og:image" content="https://emergency-dispatch-2.onrender.com/seo-preview.svg" />
+    <meta property="og:image:alt" content="Kerala Emergency Dispatch navigation dashboard" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Kerala Emergency Dispatch" />
     <meta name="twitter:description" content="Offline-first emergency navigation, incident tracking, and responder coordination for Kerala." />
@@ -33,10 +34,47 @@
         "operatingSystem": "Web"
       }
     </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Kerala Emergency Dispatch",
+        "url": "https://emergency-dispatch-2.onrender.com/"
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Kerala Emergency Dispatch?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It is an offline-first web application for emergency navigation, incident tracking, and responder coordination in Kerala."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can the dispatch app work offline?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The app is designed to keep local navigation and incident workflows available when connectivity is limited."
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root">
       <h1>Kerala Emergency Dispatch</h1>
+      <p>Offline-first emergency navigation, incident tracking, and responder coordination for Kerala.</p>
+      <section aria-label="About Kerala Emergency Dispatch">
+        <h2>Emergency navigation and coordination</h2>
+        <p>Plan routes, record incidents, coordinate responders, and continue essential workflows when network access is limited.</p>
+      </section>
     </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
