@@ -2476,6 +2476,27 @@ export default function App() {
     }
   };
 
+  const triggerRerouteDemo = async () => {
+    const activeRoute = activeSimulationRouteRef.current;
+    if (!simulationActive || !activeRoute?.edges?.length) {
+      logMessage('[NAV-TACTICAL] Start a route simulation before running the reroute demo.', 'warning');
+      return;
+    }
+
+    const demoEdge = activeRoute.edges.find(edge => !blockages.some(blockage =>
+      (blockage.fromNode === edge.from && blockage.toNode === edge.to) ||
+      (blockage.fromNode === edge.to && blockage.toNode === edge.from)
+    ));
+
+    if (!demoEdge) {
+      logMessage('[NAV-TACTICAL] Every edge on this route is already blocked.', 'warning');
+      return;
+    }
+
+    await toggleRoadBlockage(demoEdge);
+    logMessage(`[NAV-TACTICAL] Demo closure placed on ${demoEdge.name}.`, 'warning');
+  };
+
   const removeBlockage = async (id) => {
     try {
       await removeBlockageLocal(id, isOnline);
@@ -2510,7 +2531,7 @@ export default function App() {
     });
 
     const coreLine = L.polyline(geometry, {
-      color: '#10b981',
+      color: rerouteNotice ? '#f59e0b' : '#10b981',
       weight: 4,
       opacity: 0.95,
       className: 'flowing-route-line'
@@ -3386,6 +3407,15 @@ export default function App() {
                           {meansOfTransport === 'bus' && (matchingBusLines.length > 0 ? matchingBusLines[0].time : 'N/A')}
                         </strong>
                       </div>
+                      <div style={{ marginTop: '0.45rem', padding: '0.45rem', borderRadius: '6px', background: rerouteNotice ? 'rgba(245, 158, 11, 0.12)' : 'rgba(56, 189, 248, 0.08)', border: `1px solid ${rerouteNotice ? 'rgba(245, 158, 11, 0.4)' : 'rgba(56, 189, 248, 0.25)'}`, fontSize: '0.7rem' }}>
+                        <strong style={{ color: rerouteNotice ? '#fbbf24' : '#7dd3fc' }}>
+                          {rerouteNotice ? 'ALTERNATE ROUTE' : 'ACTIVE ROUTE'}
+                        </strong>
+                        <div style={{ color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                          {mapData.nodes[customRoute.nodes[0]]?.name} → {mapData.nodes[customRoute.nodes[customRoute.nodes.length - 1]]?.name}
+                          {' · '}{customRoute.nodes.length - 2} intermediate stops
+                        </div>
+                      </div>
                       
                       {meansOfTransport === 'bus' && (
                         <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
@@ -3494,6 +3524,14 @@ export default function App() {
                             style={{ marginTop: '0.5rem' }}
                           >
                             <Square size={10} /> Abort Journey
+                          </button>
+                          <button
+                            type="button"
+                            onClick={triggerRerouteDemo}
+                            className="btn btn-secondary"
+                            style={{ marginTop: '0.4rem', width: '100%', borderColor: '#f59e0b', color: '#fbbf24' }}
+                          >
+                            <AlertTriangle size={10} /> Test alternate route
                           </button>
                         </div>
                       )}
