@@ -1,5 +1,14 @@
 # React + Vite
 
+## Deploy to Render
+
+This frontend must be deployed as a **Render Static Site**, not a sleeping Render web service. The repository includes [`render.yaml`](render.yaml) with the required configuration:
+
+- Build command: `npm ci && npm run build`
+- Publish directory: `dist`
+
+The static CDN serves `/robots.txt` and `/sitemap.xml` directly, which keeps Google Search crawling from failing during web-service cold starts. If a Render service already exists, create or migrate it as a Static Site and attach the same custom domain before requesting indexing again.
+
 ## Install as an app
 
 Build the project with `npm run build`, then host the `dist` folder over HTTPS. Open the deployed URL in Chrome, Edge, or Safari and choose **Install app** or **Add to Home Screen**. The service worker enables the app shell to continue opening offline after the first online visit.
