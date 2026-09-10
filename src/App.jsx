@@ -861,6 +861,7 @@ export default function App() {
   const [simTransport, setSimTransport] = useState('car'); // car, bus, walk
   const [simulationProgress, setSimulationProgress] = useState(0); // km traveled
   const [currentBusStopName, setCurrentBusStopName] = useState('');
+  const [rerouteNotice, setRerouteNotice] = useState('');
   const simTimerRef = useRef(null);
   const activeSimulationRouteRef = useRef(null);
   const pendingCustomRerouteRef = useRef(null);
@@ -2589,6 +2590,7 @@ export default function App() {
     };
     setSimulationActive(false);
     setSelectedStartNode(rerouteStartNode);
+    setRerouteNotice('Blockage detected. Finding an alternate route...');
     logMessage('[NAV-TACTICAL] Hazard detected on the active route. Recalculating from the current position...', 'warning');
   }, [blockages, customRoute, simulationActive, simulationProgress, simTransport, selectedEndNode]);
 
@@ -2602,6 +2604,7 @@ export default function App() {
     ) return;
 
     pendingCustomRerouteRef.current = null;
+    setRerouteNotice(`Alternate route found: ${customRoute.distance.toFixed(1)} km. Resuming navigation.`);
     logMessage('[NAV-TACTICAL] Alternate route acquired. Resuming navigation.', 'success');
     startCustomSimulation(pendingReroute.mode, customRoute, pendingReroute.startNode, pendingReroute.endNode);
   }, [customRoute, simulationActive]);
@@ -3366,6 +3369,11 @@ export default function App() {
 
                   {customRoute ? (
                     <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.5rem' }}>
+                      {rerouteNotice && (
+                        <div role="status" style={{ marginBottom: '0.5rem', padding: '0.45rem 0.55rem', borderRadius: '6px', color: '#bbf7d0', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.35)', fontSize: '0.75rem', fontWeight: 700 }}>
+                          {rerouteNotice}
+                        </div>
+                      )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>Calculated Distance:</span>
                         <strong style={{ color: '#f3f4f6' }}>{customRoute.distance} km</strong>
