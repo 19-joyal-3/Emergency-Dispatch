@@ -1,6 +1,5 @@
 services:
-  - type: web
+  - type: static_site
     name: emergency-dispatch-2
-    runtime: static
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
