@@ -1887,7 +1887,7 @@ export default function App() {
     }
 
     const logoMarkup = businessLogo
-      ? `<img src="${businessLogo}" alt="" style="width: 28px; height: 28px; object-fit: contain; border-radius: 5px; background: white; padding: 2px;" />`
+      ? `<img src="${businessLogo}" alt="${escapeHtml(businessName || 'Business')} logo" style="width: 28px; height: 28px; object-fit: contain; border-radius: 5px; background: white; padding: 2px;" />`
       : '<div style="width: 28px; height: 28px; display: grid; place-items: center; color: white; font-size: 17px;">⌂</div>';
     const businessIcon = L.divIcon({
       className: 'custom-business-marker',
@@ -3716,7 +3716,7 @@ export default function App() {
                 </h2>
                 {businessDirectory.length ? businessDirectory.map(profile => (
                   <div key={`${profile.name}-${profile.location?.lat || 'unknown'}`} style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
-                    {profile.logo ? <img src={profile.logo} alt="" style={{ width: 32, height: 32, objectFit: 'contain', background: '#fff', borderRadius: 4 }} /> : <Building2 size={20} style={{ color: '#14b8a6' }} />}
+                    {profile.logo ? <img src={profile.logo} alt={`${profile.name || 'Business'} logo`} style={{ width: 32, height: 32, objectFit: 'contain', background: '#fff', borderRadius: 4 }} /> : <Building2 size={20} style={{ color: '#14b8a6' }} />}
                     <div style={{ minWidth: 0, flex: 1 }}><strong style={{ display: 'block', fontSize: '0.72rem' }}>{profile.name}</strong><span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>{profile.storeType} • {profile.location ? `${profile.location.lat.toFixed(4)}, ${profile.location.lng.toFixed(4)}` : 'Location pending'}</span></div>
                     <span style={{ color: '#4ade80', fontSize: '0.6rem' }}>Registered</span>
                   </div>
