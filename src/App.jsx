@@ -6,7 +6,7 @@ import { db, addIncidentLocal, updateIncidentStatusLocal, addBlockageLocal, remo
 import { formatSosMessage, getSosContacts, openSosCall, openSosSms, saveSosContacts, openWhatsAppShare, formatWhatsAppIncident, formatWhatsAppRoute } from './sos';
 import mapData from './mapData.json';
 import { solveDijkstra, findClosestNode, getPositionAtDistance, haversineDistance } from './routing';
-import { fetchWeather } from './weatherApi';
+import { fetchWeather, fetchDistrictLiveAlerts } from './weatherApi';
 import { isSupabaseConfigured, supabase } from './supabase';
 import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
 import confetti from 'canvas-confetti';
@@ -108,22 +108,16 @@ const KERALA_HOSPITALS = [
   { id: 'hosp_wayanad', name: 'Govt. Medical College Hospital, Mananthavady', lat: 11.8025, lng: 76.0035, node: 'wayanad', phone: '04935-240223', casualty: '04935-240224', icu: 'Hilly Region Trauma Care', blood: 'Critical Emergency Reserve' }
 ];
 
-const KSDMA_DISTRICT_ALERTS = [
-  { id: 'wayanad', name: 'Wayanad', alert: 'red', alertColor: '#ef4444', label: '🔴 Red Alert', detail: 'Extreme Rain & Landslide Threat', node: 'wayanad', center: [11.6050, 76.0830] },
-  { id: 'idukki', name: 'Idukki', alert: 'red', alertColor: '#ef4444', label: '🔴 Red Alert', detail: 'Dam Gate Releases & Flash Floods', node: 'idukki', center: [9.8500, 76.9700] },
-  { id: 'thrissur', name: 'Thrissur', alert: 'orange', alertColor: '#f97316', label: '🟠 Orange Alert', detail: 'Heavy Downpours (115-204 mm)', node: 'thrissur', center: [10.5276, 76.2144] },
-  { id: 'palakkad', name: 'Palakkad', alert: 'orange', alertColor: '#f97316', label: '🟠 Orange Alert', detail: 'Ghat Runoff & Strong Wind Gusts', node: 'palakkad', center: [10.7867, 76.6548] },
-  { id: 'kochi', name: 'Ernakulam', alert: 'orange', alertColor: '#f97316', label: '🟠 Orange Alert', detail: 'High Waves & Coastal Inundation', node: 'kochi', center: [9.9312, 76.2673] },
-  { id: 'alappuzha', name: 'Alappuzha', alert: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', detail: 'Kuttanad Low-Lying Waterlogging', node: 'alappuzha', center: [9.4981, 76.3388] },
-  { id: 'kottayam', name: 'Kottayam', alert: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', detail: 'Meenachil River Basin Warning', node: 'kottayam', center: [9.5916, 76.5222] },
-  { id: 'kozhibode', name: 'Kozhikode', alert: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', detail: 'Coastal Squall & Rough Seas', node: 'kozhibode', center: [11.2588, 75.7804] },
-  { id: 'tvm', name: 'Thiruvananthapuram', alert: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', detail: 'Isolated Thunderstorms', node: 'tvm', center: [8.5241, 76.9366] }
-];
-
 export default function App() {
   // Onboarding Tour States & Handlers
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
+
+  // Live Accurate District Weather & Alert States
+  const [districtAlerts, setDistrictAlerts] = useState([]);
+  const [districtAlertsStatus, setDistrictAlertsStatus] = useState('loading'); // 'loading', 'live', 'offline', 'error'
+  const [districtAlertsLastUpdated, setDistrictAlertsLastUpdated] = useState(null);
+  const [showAlertsFilter, setShowAlertsFilter] = useState('active_only');
 
   // Map Environment HUD States
   const [mapTheme, setMapTheme] = useState('dark'); // 'light', 'dark', 'satellite', 'terrain'
@@ -1065,10 +1059,10 @@ export default function App() {
     });
   }, [incidents, soundAlertsEnabled, vibrationAlertsEnabled]);
 
-  const logMessage = (msg, _type = 'info') => {
+  const logMessage = useCallback((msg, _type = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
     setSyncLogs(prev => [`[${timestamp}] ${msg}`, ...prev].slice(0, 50));
-  };
+  }, []);
 
   const addSosContact = (e) => {
     e.preventDefault();
@@ -1205,6 +1199,44 @@ export default function App() {
       }
     }
   };
+
+  const refreshLiveDistrictAlerts = useCallback(async () => {
+    if (!navigator.onLine) {
+      setDistrictAlertsStatus('offline');
+      return;
+    }
+    setDistrictAlertsStatus('loading');
+    try {
+      const data = await fetchDistrictLiveAlerts();
+      setDistrictAlerts(data);
+      setDistrictAlertsStatus('live');
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setDistrictAlertsLastUpdated(timeStr);
+      const activeAlerts = data.filter(d => d.isAlert);
+      if (activeAlerts.length > 0) {
+        logMessage(`[LIVE ALERTS] ${activeAlerts.length} active weather alert(s) detected in Kerala: ${activeAlerts.map(a => a.name).join(', ')}`, 'warning');
+      } else {
+        logMessage('[LIVE ALERTS] All 14 Kerala districts currently reported normal weather (0 active warnings)', 'success');
+      }
+    } catch (err) {
+      console.warn('Failed to load live district telemetry:', err);
+      setDistrictAlertsStatus('error');
+    }
+  }, [logMessage]);
+
+  useEffect(() => {
+    refreshLiveDistrictAlerts();
+    const timer = setInterval(refreshLiveDistrictAlerts, 3 * 60 * 1000);
+    const onOnline = () => refreshLiveDistrictAlerts();
+    const onOffline = () => setDistrictAlertsStatus('offline');
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, [refreshLiveDistrictAlerts]);
 
   // Helper to interpolate coordinates along geometry
   const interpolateCoordinates = (geometry, progress) => {
@@ -5182,43 +5214,145 @@ export default function App() {
           whiteSpace: 'nowrap',
           scrollbarWidth: 'none'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.68rem', fontWeight: 800, color: '#f8fafc', flexShrink: 0, paddingRight: '0.45rem', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
-            <span style={{ fontSize: '13px' }}>🚨</span>
-            <span style={{ letterSpacing: '0.04em' }}>KSDMA ALERTS:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.68rem', fontWeight: 800, color: '#f8fafc', flexShrink: 0, paddingRight: '0.5rem', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+            <span style={{
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: districtAlertsStatus === 'live' ? '#22c55e' : districtAlertsStatus === 'loading' ? '#eab308' : '#ef4444',
+              boxShadow: districtAlertsStatus === 'live' ? '0 0 8px #22c55e' : 'none'
+            }} />
+            <span style={{ letterSpacing: '0.04em' }}>
+              {districtAlertsStatus === 'live' ? 'LIVE ALERTS:' : districtAlertsStatus === 'loading' ? 'FETCHING ALERTS...' : districtAlertsStatus === 'offline' ? 'OFFLINE' : 'TELEMETRY UNAVAILABLE'}
+            </span>
+            {districtAlertsLastUpdated && (
+              <span style={{ fontSize: '0.58rem', color: '#94a3b8', fontWeight: 500 }}>
+                {districtAlertsLastUpdated}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={refreshLiveDistrictAlerts}
+              title="Refresh live district telemetry"
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#38bdf8',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                padding: '0 2px',
+                display: 'inline-flex',
+                alignItems: 'center'
+              }}
+            >
+              🔄
+            </button>
           </div>
-          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-            {KSDMA_DISTRICT_ALERTS.map((dist) => (
-              <button
-                key={dist.id}
-                type="button"
-                onClick={() => {
-                  if (mapRef.current) {
-                    mapRef.current.flyTo(dist.center, 12, { duration: 1.2 });
-                  }
-                  logMessage(`[KSDMA] ${dist.name}: ${dist.label} — ${dist.detail}`, dist.alert === 'red' ? 'warning' : 'info');
-                }}
-                title={`Inspect ${dist.name}: ${dist.detail}`}
-                style={{
-                  background: dist.alert === 'red' ? 'rgba(239, 68, 68, 0.22)' : dist.alert === 'orange' ? 'rgba(249, 115, 22, 0.22)' : 'rgba(234, 179, 8, 0.18)',
-                  border: `1px solid ${dist.alertColor}`,
-                  color: '#fff',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontSize: '0.62rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '3px',
-                  flexShrink: 0,
-                  transition: 'transform 0.1s'
-                }}
-              >
-                <span>{dist.label.split(' ')[0]}</span>
-                <span style={{ fontWeight: 'bold' }}>{dist.name}</span>
-              </button>
-            ))}
-          </div>
+          {districtAlertsStatus === 'loading' && districtAlerts.length === 0 ? (
+            <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontStyle: 'italic' }}>
+              Connecting to live meteorological stations across Kerala...
+            </span>
+          ) : districtAlertsStatus === 'offline' ? (
+            <span style={{ fontSize: '0.65rem', color: '#f87171', fontWeight: 600 }}>
+              ⚠️ Device offline. Connect to network to fetch live district weather alerts.
+            </span>
+          ) : (
+            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+              {(() => {
+                const activeAlerts = districtAlerts.filter(d => d.isAlert);
+                const itemsToDisplay = showAlertsFilter === 'all' ? districtAlerts : activeAlerts;
+
+                return (
+                  <>
+                    {itemsToDisplay.length === 0 ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <span style={{ fontSize: '0.65rem', color: '#86efac', fontWeight: 600 }}>
+                          🟢 All 14 Kerala districts normal — zero active severe rain or squall warnings.
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowAlertsFilter('all')}
+                          style={{
+                            background: 'rgba(56, 189, 248, 0.15)',
+                            border: '1px solid rgba(56, 189, 248, 0.4)',
+                            color: '#38bdf8',
+                            fontSize: '0.58rem',
+                            fontWeight: 700,
+                            padding: '1px 6px',
+                            borderRadius: '8px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Inspect All 14 Districts
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        {itemsToDisplay.map((dist) => (
+                          <button
+                            key={dist.id}
+                            type="button"
+                            onClick={() => {
+                              if (mapRef.current) {
+                                mapRef.current.flyTo(dist.center, 12, { duration: 1.2 });
+                              }
+                              logMessage(`[LIVE WEATHER] ${dist.name}: ${dist.label} — ${dist.detail}`, dist.level === 'red' ? 'error' : dist.level === 'orange' ? 'warning' : 'info');
+                            }}
+                            title={`Inspect ${dist.name}: ${dist.detail}`}
+                            style={{
+                              background: dist.level === 'red'
+                                ? 'rgba(239, 68, 68, 0.28)'
+                                : dist.level === 'orange'
+                                  ? 'rgba(249, 115, 22, 0.28)'
+                                  : dist.level === 'yellow'
+                                    ? 'rgba(234, 179, 8, 0.25)'
+                                    : 'rgba(34, 197, 94, 0.18)',
+                              border: `1px solid ${dist.alertColor}`,
+                              color: '#fff',
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontSize: '0.62rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              flexShrink: 0,
+                              transition: 'transform 0.1s'
+                            }}
+                          >
+                            <span>{dist.label.split(' ')[0]}</span>
+                            <span style={{ fontWeight: 'bold' }}>{dist.name}:</span>
+                            <span style={{ opacity: 0.9 }}>{dist.condition}</span>
+                            {dist.rain > 0 && <span style={{ color: '#67e8f9', fontSize: '0.58rem' }}>({dist.rain.toFixed(1)}mm)</span>}
+                            {dist.gusts >= 25 && <span style={{ color: '#fde047', fontSize: '0.58rem' }}>💨{dist.gusts}km/h</span>}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setShowAlertsFilter(f => f === 'all' ? 'active_only' : 'all')}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            color: '#cbd5e1',
+                            fontSize: '0.58rem',
+                            fontWeight: 600,
+                            padding: '2px 6px',
+                            borderRadius: '10px',
+                            cursor: 'pointer',
+                            flexShrink: 0
+                          }}
+                        >
+                          {showAlertsFilter === 'all' ? 'Show Active Only' : `Inspect All 14 (${districtAlerts.length})`}
+                        </button>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          )}
         </div>
         <div className={`map-search-panel ${showLocationSearch ? 'expanded' : 'collapsed'}`}>
           <button
