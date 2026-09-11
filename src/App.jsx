@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { PMTiles, leafletRasterLayer } from 'pmtiles';
 import { db, addIncidentLocal, updateIncidentStatusLocal, addBlockageLocal, removeBlockageLocal, updateResponderLocal, logVisitorAudit, getVisitorAudits } from './db';
-import { formatSosMessage, getSosContacts, openSosCall, openSosSms, saveSosContacts } from './sos';
+import { formatSosMessage, getSosContacts, openSosCall, openSosSms, saveSosContacts, openWhatsAppShare, formatWhatsAppIncident, formatWhatsAppRoute } from './sos';
 import mapData from './mapData.json';
 import { solveDijkstra, findClosestNode, getPositionAtDistance, haversineDistance } from './routing';
 import { fetchWeather } from './weatherApi';
@@ -53,6 +53,10 @@ import {
   ,EyeOff
   ,Loader2
   ,LogOut
+  ,Share2
+  ,Mic
+  ,MicOff
+  ,Hospital
 } from 'lucide-react';
 
 const INITIAL_RESPONDERS = [
@@ -94,6 +98,28 @@ const getStoredJson = (key, fallback) => {
   }
 };
 
+const KERALA_HOSPITALS = [
+  { id: 'hosp_tvm', name: 'Govt. Medical College, Thiruvananthapuram', lat: 8.5236, lng: 76.9272, node: 'tvm', phone: '0471-2528300', casualty: '0471-2528383', icu: '24/7 Trauma ICU Active', blood: 'All Groups Active' },
+  { id: 'hosp_kottayam', name: 'Govt. Medical College, Kottayam', lat: 9.6640, lng: 76.5332, node: 'kottayam', phone: '0481-2597311', casualty: '0481-2597200', icu: 'Level 1 Trauma Care', blood: 'All Groups Ready' },
+  { id: 'hosp_ekm', name: 'General Hospital, Ernakulam', lat: 9.9723, lng: 76.2818, node: 'kochi', phone: '0484-2361251', casualty: '0484-2360052', icu: 'ICU & Ventilators Ready', blood: '24/7 Blood Bank' },
+  { id: 'hosp_thrissur', name: 'Govt. Medical College, Thrissur', lat: 10.6178, lng: 76.2087, node: 'thrissur', phone: '0487-2200310', casualty: '0487-2200318', icu: 'Trauma & Burn ICU Ready', blood: 'Blood Bank Active' },
+  { id: 'hosp_palakkad', name: 'District Hospital, Palakkad', lat: 10.7744, lng: 76.6563, node: 'palakkad', phone: '0491-2533323', casualty: '0491-2534524', icu: 'Emergency Casualty Active', blood: 'Blood Bank Ready' },
+  { id: 'hosp_kozhikode', name: 'Govt. Medical College, Kozhikode', lat: 11.2721, lng: 75.8368, node: 'kozhibode', phone: '0495-2350216', casualty: '0495-2350217', icu: 'Super Specialty Trauma', blood: 'Major Regional Bank' },
+  { id: 'hosp_wayanad', name: 'Govt. Medical College Hospital, Mananthavady', lat: 11.8025, lng: 76.0035, node: 'wayanad', phone: '04935-240223', casualty: '04935-240224', icu: 'Hilly Region Trauma Care', blood: 'Critical Emergency Reserve' }
+];
+
+const KSDMA_DISTRICT_ALERTS = [
+  { id: 'wayanad', name: 'Wayanad', alert: 'red', alertColor: '#ef4444', label: '🔴 Red Alert', detail: 'Extreme Rain & Landslide Threat', node: 'wayanad', center: [11.6050, 76.0830] },
+  { id: 'idukki', name: 'Idukki', alert: 'red', alertColor: '#ef4444', label: '🔴 Red Alert', detail: 'Dam Gate Releases & Flash Floods', node: 'idukki', center: [9.8500, 76.9700] },
+  { id: 'thrissur', name: 'Thrissur', alert: 'orange', alertColor: '#f97316', label: '🟠 Orange Alert', detail: 'Heavy Downpours (115-204 mm)', node: 'thrissur', center: [10.5276, 76.2144] },
+  { id: 'palakkad', name: 'Palakkad', alert: 'orange', alertColor: '#f97316', label: '🟠 Orange Alert', detail: 'Ghat Runoff & Strong Wind Gusts', node: 'palakkad', center: [10.7867, 76.6548] },
+  { id: 'kochi', name: 'Ernakulam', alert: 'orange', alertColor: '#f97316', label: '🟠 Orange Alert', detail: 'High Waves & Coastal Inundation', node: 'kochi', center: [9.9312, 76.2673] },
+  { id: 'alappuzha', name: 'Alappuzha', alert: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', detail: 'Kuttanad Low-Lying Waterlogging', node: 'alappuzha', center: [9.4981, 76.3388] },
+  { id: 'kottayam', name: 'Kottayam', alert: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', detail: 'Meenachil River Basin Warning', node: 'kottayam', center: [9.5916, 76.5222] },
+  { id: 'kozhibode', name: 'Kozhikode', alert: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', detail: 'Coastal Squall & Rough Seas', node: 'kozhibode', center: [11.2588, 75.7804] },
+  { id: 'tvm', name: 'Thiruvananthapuram', alert: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', detail: 'Isolated Thunderstorms', node: 'tvm', center: [8.5241, 76.9366] }
+];
+
 export default function App() {
   // Onboarding Tour States & Handlers
   const [showTour, setShowTour] = useState(false);
@@ -120,6 +146,13 @@ export default function App() {
 
   const tileLayerRef = useRef(null);
   const pmtilesRef = useRef(null);
+  const hospitalMarkersRef = useRef(new Map());
+
+  // Voice Dictation & Offline Map Pack States
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+  const [cachedPacks, setCachedPacks] = useState(() => getStoredJson('cached_district_packs', []));
+  const [packDownloading, setPackDownloading] = useState(null);
 
   const getPmtilesUrl = () => (import.meta.env.VITE_PMTILES_URL || '').trim();
 
@@ -1068,6 +1101,111 @@ export default function App() {
     openSosCall(contact);
   };
 
+  const toggleVoiceDictation = () => {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      logMessage('[VOICE] Speech recognition is not supported in this browser.', 'warning');
+      return;
+    }
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    try {
+      const rec = new SpeechRec();
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.lang = interfaceLanguage === 'ml' ? 'ml-IN' : 'en-IN';
+      rec.onstart = () => {
+        setIsListening(true);
+        logMessage('[VOICE] Listening for incident details...', 'info');
+      };
+      rec.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        setNewIncidentDesc(prev => (prev ? `${prev} ${transcript}` : transcript));
+        setIsListening(false);
+        logMessage(`[VOICE] Captured: "${transcript}"`, 'success');
+      };
+      rec.onerror = () => setIsListening(false);
+      rec.onend = () => setIsListening(false);
+      recognitionRef.current = rec;
+      rec.start();
+    } catch (err) {
+      setIsListening(false);
+      logMessage(`[VOICE] Microphone error: ${err.message}`, 'error');
+    }
+  };
+
+  const handleCacheDistrictPack = async (pack) => {
+    if (!('caches' in window)) {
+      logMessage('[OFFLINE] CacheStorage is not supported in this browser.', 'warning');
+      return;
+    }
+    setPackDownloading(pack.name);
+    logMessage(`[OFFLINE] Pre-caching ${pack.name} tile pack for zero-network use...`, 'info');
+    try {
+      const cache = await caches.open('emergency-dispatch-v7');
+      const tileUrls = pack.tiles.flatMap(([x, y]) => [
+        `https://tile.openstreetmap.org/${pack.z}/${x}/${y}.png`,
+        `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${pack.z}/${y}/${x}`
+      ]);
+
+      await Promise.all(tileUrls.map(async (url) => {
+        try {
+          const res = await fetch(url, { mode: 'no-cors' });
+          if (res) await cache.put(url, res);
+        } catch {
+          // Ignore individual tile network fails
+        }
+      }));
+
+      const updated = [...new Set([...cachedPacks, pack.name])];
+      setCachedPacks(updated);
+      localStorage.setItem('cached_district_packs', JSON.stringify(updated));
+      confetti({ particleCount: 25, spread: 50 });
+      logMessage(`[OFFLINE] ${pack.name} map pack cached! Ready for zero-connectivity deployment.`, 'success');
+    } catch (err) {
+      logMessage(`[OFFLINE] Failed to cache ${pack.name}: ${err.message}`, 'error');
+    } finally {
+      setPackDownloading(null);
+    }
+  };
+
+  const routeToNearestHospital = () => {
+    let startLat = 10.61;
+    let startLng = 76.50;
+    if (gpsActive && gpsCoords) {
+      startLat = gpsCoords.lat;
+      startLng = gpsCoords.lng;
+    } else if (selectedStartNode && mapData.nodes[selectedStartNode]) {
+      startLat = mapData.nodes[selectedStartNode].lat;
+      startLng = mapData.nodes[selectedStartNode].lng;
+    }
+
+    let nearest = null;
+    let minDist = Infinity;
+    KERALA_HOSPITALS.forEach(h => {
+      const dist = haversineDistance(startLat, startLng, h.lat, h.lng);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = h;
+      }
+    });
+
+    if (nearest) {
+      const { id: startNodeId } = findClosestNode(startLat, startLng, mapData.nodes);
+      setSelectedStartNode(startNodeId);
+      setSelectedEndNode(nearest.node);
+      setMeansOfTransport('car');
+      confetti({ particleCount: 35, spread: 55 });
+      logMessage(`[TRAUMA DISPATCH] Fastest emergency route to ${nearest.name} calculated (${minDist.toFixed(1)} km).`, 'warning');
+      if (mapRef.current) {
+        mapRef.current.flyTo([nearest.lat, nearest.lng], 12, { duration: 1.2 });
+      }
+    }
+  };
+
   // Helper to interpolate coordinates along geometry
   const interpolateCoordinates = (geometry, progress) => {
     if (!geometry || geometry.length === 0) return { lat: 0, lng: 0, heading: 0 };
@@ -1802,6 +1940,79 @@ export default function App() {
       }
     });
   }, [shelters, gpsCoords, gpsActive]);
+
+  // Update Hospital & Trauma Center Markers
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    KERALA_HOSPITALS.forEach(hosp => {
+      const hospIcon = L.divIcon({
+        className: 'custom-hosp-icon',
+        html: `
+          <div style="
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 2px solid #ef4444;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+            cursor: pointer;
+          ">
+            🏥
+          </div>
+        `,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+      });
+
+      if (hospitalMarkersRef.current.has(hosp.id)) {
+        hospitalMarkersRef.current.get(hosp.id).setLatLng([hosp.lat, hosp.lng]);
+      } else {
+        const m = L.marker([hosp.lat, hosp.lng], { icon: hospIcon })
+          .addTo(mapRef.current)
+          .bindPopup(`
+            <div style="color: #f3f4f6; font-family: sans-serif; font-size: 11px; min-width: 190px;">
+              <h4 style="margin: 0 0 4px; color: #f87171;">🏥 ${hosp.name}</h4>
+              <p style="margin: 0 0 3px;">📞 Casualty: <a href="tel:${hosp.casualty}" style="color: #60a5fa; font-weight: bold; text-decoration: none;">${hosp.casualty}</a></p>
+              <p style="margin: 0 0 3px; color: #4ade80;">🛏️ ${hosp.icu}</p>
+              <p style="margin: 0 0 6px; color: #f59e0b; font-size: 10px;">🩸 Blood: ${hosp.blood}</p>
+              <button id="route-hosp-btn-${hosp.id}" style="
+                background: #ef4444;
+                color: white;
+                border: none;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-weight: bold;
+                cursor: pointer;
+                width: 100%;
+              ">🚨 Route Ambulance Here</button>
+            </div>
+          `);
+
+        m.on('popupopen', () => {
+          const btn = document.getElementById(`route-hosp-btn-${hosp.id}`);
+          if (btn) {
+            btn.onclick = () => {
+              if (gpsCoords && gpsActive) {
+                const { id: startId } = findClosestNode(gpsCoords.lat, gpsCoords.lng, mapData.nodes);
+                setSelectedStartNode(startId);
+              }
+              setSelectedEndNode(hosp.node);
+              setMeansOfTransport('car');
+              logMessage(`Emergency route plotted to ${hosp.name}`, 'warning');
+              mapRef.current?.closePopup();
+            };
+          }
+        });
+
+        hospitalMarkersRef.current.set(hosp.id, m);
+      }
+    });
+  }, [gpsCoords, gpsActive]);
 
   // 8. Live GPS tracking markers
   useEffect(() => {
@@ -3503,6 +3714,31 @@ export default function App() {
                     </div>
                   </div>
 
+                  <button
+                    type="button"
+                    onClick={routeToNearestHospital}
+                    disabled={simulationActive}
+                    className="btn"
+                    style={{
+                      width: '100%',
+                      background: 'linear-gradient(135deg, rgba(239,68,68,0.22), rgba(185,28,28,0.35))',
+                      border: '1px solid rgba(239,68,68,0.6)',
+                      color: '#fca5a5',
+                      fontWeight: 'bold',
+                      fontSize: '0.72rem',
+                      padding: '0.45rem',
+                      borderRadius: '6px',
+                      marginBottom: '0.6rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Hospital size={14} /> 🚨 Route to Nearest Hospital / MCH
+                  </button>
+
                   {customRoute ? (
                     <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.5rem' }}>
                       {rerouteNotice && (
@@ -3585,39 +3821,70 @@ export default function App() {
                       )}
 
                       {!simulationActive ? (
-                        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
+                        <>
+                          <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
+                            <button 
+                              type="button" 
+                              onClick={() => startCustomSimulation(meansOfTransport)} 
+                              className="btn btn-secondary" 
+                              style={{ flex: 1, borderColor: 'hsl(var(--color-secondary))' }}
+                              disabled={meansOfTransport === 'bus' && matchingBusLines.length === 0}
+                            >
+                              <Play size={12} /> Simulate Travel
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // Synchronously configure GPS coordinates to start at the selected departure node
+                                if (!gpsActive) {
+                                  const startNode = mapData.nodes[selectedStartNode] || mapData.nodes['vadakkencherry'];
+                                  setGpsCoords({ lat: startNode.lat, lng: startNode.lng });
+                                  setGpsActive(true);
+                                  setMockGpsMode(true);
+                                } else if (mockGpsMode) {
+                                  const startNode = mapData.nodes[selectedStartNode] || mapData.nodes['vadakkencherry'];
+                                  setGpsCoords({ lat: startNode.lat, lng: startNode.lng });
+                                }
+                                setIsNavigating(true);
+                                logMessage('[NAV] Active turn-by-turn guidance initiated.', 'success');
+                              }}
+                              className="btn btn-success"
+                              style={{ flex: 1 }}
+                            >
+                              <Navigation size={12} /> Navigate
+                            </button>
+                          </div>
+
                           <button 
                             type="button" 
-                            onClick={() => startCustomSimulation(meansOfTransport)} 
-                            className="btn btn-secondary" 
-                            style={{ flex: 1, borderColor: 'hsl(var(--color-secondary))' }}
-                            disabled={meansOfTransport === 'bus' && matchingBusLines.length === 0}
-                          >
-                            <Play size={12} /> Simulate Travel
-                          </button>
-                          
-                          <button
-                            type="button"
                             onClick={() => {
-                              // Synchronously configure GPS coordinates to start at the selected departure node
-                              if (!gpsActive) {
-                                const startNode = mapData.nodes[selectedStartNode] || mapData.nodes['vadakkencherry'];
-                                setGpsCoords({ lat: startNode.lat, lng: startNode.lng });
-                                setGpsActive(true);
-                                setMockGpsMode(true);
-                              } else if (mockGpsMode) {
-                                const startNode = mapData.nodes[selectedStartNode] || mapData.nodes['vadakkencherry'];
-                                setGpsCoords({ lat: startNode.lat, lng: startNode.lng });
-                              }
-                              setIsNavigating(true);
-                              logMessage('[NAV] Active turn-by-turn guidance initiated.', 'success');
+                              const startName = mapData.nodes[customRoute.nodes[0]]?.name || 'Origin';
+                              const endName = mapData.nodes[customRoute.nodes[customRoute.nodes.length - 1]]?.name || 'Destination';
+                              const msg = formatWhatsAppRoute(customRoute, startName, endName, meansOfTransport);
+                              openWhatsAppShare(msg);
+                            }} 
+                            className="btn" 
+                            style={{
+                              width: '100%',
+                              marginTop: '0.4rem',
+                              background: '#25D366',
+                              color: '#000',
+                              fontWeight: 'bold',
+                              border: 'none',
+                              fontSize: '0.72rem',
+                              padding: '0.4rem',
+                              borderRadius: '6px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.4rem',
+                              cursor: 'pointer'
                             }}
-                            className="btn btn-success"
-                            style={{ flex: 1 }}
                           >
-                            <Navigation size={12} /> Navigate
+                            <Share2 size={13} /> Share Route via WhatsApp
                           </button>
-                        </div>
+                        </>
                       ) : (
                         <div style={{ marginTop: '0.5rem' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', color: '#10b981', marginBottom: '0.25rem' }}>
@@ -4182,7 +4449,29 @@ export default function App() {
                   )}
 
                   <div className="form-group">
-                    <label>Situation Details</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ margin: 0 }}>Situation Details</label>
+                      <button
+                        type="button"
+                        onClick={toggleVoiceDictation}
+                        title={isListening ? "Listening... Click to stop" : "Speak to dictate incident description"}
+                        style={{
+                          background: isListening ? '#ef4444' : 'rgba(255,255,255,0.08)',
+                          border: isListening ? '1px solid #f87171' : '1px solid rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          borderRadius: '4px',
+                          padding: '2px 8px',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        {isListening ? <MicOff size={12} /> : <Mic size={12} />}
+                        <span>{isListening ? 'Listening...' : 'Voice Dictate'}</span>
+                      </button>
+                    </div>
                     <input 
                       type="text" 
                       value={newIncidentDesc} 
@@ -4490,9 +4779,35 @@ export default function App() {
                               {inc.assignedResponderName ? `Auto-assigned: ${inc.assignedResponderName}` : 'Responder: awaiting assignment'}
                             </div>
                             {isActive && (
-                              <button type="button" className="btn btn-secondary" onClick={(event) => { event.stopPropagation(); downloadIncidentPdf(inc); }} style={{ marginTop: '0.4rem', padding: '0.25rem 0.4rem', fontSize: '0.62rem' }}>
-                                <FileText size={11} /> Export incident PDF
-                              </button>
+                              <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
+                                <button type="button" className="btn btn-secondary" onClick={(event) => { event.stopPropagation(); downloadIncidentPdf(inc); }} style={{ padding: '0.25rem 0.4rem', fontSize: '0.62rem' }}>
+                                  <FileText size={11} /> Export incident PDF
+                                </button>
+                                <button 
+                                  type="button" 
+                                  className="btn" 
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    const msg = formatWhatsAppIncident(inc, inc.assignedResponderName);
+                                    openWhatsAppShare(msg);
+                                  }} 
+                                  style={{
+                                    background: '#25D366',
+                                    color: '#000',
+                                    fontWeight: 'bold',
+                                    border: 'none',
+                                    padding: '0.25rem 0.5rem',
+                                    fontSize: '0.62rem',
+                                    borderRadius: '4px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <Share2 size={11} /> Share to WhatsApp
+                                </button>
+                              </div>
                             )}
                             {isActive && inc.aiRecommendation && (
                               <div style={{ 
@@ -4846,6 +5161,65 @@ export default function App() {
       <main id="onboarding-map" className={`map-viewport ${showTour && tourStep === 2 ? 'onboarding-highlight' : ''}`}>
         {/* Interactive Leaflet Element */}
         <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : mapTheme === 'satellite' ? 'map-satellite-theme' : mapTheme === 'terrain' ? 'map-terrain-theme' : 'map-light-theme'}`}></div>
+
+        {/* KSDMA Kerala District Weather Alert Ticker */}
+        <div className="ksdma-alert-ticker" style={{
+          position: 'absolute',
+          top: '1.25rem',
+          left: '3.75rem',
+          right: '6.5rem',
+          zIndex: 999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.45rem',
+          background: 'rgba(15, 23, 42, 0.88)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          borderRadius: '10px',
+          padding: '0.35rem 0.65rem',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
+          overflowX: 'auto',
+          whiteSpace: 'nowrap',
+          scrollbarWidth: 'none'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.68rem', fontWeight: 800, color: '#f8fafc', flexShrink: 0, paddingRight: '0.45rem', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+            <span style={{ fontSize: '13px' }}>🚨</span>
+            <span style={{ letterSpacing: '0.04em' }}>KSDMA ALERTS:</span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+            {KSDMA_DISTRICT_ALERTS.map((dist) => (
+              <button
+                key={dist.id}
+                type="button"
+                onClick={() => {
+                  if (mapRef.current) {
+                    mapRef.current.flyTo(dist.center, 12, { duration: 1.2 });
+                  }
+                  logMessage(`[KSDMA] ${dist.name}: ${dist.label} — ${dist.detail}`, dist.alert === 'red' ? 'warning' : 'info');
+                }}
+                title={`Inspect ${dist.name}: ${dist.detail}`}
+                style={{
+                  background: dist.alert === 'red' ? 'rgba(239, 68, 68, 0.22)' : dist.alert === 'orange' ? 'rgba(249, 115, 22, 0.22)' : 'rgba(234, 179, 8, 0.18)',
+                  border: `1px solid ${dist.alertColor}`,
+                  color: '#fff',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontSize: '0.62rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  flexShrink: 0,
+                  transition: 'transform 0.1s'
+                }}
+              >
+                <span>{dist.label.split(' ')[0]}</span>
+                <span style={{ fontWeight: 'bold' }}>{dist.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className={`map-search-panel ${showLocationSearch ? 'expanded' : 'collapsed'}`}>
           <button
             type="button"
@@ -5368,6 +5742,41 @@ export default function App() {
                       onClick={() => setWeatherEffect(fx)}
                     >
                       {fx}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>OFFLINE DISTRICT PACKS</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {[
+                    { name: 'Wayanad Ghats', z: 12, tiles: [[1891, 2908], [1891, 2909], [1892, 2908], [1892, 2909]] },
+                    { name: 'Idukki / Munnar', z: 12, tiles: [[1899, 2924], [1899, 2925], [1900, 2924], [1900, 2925]] },
+                    { name: 'Ernakulam / Central', z: 12, tiles: [[1893, 2923], [1893, 2924], [1894, 2923], [1894, 2924]] }
+                  ].map(pack => (
+                    <button
+                      key={pack.name}
+                      type="button"
+                      onClick={() => handleCacheDistrictPack(pack)}
+                      className="btn"
+                      style={{
+                        padding: '4px 6px',
+                        fontSize: '0.65rem',
+                        background: cachedPacks.includes(pack.name) ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.04)',
+                        border: cachedPacks.includes(pack.name) ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
+                        color: cachedPacks.includes(pack.name) ? '#6ee7b7' : '#cbd5e1',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <span>📦 {pack.name}</span>
+                      <span style={{ fontWeight: 'bold' }}>
+                        {packDownloading === pack.name ? 'Saving...' : cachedPacks.includes(pack.name) ? '✓ Ready' : 'Download'}
+                      </span>
                     </button>
                   ))}
                 </div>

@@ -35,3 +35,38 @@ export function openSosSms(contact, message) {
 export function openSosCall(contact) {
   window.location.href = `tel:${encodeURIComponent(contact.phone)}`;
 }
+
+export function openWhatsAppShare(message) {
+  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+export function formatWhatsAppIncident(incident, responderName = null, shelterName = null) {
+  const mapUrl = `https://maps.google.com/?q=${incident.lat},${incident.lng}`;
+  const lines = [
+    '🚨 *KERALA TACTICAL DISPATCH ALERT*',
+    `*Type:* ${incident.type?.toUpperCase() || 'EMERGENCY'}`,
+    `*Priority:* ${incident.priority?.toUpperCase() || 'MEDIUM'}`,
+    `*Details:* ${incident.description || 'Immediate emergency response requested'}`,
+    `*Location:* ${incident.lat.toFixed(4)}, ${incident.lng.toFixed(4)}`,
+    `*Live Pin:* ${mapUrl}`,
+    responderName ? `*Assigned Unit:* ${responderName}` : null,
+    shelterName ? `*Nearest Camp:* ${shelterName}` : null,
+    `*Reported:* ${new Date(incident.reportedAt || Date.now()).toLocaleTimeString()}`,
+    '— _Dispatched via Kerala Tactical Emergency Hub_'
+  ].filter(Boolean);
+  return lines.join('\n');
+}
+
+export function formatWhatsAppRoute(route, startName, endName, transport = 'car') {
+  const lines = [
+    '🧭 *KERALA EMERGENCY ROUTE DISPATCH*',
+    `*Origin:* ${startName}`,
+    `*Destination:* ${endName}`,
+    `*Distance:* ${route.distance} km`,
+    `*Est. Time:* ${route.travelTimeMinutes} mins (via ${transport.toUpperCase()})`,
+    route.nodes?.length ? `*Key Waypoints:* ${route.nodes.join(' ➔ ')}` : null,
+    '— _Dispatched via Kerala Tactical Emergency Hub_'
+  ].filter(Boolean);
+  return lines.join('\n');
+}
