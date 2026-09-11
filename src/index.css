@@ -1229,6 +1229,27 @@ select:focus, input[type="text"]:focus, textarea:focus {
   background-color: #1e293b !important;
 }
 
+/* Satellite Tactical View */
+.map-satellite-theme .leaflet-tile-container {
+  filter: none !important;
+}
+
+.map-satellite-theme {
+  background: #020617 !important;
+}
+
+.map-satellite-theme .leaflet-bar a {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #cbd5e1 !important;
+  backdrop-filter: blur(6px);
+}
+
+.map-satellite-theme .leaflet-bar a:hover {
+  background-color: #1e293b !important;
+  color: #38bdf8 !important;
+}
+
 /* Ambient Weather Particle Overlays */
 .weather-overlay {
   position: absolute;

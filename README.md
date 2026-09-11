@@ -26,6 +26,14 @@ The backend must expose `POST /auth/login` and `POST /auth/register`. Registrati
 
 The emergency numbers can also be edited locally from the Alerts panel. Configure email, webhook, database, and notification secrets only on the backend; never expose them through `VITE_*` variables.
 
+### Optional Valhalla routing
+
+The app can use a self-hosted [Valhalla](https://github.com/valhalla/valhalla) service for online road-level routes and ETAs. Set `VITE_VALHALLA_URL` to the service base URL at build time. The frontend calls its `/route` endpoint and keeps the bundled Dijkstra router as the automatic offline or fallback route. Do not use the public Valhalla demo server as a production dependency; proxy requests through your own backend when browser CORS or access-control policies require it.
+
+### Optional PMTiles basemap and rerouting
+
+Set `VITE_PMTILES_URL` to a raster PMTiles archive hosted on storage that supports CORS and HTTP range requests. The archive becomes the Leaflet basemap while incidents, responders, blockages, and routes remain application overlays. When both PMTiles and Valhalla are configured, an active blockage triggers a fresh Valhalla route request for the online route; when offline or unavailable, the bundled Dijkstra route remains the fallback. PMTiles is a basemap format, not a routing engine. For true offline map packs, download a regional archive into the native app or browser storage rather than relying only on a remote URL.
+
 Create a `.env.local` file:
 
 ```env

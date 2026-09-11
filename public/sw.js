@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emergency-dispatch-v5';
+const CACHE_NAME = 'emergency-dispatch-v7';
 const APP_SHELL = ['/', '/index.html', '/favicon.svg', '/icons.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
@@ -19,13 +19,16 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const requestUrl = new URL(event.request.url);
-  const isMapTile = /tile\.openstreetmap\.org/.test(requestUrl.href);
-  if (requestUrl.origin !== self.location.origin && !isMapTile) return;
+  const isMapTile = /tile\.openstreetmap\.org|arcgisonline\.com/.test(requestUrl.href);
+  const isPmtilesRangeRequest = event.request.headers.has('range') && (
+    requestUrl.pathname.endsWith('.pmtiles') || requestUrl.searchParams.has('pmtiles')
+  );
+  if (requestUrl.origin !== self.location.origin && !isMapTile && !isPmtilesRangeRequest) return;
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const networkRequest = fetch(event.request).then((networkResponse) => {
-        if (networkResponse.ok || isMapTile) {
+        if (networkResponse.ok || isMapTile || isPmtilesRangeRequest) {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
         }
         return networkResponse;

@@ -43,8 +43,32 @@ class PriorityQueue {
   }
 }
 
-// Dijkstra solver excluding blocked edges
-export function solveDijkstra(startNodeId, endNodeId, nodes, edges, blockages) {
+const getEdgeSpeed = (edge, transport) => {
+  const baseSpeed = transport === 'walk' ? 5 : transport === 'bus' ? 55 : 85;
+  const roadName = String(edge.name || '').toLowerCase();
+  if (transport === 'walk') return baseSpeed;
+  if (roadName.includes('ghat') || roadName.includes('idukki') || roadName.includes('munnar')) {
+    return Math.min(baseSpeed, 35);
+  }
+  if (roadName.includes('local') || roadName.includes('link')) {
+    return Math.min(baseSpeed, 45);
+  }
+  if (roadName.includes('nh ')) return baseSpeed;
+  return Math.min(baseSpeed, 60);
+};
+
+export const getEdgeKey = (fromNode, toNode) => (
+  [fromNode, toNode].sort().join('::')
+);
+
+export const getExcludedEdgeKeys = (blockages = []) => new Set(
+  blockages
+    .filter((blockage) => blockage.active && blockage.fromNode && blockage.toNode)
+    .map((blockage) => getEdgeKey(blockage.fromNode, blockage.toNode))
+);
+
+// Dijkstra solver excluding blocked edges and minimizing travel time.
+export function solveDijkstra(startNodeId, endNodeId, nodes, edges, blockages, transport = 'car') {
   if (!nodes[startNodeId] || !nodes[endNodeId]) return null;
 
   // 1. Build adjacency list of open edges
@@ -54,19 +78,14 @@ export function solveDijkstra(startNodeId, endNodeId, nodes, edges, blockages) {
   });
 
   // Keep track of active blockages
-  const blockedKeys = new Set();
-  blockages.forEach(b => {
-    if (b.active && b.fromNode && b.toNode) {
-      blockedKeys.add(`${b.fromNode}-${b.toNode}`);
-      blockedKeys.add(`${b.toNode}-${b.fromNode}`);
-    }
-  });
+  const excludedEdgeKeys = getExcludedEdgeKeys(blockages);
 
   edges.forEach(edge => {
-    const key = `${edge.from}-${edge.to}`;
-    if (!blockedKeys.has(key)) {
-      adj[edge.from].push({ to: edge.to, dist: edge.distance, edge: edge });
-      adj[edge.to].push({ to: edge.from, dist: edge.distance, edge: edge }); // Bidirectional
+    if (!excludedEdgeKeys.has(getEdgeKey(edge.from, edge.to))) {
+      const speed = getEdgeSpeed(edge, transport);
+      const time = edge.distance / speed;
+      adj[edge.from].push({ to: edge.to, dist: edge.distance, time, edge: edge });
+      adj[edge.to].push({ to: edge.from, dist: edge.distance, time, edge: edge }); // Bidirectional
     }
   });
 
@@ -90,7 +109,7 @@ export function solveDijkstra(startNodeId, endNodeId, nodes, edges, blockages) {
 
     const neighbors = adj[curr] || [];
     for (const neighbor of neighbors) {
-      const alt = distances[curr] + neighbor.dist;
+      const alt = distances[curr] + neighbor.time;
       if (alt < distances[neighbor.to]) {
         distances[neighbor.to] = alt;
         previous[neighbor.to] = { from: curr, edge: neighbor.edge };
@@ -119,6 +138,11 @@ export function solveDijkstra(startNodeId, endNodeId, nodes, edges, blockages) {
 
   // 4. Build complete path geometry
   let fullGeometry = [];
+  const routeDistance = pathEdges.reduce((total, edge) => total + edge.distance, 0);
+  const routeTimeHours = pathEdges.reduce(
+    (total, edge) => total + edge.distance / getEdgeSpeed(edge, transport),
+    0
+  );
   let currentPos = startNodeId;
 
   for (const edge of pathEdges) {
@@ -150,7 +174,8 @@ export function solveDijkstra(startNodeId, endNodeId, nodes, edges, blockages) {
   return {
     nodes: pathNodes,
     edges: pathEdges,
-    distance: parseFloat(distances[endNodeId].toFixed(2)),
+    distance: parseFloat(routeDistance.toFixed(2)),
+    travelTimeMinutes: Math.round(routeTimeHours * 60),
     geometry: fullGeometry
   };
 }

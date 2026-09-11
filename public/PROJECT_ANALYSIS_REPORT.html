@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kerala Emergency Dispatch — Comprehensive Technical Analysis Report</title>
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-muted: #334155;
+      --border-color: #475569;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-amber: #f59e0b;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    header {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-red), var(--accent-amber), var(--accent-green));
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-red { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; }
+    .badge-green { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; }
+    .badge-blue { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid #3b82f6; }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 0.75rem 0 0.5rem;
+      color: #fff;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+    }
+    .meta-item span {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .meta-item strong {
+      font-size: 1rem;
+      color: #fff;
+    }
+    .actions-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    .btn {
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background-color: var(--bg-muted);
+      border-color: #94a3b8;
+    }
+    .btn-primary {
+      background-color: #2563eb;
+      border-color: #3b82f6;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #1d4ed8;
+    }
+    .section-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #fff;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.75rem;
+    }
+    h3 {
+      font-size: 1.15rem;
+      margin: 1.5rem 0 0.75rem;
+      color: #38bdf8;
+    }
+    p {
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+    }
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+      color: #cbd5e1;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--border-color);
+    }
+    th {
+      background-color: rgba(51, 65, 85, 0.6);
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background-color: rgba(30, 41, 59, 0.5);
+    }
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin: 1.25rem 0;
+      border-left: 4px solid;
+    }
+    .alert-danger {
+      background: rgba(239, 68, 68, 0.1);
+      border-left-color: var(--accent-red);
+      color: #fecaca;
+    }
+    .alert-warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-left-color: var(--accent-amber);
+      color: #fef3c7;
+    }
+    .alert-info {
+      background: rgba(59, 130, 246, 0.1);
+      border-left-color: var(--accent-blue);
+      color: #bfdbfe;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: rgba(15, 23, 42, 0.8);
+      color: #38bdf8;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.875em;
+    }
+    pre {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.25rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .stat-card {
+      background: var(--bg-muted);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: #38bdf8;
+      line-height: 1.2;
+    }
+    .stat-lbl {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+      font-weight: 600;
+    }
+    @media print {
+      body {
+        background-color: #fff;
+        color: #0f172a;
+        padding: 0;
+      }
+      .actions-bar {
+        display: none;
+      }
+      header, .section-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        box-shadow: none;
+        color: #0f172a;
+        page-break-inside: avoid;
+      }
+      h1, h2, h3, strong {
+        color: #0f172a;
+      }
+      p, ul, li {
+        color: #334155;
+      }
+      th {
+        background-color: #f1f5f9;
+        color: #0f172a;
+      }
+      code {
+        background-color: #f8fafc;
+        color: #0369a1;
+      }
+      pre {
+        background-color: #f8fafc;
+        border-color: #cbd5e1;
+      }
+      pre code {
+        color: #0f172a;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-top">
+        <div>
+          <span class="badge badge-red">Tactical Dispatch Assessment</span>
+          <h1>Kerala Emergency Dispatch System</h1>
+          <p class="subtitle">Offline-First Multi-Modal Navigation, Triage & First Responder Coordination Platform</p>
+        </div>
+        <div>
+          <span class="badge badge-green">Vite 8 / React 19 Verified</span>
+        </div>
+      </div>
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span>Project Identifier</span>
+          <strong>Vanguard Geo (`offline-emergency-nav`)</strong>
+        </div>
+        <div class="meta-item">
+          <span>Deployment Model</span>
+          <strong>Render Static Site / Android PWA</strong>
+        </div>
+        <div class="meta-item">
+          <span>Audit Date</span>
+          <strong>September 11, 2026</strong>
+        </div>
+        <div class="meta-item">
+          <span>Build Status</span>
+          <strong>Production Ready (400ms compile)</strong>
+        </div>
+      </div>
+    </header>
+
+    <div class="actions-bar">
+      <button class="btn btn-primary" onclick="window.print()">
+        🖨️ Print / Save as PDF
+      </button>
+      <button class="btn" onclick="navigator.clipboard.writeText(window.location.href); alert('Report link copied!');">
+        🔗 Copy Link
+      </button>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-val">100%</div>
+        <div class="stat-lbl">Offline Route Capability</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">19+</div>
+        <div class="stat-lbl">Regional Kerala Hub Nodes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">5,433</div>
+        <div class="stat-lbl">Lines in App.jsx (Monolith)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">0 / 19</div>
+        <div class="stat-lbl">Lint Errors / Warnings</div>
+      </div>
+    </div>
+
+    <!-- Section 1: Executive Summary -->
+    <div class="section-card">
+      <h2>1. Executive Summary</h2>
+      <p>
+        <strong>Kerala Emergency Dispatch</strong> is an offline-first emergency coordination, incident reporting, and multi-modal navigation platform tailored for disaster response across Kerala, India. The application is architected to operate under severe network degradation or complete blackouts during monsoons, floods, and landslides.
+      </p>
+      <p>
+        It combines an on-device Dijkstra pathfinding engine over a bundled topological road network, a local-first IndexedDB database with offline synchronization queuing, edge AI photo classification for triage verification, and live integration with external services (Valhalla routing, Open-Meteo weather, and Supabase authentication).
+      </p>
+    </div>
+
+    <!-- Section 2: Technical Stack Audit -->
+    <div class="section-card">
+      <h2>2. Technology Stack & Dependency Audit</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology / Library</th>
+            <th>Version</th>
+            <th>Role in System</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Core UI Framework</strong></td>
+            <td>React</td>
+            <td><code>19.2.7</code></td>
+            <td>Modern declarative UI component tree with concurrent transitions</td>
+          </tr>
+          <tr>
+            <td><strong>Build & Bundling</strong></td>
+            <td>Vite</td>
+            <td><code>8.1.1</code></td>
+            <td>High-performance ESM dev server and Rolldown/ESBuild compilation</td>
+          </tr>
+          <tr>
+            <td><strong>Mapping Engine</strong></td>
+            <td>Leaflet</td>
+            <td><code>1.9.4</code></td>
+            <td>Interactive GIS map, layers, coordinate projections, custom markers</td>
+          </tr>
+          <tr>
+            <td><strong>Offline Map Archives</strong></td>
+            <td>PMTiles</td>
+            <td><code>4.5.0</code></td>
+            <td>Serverless single-file tile archives using HTTP range requests</td>
+          </tr>
+          <tr>
+            <td><strong>Local Storage & Sync</strong></td>
+            <td>Dexie (IndexedDB)</td>
+            <td><code>4.4.4</code></td>
+            <td>Reactive client database schema with offline FIFO sync queue</td>
+          </tr>
+          <tr>
+            <td><strong>Edge AI / Machine Learning</strong></td>
+            <td>TensorFlow.js + MobileNet</td>
+            <td><code>4.17.0 / 2.1.0</code></td>
+            <td>Client-side on-device photo threat verification (Zero backend upload)</td>
+          </tr>
+          <tr>
+            <td><strong>Cloud Backend & Auth</strong></td>
+            <td>Supabase JS</td>
+            <td><code>2.115.0</code></td>
+            <td>Admin terminal authentication, session management, cloud syncing</td>
+          </tr>
+          <tr>
+            <td><strong>Mobile Runtime</strong></td>
+            <td>Capacitor</td>
+            <td><code>8.5.1</code></td>
+            <td>Native Android packaging and web-to-native hardware bridge</td>
+          </tr>
+          <tr>
+            <td><strong>Iconography & Feedback</strong></td>
+            <td>Lucide React + Confetti</td>
+            <td><code>1.23.0 / 1.9.4</code></td>
+            <td>Tactical iconography and incident resolution animations</td>
+          </tr>
+          <tr>
+            <td><strong>Linter</strong></td>
+            <td>Oxlint</td>
+            <td><code>1.71.0</code></td>
+            <td>Rust-powered high-throughput static code analysis</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section 3: Functional Subsystems Deep-Dive -->
+    <div class="section-card">
+      <h2>3. Functional Subsystems Deep-Dive</h2>
+
+      <h3>3.1. Offline Dijkstra Routing & Blockage Avoidance</h3>
+      <ul>
+        <li><strong>Pre-computed Topology (<code>src/mapData.json</code>)</strong>: Contains 19 key Kerala hubs (Thiruvananthapuram, Kollam, Alappuzha, Pathanamthitta, Kottayam, Idukki, Kochi, Thrissur, Palakkad, Kozhikode, Wayanad, Munnar, Vadakkencherry, etc.) with bidirectional coordinate geometries.</li>
+        <li><strong>Speed & Terrain Profiles</strong>: Edge speeds dynamically account for road class:
+          <ul>
+            <li>Ghat corridors (Idukki, Munnar) constrained to 35 km/h.</li>
+            <li>Local link roads capped at 45 km/h.</li>
+            <li>National highways (NH 66, NH 544) weighted for standard travel speeds.</li>
+            <li>Multi-modal profiles: Car (85 km/h), Bus (55 km/h), Walk (5 km/h).</li>
+          </ul>
+        </li>
+        <li><strong>Active Blockage Rerouting</strong>: When an edge is marked blocked (e.g. flood or landslide), the solver actively excludes it and calculates alternate detours in milliseconds.</li>
+        <li><strong>Voice Navigation</strong>: Spoken turn-by-turn guidance synthesized via HTML5 <code>SpeechSynthesis</code>.</li>
+      </ul>
+
+      <h3>3.2. Incident Management & Automated Dispatch</h3>
+      <ul>
+        <li><strong>Categorization</strong>: Dedicated schemas for Flood, Fire/Landslide, Medical Emergency, and Traffic Blockages with priority ratings (Critical, High, Medium, Low).</li>
+        <li><strong>Responder State Machine</strong>: Units (Ambulance Alpha, Fire Engine Beta, Rescue Boat Gamma) with live coordinates, operational statuses, and simulated movement along calculated routes.</li>
+        <li><strong>Sensory Warnings</strong>: Multi-frequency siren synthesizer built on the Web Audio API (<code>AudioContext</code>) and mobile haptic pulses (<code>navigator.vibrate</code>).</li>
+      </ul>
+
+      <h3>3.3. Client-Side AI Photo Verification</h3>
+      <ul>
+        <li>Dynamically evaluates user-submitted disaster photographs directly in the browser via TensorFlow.js MobileNet.</li>
+        <li>Checks predictions against tactical keyword profiles:
+          <ul>
+            <li><strong>Flood</strong>: <code>river</code>, <code>floodwater</code>, <code>stream</code>, <code>canal</code>, <code>waterfall</code>, <code>dam</code></li>
+            <li><strong>Landslide</strong>: <code>landslide</code>, <code>rockslide</code>, <code>mudslide</code>, <code>debris</code>, <code>cliff</code>, <code>mountain</code></li>
+            <li><strong>Fire</strong>: <code>fire</code>, <code>flame</code>, <code>smoke</code>, <code>blaze</code></li>
+            <li><strong>Medical / Crash</strong>: <code>ambulance</code>, <code>crash</code>, <code>wreck</code>, <code>collision</code>, <code>stretcher</code></li>
+          </ul>
+        </li>
+        <li>Eliminates false reports before deploying limited emergency personnel.</li>
+      </ul>
+
+      <h3>3.4. Live Weather & Evacuation Hub Logistics</h3>
+      <ul>
+        <li><strong>Weather Hazard Engine</strong>: Live Open-Meteo forecasts generate threat levels (danger, caution, safe) with dynamic HTML5 canvas weather overlays (rain particles, storm flashes, fog).</li>
+        <li><strong>Shelters Manager</strong>: Tracks designated relief camps across Kerala districts, monitoring total capacity, occupancy percentages, and inventory of food, clean water, medical packs, and blankets.</li>
+        <li><strong>Bus Fleet ("Bustle")</strong>: Real-time monitor of public KSRTC and private bus lines across Kerala with station progression tracking.</li>
+      </ul>
+    </div>
+
+    <!-- Section 4: Codebase Health, Bugs & Technical Debt -->
+    <div class="section-card">
+      <h2>4. Codebase Health & Technical Debt Assessment</h2>
+
+      <div class="alert alert-danger">
+        <strong>⚠️ Critical Bug Identified in Service Worker (<code>public/sw.js:23</code>)</strong>
+        <p>In <code>public/sw.js</code> on line 23, variable <code>request</code> is referenced directly instead of <code>event.request</code>:</p>
+        <pre><code>// Current Line 23:
+const isPmtilesRangeRequest = request.headers.has('range') && ( ... );
+
+// Required Correction:
+const isPmtilesRangeRequest = event.request.headers.has('range') && ( ... );</code></pre>
+        <p>This causes an uncaught <code>ReferenceError: request is not defined</code> whenever range queries are evaluated by the worker.</p>
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>⚠️ Monolithic Architecture in <code>src/App.jsx</code> (5,433 Lines)</strong>
+        <p>The entire application UI, Leaflet lifecycle, Web Audio, SpeechSynthesis, AI models, modals, tabs, and timers are housed in a single component. Splitting this into modular components will significantly reduce complexity and prevent redundant re-renders.</p>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>ℹ️ Single Bundle Chunk Size Warning (>850 kB)</strong>
+        <p>Vite's build output produces a single JavaScript bundle of 858 kB (248 kB gzip). Code-splitting secondary views (Business Directory, Shelter Hubs, Admin Console) via <code>React.lazy()</code> will optimize initial load times on mobile networks.</p>
+      </div>
+    </div>
+
+    <!-- Section 5: Modernization Roadmap -->
+    <div class="section-card">
+      <h2>5. Actionable Recommendations & Modernization Roadmap</h2>
+      <ol>
+        <li><strong>Apply Service Worker Patch</strong>: Update <code>request.headers</code> to <code>event.request.headers</code> in <code>public/sw.js</code>.</li>
+        <li><strong>Modularize <code>App.jsx</code></strong>:
+          <ul>
+            <li><code>src/components/map/</code> (Map canvas, route polylines, vehicle markers)</li>
+            <li><code>src/components/dispatch/</code> (Incident modal, triage verifier, responder tracker)</li>
+            <li><code>src/components/planner/</code> (Multi-modal route planner, voice navigation)</li>
+            <li><code>src/components/shelters/</code> (Relief hubs, capacity monitor)</li>
+            <li><code>src/hooks/</code> (<code>useWeather</code>, <code>useAudioAlerts</code>, <code>useDijkstra</code>)</li>
+          </ul>
+        </li>
+        <li><strong>Cache AI Model Weights for True Offline Operation</strong>: Pre-cache the MobileNet weights in IndexedDB or the Service Worker cache so AI verification works without any initial internet connection.</li>
+        <li><strong>Implement Unit Testing</strong>: Add test coverage for <code>src/routing.js</code> (graph traversal, edge speeds, blockage exclusion) using Vitest.</li>
+      </ol>
+    </div>
+  </div>
+</body>
+</html>

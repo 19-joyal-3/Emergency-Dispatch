@@ -1,26 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { PMTiles, leafletRasterLayer } from 'pmtiles';
 import { db, addIncidentLocal, updateIncidentStatusLocal, addBlockageLocal, removeBlockageLocal, updateResponderLocal, logVisitorAudit, getVisitorAudits } from './db';
 import { formatSosMessage, getSosContacts, openSosCall, openSosSms, saveSosContacts } from './sos';
 import mapData from './mapData.json';
-import { solveDijkstra, findClosestNode, findClosestEdge, getPositionAtDistance, getRouteLength, haversineDistance } from './routing';
+import { solveDijkstra, findClosestNode, getPositionAtDistance, haversineDistance } from './routing';
 import { fetchWeather } from './weatherApi';
 import { isSupabaseConfigured, supabase } from './supabase';
+import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
 import confetti from 'canvas-confetti';
 import { 
   ShieldAlert, 
   Wifi, 
-  WifiOff, 
   PlusCircle,
   Info, 
   MapPin, 
-  TrendingUp, 
   Navigation, 
-  RotateCcw, 
   CheckCircle2, 
   AlertTriangle,
-  ArrowRight,
   Flame,
   Activity,
   Droplet,
@@ -121,14 +119,27 @@ export default function App() {
   const [emergencyNumbers, setEmergencyNumbers] = useState(() => getStoredJson('dispatch_emergency_numbers', DISPATCH_CONFIG.emergencyNumbers));
 
   const tileLayerRef = useRef(null);
+  const pmtilesRef = useRef(null);
 
-  const getTileUrl = (_theme) => {
+  const getPmtilesUrl = () => (import.meta.env.VITE_PMTILES_URL || '').trim();
+
+  const getTileUrl = (theme) => {
+    if (getPmtilesUrl()) return null;
     if (!navigator.onLine) return null;
+    if (theme === 'satellite') {
+      return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    }
+    if (theme === 'terrain') {
+      return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
+    }
     return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   };
 
   const getTileAttribution = (theme) => {
+    if (getPmtilesUrl()) return '&copy; OpenStreetMap contributors';
     if (!navigator.onLine) return 'Offline mode: local road network view';
+    if (theme === 'satellite') return '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
+    if (theme === 'terrain') return '&copy; Esri &mdash; Source: Esri, USGS';
     if (theme === 'dark') return '&copy; OpenStreetMap contributors &copy; CARTO';
     return 'Map data: &copy; OpenStreetMap contributors';
   };
@@ -326,7 +337,7 @@ export default function App() {
   const [mobilenetModel, setMobilenetModel] = useState(null);
   const [modelStatus, setModelStatus] = useState('loading'); // 'loading', 'ready', 'classifying', 'failed'
   const [aiVerificationResult, setAiVerificationResult] = useState(null);
-  const [overrideAiVerification, setOverrideAiVerification] = useState(false);
+  const [_overrideAiVerification, setOverrideAiVerification] = useState(false);
 
   // Load TensorFlow.js and MobileNet scripts dynamically
   const loadModelScripts = () => {
@@ -776,7 +787,7 @@ export default function App() {
   }, []);
 
   // Evacuation Shelters State
-  const [shelters, setShelters] = useState([
+  const [shelters] = useState([
     { id: 'shelter_1', name: 'Thrissur Town Hall Camp', lat: 10.5310, lng: 76.2200, capacity: 250, occupancy: 145, resources: 'Food: High | Meds: Medium', district: 'thrissur' },
     { id: 'shelter_2', name: 'Palakkad Victoria College Camp', lat: 10.7920, lng: 76.6590, capacity: 300, occupancy: 88, resources: 'Food: High | Meds: High', district: 'palakkad' },
     { id: 'shelter_3', name: 'Alappuzha SD College Center', lat: 9.4780, lng: 76.3450, capacity: 200, occupancy: 185, resources: 'Food: Low | Meds: Low', district: 'alappuzha' },
@@ -966,7 +977,7 @@ export default function App() {
         terminalMarkersRef.current.set(ipKey, m);
       }
     });
-  }, [visitorLogs, mapRef.current]);
+  }, [visitorLogs]);
 
   const reloadLocalData = async () => {
     const listIncidents = await db.incidents.toArray();
@@ -1021,7 +1032,7 @@ export default function App() {
     });
   }, [incidents, soundAlertsEnabled, vibrationAlertsEnabled]);
 
-  const logMessage = (msg, type = 'info') => {
+  const logMessage = (msg, _type = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
     setSyncLogs(prev => [`[${timestamp}] ${msg}`, ...prev].slice(0, 50));
   };
@@ -1168,16 +1179,22 @@ export default function App() {
         center: [10.61, 76.50], // Center around Vadakkencherry / Valliyode Palakkad corridor
         zoom: 12,
         minZoom: 7,
-        maxZoom: 15,
+        maxZoom: 18,
         doubleClickZoom: false
       });
 
+      const pmtilesUrl = getPmtilesUrl();
       const offlineTileUrl = getTileUrl(mapTheme);
-      if (offlineTileUrl) {
-        const tileLayer = L.tileLayer(offlineTileUrl, {
+      if (pmtilesUrl) {
+        pmtilesRef.current = new PMTiles(pmtilesUrl);
+        tileLayerRef.current = leafletRasterLayer(pmtilesRef.current, {
           attribution: getTileAttribution(mapTheme)
         }).addTo(map);
-        tileLayerRef.current = tileLayer;
+      } else if (offlineTileUrl) {
+        tileLayerRef.current = L.tileLayer(offlineTileUrl, {
+          attribution: getTileAttribution(mapTheme),
+          maxZoom: 18
+        }).addTo(map);
       } else {
         tileLayerRef.current = null;
         map.getContainer().style.background = 'radial-gradient(circle at center, rgba(30,41,59,0.95), rgba(2,6,23,1))';
@@ -1225,15 +1242,25 @@ export default function App() {
   useEffect(() => {
     if (!mapRef.current) return;
 
+    const pmtilesUrl = getPmtilesUrl();
     const tileUrl = getTileUrl(mapTheme);
-    if (tileUrl) {
-      if (!tileLayerRef.current) {
-        tileLayerRef.current = L.tileLayer(tileUrl, {
-          attribution: getTileAttribution(mapTheme)
-        }).addTo(mapRef.current);
-      } else {
-        tileLayerRef.current.setUrl(tileUrl);
+    if (pmtilesUrl) {
+      if (tileLayerRef.current && pmtilesRef.current) {
+        mapRef.current.removeLayer(tileLayerRef.current);
       }
+      pmtilesRef.current = new PMTiles(pmtilesUrl);
+      tileLayerRef.current = leafletRasterLayer(pmtilesRef.current, {
+        attribution: getTileAttribution(mapTheme)
+      }).addTo(mapRef.current);
+      mapRef.current.getContainer().style.background = '';
+    } else if (tileUrl) {
+      if (tileLayerRef.current) {
+        mapRef.current.removeLayer(tileLayerRef.current);
+      }
+      tileLayerRef.current = L.tileLayer(tileUrl, {
+        attribution: getTileAttribution(mapTheme),
+        maxZoom: 18
+      }).addTo(mapRef.current);
       tileLayerRef.current.setOpacity(1);
       mapRef.current.getContainer().style.background = '';
     } else {
@@ -1241,6 +1268,7 @@ export default function App() {
         mapRef.current.removeLayer(tileLayerRef.current);
         tileLayerRef.current = null;
       }
+      pmtilesRef.current = null;
       mapRef.current.getContainer().style.background = 'radial-gradient(circle at center, rgba(30,41,59,0.95), rgba(2,6,23,1))';
     }
   }, [mapTheme, isOnline]);
@@ -2548,8 +2576,20 @@ export default function App() {
       return;
     }
 
-    const result = solveDijkstra(selectedStartNode, selectedEndNode, mapData.nodes, mapData.edges, blockages);
-    if (result) {
+    const controller = new AbortController();
+    const localResult = solveDijkstra(selectedStartNode, selectedEndNode, mapData.nodes, mapData.edges, blockages, meansOfTransport);
+    let cancelled = false;
+
+    const applyRoute = (result) => {
+      if (cancelled) return;
+      if (!result) {
+        setCustomRoute(null);
+        setMatchingBusLines([]);
+        if (!simulationActive && routeLayerRef.current) {
+          routeLayerRef.current.clearLayers();
+        }
+        return;
+      }
       setCustomRoute(result);
       
       // If dispatch simulator is not active, render the tactical path
@@ -2567,29 +2607,59 @@ export default function App() {
         }
       }
 
-      // Check bus availability along this path
-      const buses = getTransitOptionsForPath(result.nodes, result.distance);
+      // Check bus availability along this path when local graph nodes are available.
+      const buses = result.nodes.length > 1
+        ? getTransitOptionsForPath(result.nodes, result.distance)
+        : [];
       setMatchingBusLines(buses);
-    } else {
-      setCustomRoute(null);
-      setMatchingBusLines([]);
-      if (!simulationActive && routeLayerRef.current) {
-        routeLayerRef.current.clearLayers();
-      }
+    };
+
+    applyRoute(localResult);
+
+    // Keep the local graph authoritative while closures are active so every
+    // blocked edge is excluded exactly, in both travel directions.
+    if (isValhallaConfigured && navigator.onLine && !blockages.some((blockage) => blockage.active)) {
+      const avoidLocations = blockages.flatMap((blockage) => {
+        const from = mapData.nodes[blockage.fromNode];
+        const to = mapData.nodes[blockage.toNode];
+        return blockage.active && from && to ? [from, to] : [];
+      });
+
+      requestValhallaRoute({
+        start: mapData.nodes[selectedStartNode],
+        end: mapData.nodes[selectedEndNode],
+        nodeIds: [selectedStartNode, selectedEndNode],
+        transport: meansOfTransport,
+        avoidLocations,
+        signal: controller.signal
+      }).then((onlineResult) => {
+        if (onlineResult) applyRoute(onlineResult);
+      }).catch((error) => {
+        if (error.name !== 'AbortError') {
+          console.warn('Valhalla route unavailable; keeping local route:', error);
+        }
+      });
     }
-  }, [selectedStartNode, selectedEndNode, blockages, simulationActive]);
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [selectedStartNode, selectedEndNode, blockages, simulationActive, meansOfTransport]);
 
   // Re-route an active tactical simulation when a newly reported blockage closes its path.
   useEffect(() => {
     const activeRoute = activeSimulationRouteRef.current;
     if (!simulationActive || !activeRoute || !customRoute) return;
 
-    const routeBlocked = blockages.some(blockage =>
-      activeRoute.edges.some(edge =>
-        (blockage.fromNode === edge.from && blockage.toNode === edge.to) ||
-        (blockage.fromNode === edge.to && blockage.toNode === edge.from)
-      )
-    );
+    const routeBlocked = activeRoute.source === 'valhalla'
+      ? blockages.some(blockage => blockage.active)
+      : blockages.some(blockage =>
+        activeRoute.edges.some(edge =>
+          (blockage.fromNode === edge.from && blockage.toNode === edge.to) ||
+          (blockage.fromNode === edge.to && blockage.toNode === edge.from)
+        )
+      );
 
     if (!routeBlocked) return;
 
@@ -2625,7 +2695,7 @@ export default function App() {
     ) return;
 
     pendingCustomRerouteRef.current = null;
-    setRerouteNotice(`Alternate route found: ${customRoute.distance.toFixed(1)} km. Resuming navigation.`);
+    setRerouteNotice(`Fastest alternate route found: ${customRoute.travelTimeMinutes} min, ${customRoute.distance.toFixed(1)} km. Resuming navigation.`);
     logMessage('[NAV-TACTICAL] Alternate route acquired. Resuming navigation.', 'success');
     startCustomSimulation(pendingReroute.mode, customRoute, pendingReroute.startNode, pendingReroute.endNode);
   }, [customRoute, simulationActive]);
@@ -2651,18 +2721,53 @@ export default function App() {
     const { id: startId } = findClosestNode(startLat, startLng, mapData.nodes);
     const { id: endId } = findClosestNode(selectedIncident.lat, selectedIncident.lng, mapData.nodes);
 
-    const result = solveDijkstra(startId, endId, mapData.nodes, mapData.edges, blockages);
-    if (result) {
+    const controller = new AbortController();
+    let cancelled = false;
+    const localResult = solveDijkstra(startId, endId, mapData.nodes, mapData.edges, blockages, 'car');
+    const applyDispatchRoute = (result) => {
+      if (cancelled) return;
+      if (!result) {
+        setDispatchRoute(null);
+        if (!simulationActive && routeLayerRef.current) {
+          routeLayerRef.current.clearLayers();
+        }
+        return;
+      }
       setDispatchRoute(result);
       if (!simulationActive) {
         drawRoutePolyline(result.geometry);
       }
-    } else {
-      setDispatchRoute(null);
-      if (!simulationActive && routeLayerRef.current) {
-        routeLayerRef.current.clearLayers();
-      }
+    };
+
+    applyDispatchRoute(localResult);
+
+    if (isValhallaConfigured && navigator.onLine && !blockages.some((blockage) => blockage.active)) {
+      const avoidLocations = blockages.flatMap((blockage) => {
+        const from = mapData.nodes[blockage.fromNode];
+        const to = mapData.nodes[blockage.toNode];
+        return blockage.active && from && to ? [from, to] : [];
+      });
+
+      requestValhallaRoute({
+        start: { lat: startLat, lng: startLng },
+        end: { lat: selectedIncident.lat, lng: selectedIncident.lng },
+        nodeIds: [startId, endId],
+        transport: 'car',
+        avoidLocations,
+        signal: controller.signal
+      }).then((onlineResult) => {
+        if (onlineResult) applyDispatchRoute(onlineResult);
+      }).catch((error) => {
+        if (error.name !== 'AbortError') {
+          console.warn('Valhalla dispatch route unavailable; keeping local route:', error);
+        }
+      });
     }
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [selectedIncident, selectedResponder, gpsCoords, bindGpsToUnit, blockages, simulationActive]);
 
   // 13. Public Transit Route Matching Algorithm
@@ -2785,7 +2890,7 @@ export default function App() {
   };
 
   // Get active route metrics to show in overlay
-  const getActiveRouteMetrics = () => {
+  const _getActiveRouteMetrics = () => {
     const route = simulationActive ? customRoute || dispatchRoute : customRoute || dispatchRoute;
     if (!route) return null;
     return {
@@ -2802,7 +2907,13 @@ export default function App() {
     endNodeOverride = selectedEndNode
   ) => {
     const route = routeOverride;
-    if (!route) return;
+    const startNode = mapData.nodes[startNodeOverride];
+    const endNode = mapData.nodes[endNodeOverride];
+    const startCoord = route?.geometry?.[0];
+    if (!route || !startNode || !endNode || !startCoord || route.nodes?.length < 2) {
+      logMessage('[NAV-TACTICAL] Unable to start simulation: route geometry is unavailable.', 'error');
+      return;
+    }
 
     activeSimulationRouteRef.current = route;
     setSimulationActive(true);
@@ -2822,10 +2933,9 @@ export default function App() {
       speed = 60; // km/h
     }
 
-    logMessage(`[SIMULATION] Starting journey from ${mapData.nodes[startNodeOverride].name} to ${mapData.nodes[endNodeOverride].name} via ${mode.toUpperCase()}...`, 'system');
+    logMessage(`[SIMULATION] Starting journey from ${startNode.name} to ${endNode.name} via ${mode.toUpperCase()}...`, 'system');
 
     // Create a temporary simulation marker
-    const startCoord = route.geometry[0];
     const simIcon = L.divIcon({
       className: 'custom-simulation-marker',
       html: `<div style="font-size: 26px; transform-origin: center; filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.85));">${emoji}</div>`,
@@ -2909,11 +3019,16 @@ export default function App() {
   };
 
   const stopCustomSimulation = () => {
+    const activeRoute = activeSimulationRouteRef.current;
     if (simTimerRef.current) {
       clearInterval(simTimerRef.current);
     }
     setSimulationActive(false);
     setCurrentBusStopName('');
+    setRerouteNotice('');
+    if (activeRoute?.nodes?.[0]) {
+      setSelectedStartNode(activeRoute.nodes[0]);
+    }
     activeSimulationRouteRef.current = null;
     pendingCustomRerouteRef.current = null;
 
@@ -3402,8 +3517,7 @@ export default function App() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>Est. Travel Time:</span>
                         <strong style={{ color: '#fbbf24' }}>
-                          {meansOfTransport === 'car' && `${Math.round((customRoute.distance / 85) * 60)} mins (at 85 km/h)`}
-                          {meansOfTransport === 'walk' && `${Math.round((customRoute.distance / 5) * 60)} mins (at 5 km/h)`}
+                          {`${customRoute.travelTimeMinutes} mins (fastest available route)`}
                           {meansOfTransport === 'bus' && (matchingBusLines.length > 0 ? matchingBusLines[0].time : 'N/A')}
                         </strong>
                       </div>
@@ -3986,7 +4100,7 @@ export default function App() {
                               return (
                                 <div key={nid} style={{ display: 'flex', justifyContent: 'space-between', color: isCurrent ? '#fbbf24' : isVisited ? 'var(--text-muted)' : 'var(--text-secondary)' }}>
                                   <span>{isCurrent ? '●' : '○'} {mapData.nodes[nid]?.name || nid}</span>
-                                  <span>{idx === 0 ? '08:00 AM' : `+\idx * 30} mins`}</span>
+                                  <span>{idx === 0 ? '08:00 AM' : `+${idx * 30} mins`}</span>
                                 </div>
                               );
                             })}
@@ -4731,7 +4845,7 @@ export default function App() {
       {/* Main Interactive Map Viewport */}
       <main id="onboarding-map" className={`map-viewport ${showTour && tourStep === 2 ? 'onboarding-highlight' : ''}`}>
         {/* Interactive Leaflet Element */}
-        <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : 'map-light-theme'}`}></div>
+        <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : mapTheme === 'satellite' ? 'map-satellite-theme' : mapTheme === 'terrain' ? 'map-terrain-theme' : 'map-light-theme'}`}></div>
         <div className={`map-search-panel ${showLocationSearch ? 'expanded' : 'collapsed'}`}>
           <button
             type="button"
@@ -4802,7 +4916,7 @@ export default function App() {
             <div className="nav-details-bottom">
               <div className="nav-detail-col">
                 <span className="nav-detail-val" style={{ color: '#10b981' }}>
-                  {customRoute ? Math.round((customRoute.distance / (meansOfTransport === 'walk' ? 5 : meansOfTransport === 'bus' ? 55 : 85)) * 60) : 0} min
+                  {customRoute ? customRoute.travelTimeMinutes : 0} min
                 </span>
                 <span className="nav-detail-label">TIME</span>
               </div>
@@ -4815,7 +4929,7 @@ export default function App() {
               <div className="nav-detail-col">
                 <span className="nav-detail-val">
                   {(() => {
-                    const etaMins = customRoute ? Math.round((customRoute.distance / (meansOfTransport === 'walk' ? 5 : meansOfTransport === 'bus' ? 55 : 85)) * 60) : 0;
+                    const etaMins = customRoute ? customRoute.travelTimeMinutes : 0;
                     const date = new Date();
                     date.setMinutes(date.getMinutes() + etaMins);
                     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -5051,39 +5165,66 @@ export default function App() {
           alignItems: 'flex-end',
           gap: '0.5rem'
         }}>
-          <button
-            type="button"
-            className="map-settings-btn"
-            onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-            title="Configure Map Environment HUD"
-            style={{
-              background: 'rgba(15, 23, 42, 0.85)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(168, 85, 247, 0.4)',
-              color: '#c084fc',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-              transition: 'all 0.2s',
-              fontSize: '16px',
-              outline: 'none'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.border = '1px solid rgba(168, 85, 247, 0.8)';
-              e.currentTarget.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.border = '1px solid rgba(168, 85, 247, 0.4)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
-            }}
-          >
-            ⚙️
-          </button>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <button
+              type="button"
+              className="map-settings-btn"
+              onClick={() => setMapTheme(prev => prev === 'satellite' ? 'dark' : 'satellite')}
+              title={mapTheme === 'satellite' ? "Switch to Tactical Dark Map" : "Switch to Satellite Imagery"}
+              style={{
+                background: mapTheme === 'satellite' ? '#2563eb' : 'rgba(15, 23, 42, 0.85)',
+                backdropFilter: 'blur(8px)',
+                border: mapTheme === 'satellite' ? '1px solid #3b82f6' : '1px solid rgba(59, 130, 246, 0.4)',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                transition: 'all 0.2s',
+                fontSize: '16px',
+                outline: 'none'
+              }}
+            >
+              🛰️
+            </button>
+            <button
+              type="button"
+              className="map-settings-btn"
+              onClick={() => setShowSettingsPanel(!showSettingsPanel)}
+              title="Configure Map Environment HUD"
+              style={{
+                background: 'rgba(15, 23, 42, 0.85)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(168, 85, 247, 0.4)',
+                color: '#c084fc',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                transition: 'all 0.2s',
+                fontSize: '16px',
+                outline: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.border = '1px solid rgba(168, 85, 247, 0.8)';
+                e.currentTarget.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.border = '1px solid rgba(168, 85, 247, 0.4)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
+              }}
+            >
+              ⚙️
+            </button>
+          </div>
           
           {showSettingsPanel && (
             <div className="map-settings-panel" style={{
@@ -5151,9 +5292,10 @@ export default function App() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>MAP STYLE</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.25rem' }}>
                   {[
                     { id: 'dark', label: '🌙 Dark' },
+                    { id: 'satellite', label: '🛰️ Satellite' },
                     { id: 'light', label: '☀️ Light' },
                   ].map(style => (
                     <button 
@@ -5162,13 +5304,14 @@ export default function App() {
                       className="btn"
                       style={{ 
                         padding: '4px 0', 
-                        fontSize: '0.7rem', 
+                        fontSize: '0.65rem', 
                         border: '1px solid rgba(255,255,255,0.05)', 
                         background: mapTheme === style.id ? '#a855f7' : 'rgba(255,255,255,0.03)',
                         color: '#fff',
                         fontWeight: 'bold',
                         cursor: 'pointer',
-                        borderRadius: '4px'
+                        borderRadius: '4px',
+                        textAlign: 'center'
                       }}
                       onClick={() => setMapTheme(style.id)}
                     >
