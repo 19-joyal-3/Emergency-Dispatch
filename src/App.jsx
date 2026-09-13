@@ -1524,9 +1524,54 @@ export default function App() {
         handleBusinessMapLocation(e.latlng.lat, e.latlng.lng);
       });
 
+      // Force Leaflet to calculate full container dimensions and load tiles for the entire screen
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 500);
+
       return () => mapImageObserver.disconnect();
     }
   }, [blockages]);
+
+  // Automatically recalculate map dimensions whenever sidebar opens, closes, or switches tabs
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const t1 = setTimeout(() => mapRef.current?.invalidateSize(), 50);
+    const t2 = setTimeout(() => mapRef.current?.invalidateSize(), 200);
+    const t3 = setTimeout(() => mapRef.current?.invalidateSize(), 500);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [activeTab]);
+
+  // Automatically recalculate map dimensions on container or window resize
+  useEffect(() => {
+    const handleResize = () => {
+      mapRef.current?.invalidateSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    let ro = null;
+    if (window.ResizeObserver && mapContainerRef.current) {
+      ro = new ResizeObserver(() => {
+        mapRef.current?.invalidateSize();
+      });
+      ro.observe(mapContainerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      if (ro) ro.disconnect();
+    };
+  }, []);
 
   // Render KSDMA Landslide & Flood Hazard Risk Polygons
   useEffect(() => {
