@@ -3021,6 +3021,7 @@ export default function App() {
                 isInsidePolygon: false
               });
               setShowHazardInterceptModal(true);
+              triggerHaptic([80, 50, 80]);
               if (audioSirenEnabled) {
                 playEvacuationSiren(1.2);
               }
@@ -3094,6 +3095,7 @@ export default function App() {
     if (soundAlertsEnabled) {
       playTacticalChime(0.35);
     }
+    triggerHaptic([60, 80, 60]);
     setP2pSosModalOpen(false);
     setP2pSosForm(prev => ({ ...prev, message: '' }));
     setP2pToast({
@@ -3104,10 +3106,22 @@ export default function App() {
     setTimeout(() => setP2pToast(null), 5000);
   };
 
+  const triggerHaptic = (pattern = [30]) => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch {
+        // Haptic feedback unsupported or blocked by browser policy
+      }
+    }
+  };
+
   const handleBleScan = async () => {
+    triggerHaptic(25);
     try {
       const device = await p2pEngine.scanForBluetoothDevice();
       if (device) {
+        triggerHaptic([30, 50]);
         setP2pToast({
           type: 'success',
           title: '📶 BLE DEVICE DETECTED',
@@ -3122,6 +3136,7 @@ export default function App() {
 
   const handleSendDirectMessage = (deviceId) => {
     if (!directMsgText.trim()) return;
+    triggerHaptic(30);
     p2pEngine.sendDirectMessage(deviceId, directMsgText);
     setDirectMsgTarget(null);
     setDirectMsgText('');
@@ -3202,6 +3217,7 @@ export default function App() {
         if (!dismissedHazardIds.has(hazardKey)) {
           setActiveProximityHazard(check.hazard);
           setShowHazardInterceptModal(true);
+          triggerHaptic([80, 50, 80]);
           if (soundAlertsEnabled) {
             playTacticalChime(0.4);
           }
@@ -4167,7 +4183,7 @@ export default function App() {
   ));
 
   return (
-    <div className={`app-container ${activeTab ? 'sidebar-open' : 'map-focused'}`}>
+    <div className={`app-container ${activeTab ? 'sidebar-open' : 'map-focused'}`} data-theme={mapTheme === 'terrain' ? 'thermal' : mapTheme}>
       {/* Sidebar Controls */}
       {/* 1. Tab Toolbar (Futuristic HUD Navigation) */}
       <nav className="tab-toolbar">
@@ -6228,17 +6244,30 @@ export default function App() {
           display: 'flex',
           alignItems: 'center',
           gap: '0.45rem',
-          background: 'rgba(15, 23, 42, 0.88)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          background: 'rgba(11, 19, 29, 0.9)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(56, 189, 248, 0.3)',
           borderRadius: '10px',
           padding: '0.35rem 0.65rem',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.6), 0 0 15px rgba(56, 189, 248, 0.1)',
           overflowX: 'auto',
           whiteSpace: 'nowrap',
           scrollbarWidth: 'none'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.68rem', fontWeight: 800, color: '#f8fafc', flexShrink: 0, paddingRight: '0.5rem', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+            <span style={{
+              background: 'rgba(56, 189, 248, 0.22)',
+              border: '1px solid #38bdf8',
+              color: '#38bdf8',
+              padding: '1px 5px',
+              borderRadius: '4px',
+              fontSize: '0.6rem',
+              fontWeight: 800,
+              letterSpacing: '0.05em'
+            }}>
+              SITREP
+            </span>
             <span style={{
               display: 'inline-block',
               width: '8px',
@@ -6272,6 +6301,42 @@ export default function App() {
             >
               🔄
             </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, paddingRight: '0.4rem', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
+            <span style={{
+              background: activeIncidents.length > 0 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.18)',
+              color: activeIncidents.length > 0 ? '#fca5a5' : '#86efac',
+              border: `1px solid ${activeIncidents.length > 0 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(34, 197, 94, 0.35)'}`,
+              padding: '1px 6px',
+              borderRadius: '4px',
+              fontSize: '0.6rem',
+              fontWeight: 700
+            }}>
+              ⚡ {activeIncidents.length} INCIDENTS
+            </span>
+            <span style={{
+              background: 'rgba(234, 179, 8, 0.15)',
+              color: '#fde047',
+              border: '1px solid rgba(234, 179, 8, 0.35)',
+              padding: '1px 6px',
+              borderRadius: '4px',
+              fontSize: '0.6rem',
+              fontWeight: 700
+            }}>
+              🛡️ 14 DEOC
+            </span>
+            <span style={{
+              background: 'rgba(16, 185, 129, 0.15)',
+              color: '#6ee7b7',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              padding: '1px 6px',
+              borderRadius: '4px',
+              fontSize: '0.6rem',
+              fontWeight: 700
+            }}>
+              📡 P2P BLE
+            </span>
           </div>
           {districtAlertsStatus === 'loading' && districtAlerts.length === 0 ? (
             <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontStyle: 'italic' }}>
@@ -7191,6 +7256,84 @@ export default function App() {
             ℹ️
           </button>
         )}
+
+        {/* Floating Island Action Capsule HUD */}
+        <div className="floating-island-hud" role="toolbar" aria-label="Tactical Quick Action HUD">
+          <button
+            type="button"
+            className="floating-hud-btn sos-beacon"
+            onClick={() => {
+              triggerHaptic([40, 60, 40]);
+              setP2pSosModalOpen(true);
+            }}
+            title="Broadcast Immediate Zero-Connectivity Emergency SOS Beacon"
+          >
+            🚨 <span>SOS BEACON</span>
+          </button>
+
+          <div className="floating-hud-divider" />
+
+          <button
+            type="button"
+            className="floating-hud-btn"
+            onClick={() => {
+              triggerHaptic(20);
+              setShowP2pModal(true);
+            }}
+            title="Open Zero-Connectivity P2P Proximity Radar"
+          >
+            📡 <span>Radar</span>
+          </button>
+
+          <button
+            type="button"
+            className="floating-hud-btn"
+            onClick={() => {
+              triggerHaptic(20);
+              if (mapRef.current && gpsCoords) {
+                mapRef.current.flyTo([gpsCoords.lat, gpsCoords.lng], 15, { duration: 1.2 });
+                logMessage(`[GPS] Camera centered on live coordinates (${gpsCoords.lat.toFixed(4)}, ${gpsCoords.lng.toFixed(4)})`, 'success');
+              } else if (mapRef.current) {
+                mapRef.current.flyTo([9.9312, 76.2673], 12, { duration: 1.2 });
+              }
+            }}
+            title="Center Camera on Live GPS Position"
+          >
+            🧭 <span>Recenter</span>
+          </button>
+
+          <button
+            type="button"
+            className="floating-hud-btn"
+            onClick={() => {
+              triggerHaptic(20);
+              setMapTheme(prev => {
+                const order = ['dark', 'satellite', 'terrain', 'light'];
+                const nextIdx = (order.indexOf(prev) + 1) % order.length;
+                return order[nextIdx];
+              });
+            }}
+            title={`Current Spectrum: ${mapTheme.toUpperCase()}. Click to cycle spectrum modes.`}
+          >
+            🛰️ <span style={{ textTransform: 'capitalize' }}>{mapTheme}</span>
+          </button>
+
+          <button
+            type="button"
+            className="floating-hud-btn"
+            onClick={() => {
+              triggerHaptic(20);
+              if (incidents && incidents.length > 0) {
+                setGeofenceModalData({ incident: incidents[0], radiusKm: 2.5 });
+              } else {
+                setP2pSosModalOpen(true);
+              }
+            }}
+            title="Launch Targeted Evacuation Geofence Broadcaster"
+          >
+            ⚡ <span>Evac Alert</span>
+          </button>
+        </div>
       </main>
 
       {/* Onboarding Tour Modal Overlay */}
@@ -7350,7 +7493,7 @@ export default function App() {
       {/* Zero-Connectivity P2P Proximity Radar & Emergency Messenger Modal */}
       {showP2pModal && (
         <div className="p2p-modal-overlay" onClick={() => setShowP2pModal(false)}>
-          <div className="p2p-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="p2p-modal-card hud-frame" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
             <div className="p2p-modal-header">
               <div>
@@ -7747,7 +7890,7 @@ export default function App() {
       {/* 1-Tap Emergency SOS Broadcast Composer Modal */}
       {p2pSosModalOpen && (
         <div className="p2p-modal-overlay" onClick={() => setP2pSosModalOpen(false)}>
-          <div className="p2p-modal-card" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="p2p-modal-card hud-frame" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
             <div className="p2p-modal-header" style={{ borderBottomColor: 'rgba(239, 68, 68, 0.3)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <AlertTriangle size={18} style={{ color: '#ef4444' }} />
@@ -7855,7 +7998,7 @@ export default function App() {
       {/* Dynamic Geofence Perimeter Broadcaster Modal */}
       {geofenceModalData && (
         <div className="p2p-modal-overlay" onClick={() => setGeofenceModalData(null)}>
-          <div className="geofence-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="geofence-modal-card hud-frame" onClick={(e) => e.stopPropagation()}>
             <div className="p2p-modal-header" style={{ borderBottomColor: 'rgba(249, 115, 22, 0.3)' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -8018,12 +8161,12 @@ export default function App() {
       {/* Tactical Hazard Ahead - Ground Photo & Early Warning Screen Intercept Modal */}
       {showHazardInterceptModal && activeProximityHazard && (
         <div 
-          className="hazard-intercept-overlay" 
+          className="hazard-intercept-overlay hazard-ahead-active-vignette" 
           role="dialog" 
           aria-modal="true" 
           aria-labelledby="hazard-intercept-title"
         >
-          <div className="hazard-intercept-card">
+          <div className="hazard-intercept-card hud-frame">
             {/* Header with pulsating strobe and distance badge */}
             <div className="hazard-intercept-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

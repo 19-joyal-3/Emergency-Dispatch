@@ -3505,5 +3505,215 @@ textarea {
   color: #fff;
 }
 
+/* =========================================================
+   CYBER-TACTICAL HUD DESIGN SYSTEM & FLOATING ACTION CAPSULE
+   ========================================================= */
+
+/* Floating Island Action Capsule HUD */
+.floating-island-hud {
+  position: absolute;
+  bottom: 1.8rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(11, 19, 29, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.65), 0 0 20px rgba(56, 189, 248, 0.15);
+  padding: 0.4rem 0.65rem;
+  border-radius: 9999px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-island-hud:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 12px 35px -5px rgba(0, 0, 0, 0.75), 0 0 28px rgba(56, 189, 248, 0.25);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.floating-hud-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  color: #f1f5f9;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  user-select: none;
+}
+
+.floating-hud-btn:hover {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}
+
+.floating-hud-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.floating-hud-btn.sos-beacon {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #fca5a5;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+  animation: sos-beacon-pulse 2s infinite;
+}
+
+.floating-hud-btn.sos-beacon:hover {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.7);
+  color: #ffffff;
+}
+
+@keyframes sos-beacon-pulse {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(239, 68, 68, 0.85);
+  }
+}
+
+.floating-hud-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 2px;
+}
+
+/* Cyber-HUD Framing & Corner Brackets */
+.hud-frame {
+  position: relative;
+}
+
+.hud-frame::before,
+.hud-frame::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  z-index: 5;
+  transition: all 0.2s ease;
+}
+
+.hud-frame::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid #38bdf8;
+  border-left: 2px solid #38bdf8;
+}
+
+.hud-frame::after {
+  bottom: 0;
+  right: 0;
+  border-bottom: 2px solid #38bdf8;
+  border-right: 2px solid #38bdf8;
+}
+
+.hud-frame:hover::before,
+.hud-frame:hover::after {
+  width: 15px;
+  height: 15px;
+  border-color: #67e8f9;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+}
+
+/* Telemetry Monospace Font Utility */
+.telemetry-font {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.03em;
+}
+
+/* CRT Scanlines for P2P Radar Scope */
+.p2p-radar-screen {
+  position: relative;
+  overflow: hidden;
+}
+
+.p2p-radar-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.18) 0px,
+    rgba(0, 0, 0, 0.18) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  border-radius: 50%;
+  z-index: 3;
+}
+
+/* Screen Perimeter Danger Vignette Pulse */
+@keyframes hazard-vignette-pulse {
+  0%, 100% {
+    box-shadow: inset 0 0 35px rgba(239, 68, 68, 0.25);
+  }
+  50% {
+    box-shadow: inset 0 0 85px rgba(239, 68, 68, 0.55);
+  }
+}
+
+.hazard-ahead-active-vignette {
+  animation: hazard-vignette-pulse 2s infinite ease-in-out;
+}
+
+/* FLIR Thermal Theme Overrides */
+[data-theme="thermal"] {
+  --bg-main: #0c0806;
+  --bg-card: rgba(22, 14, 10, 0.92);
+  --bg-card-hover: rgba(35, 20, 14, 0.96);
+  --border-color: rgba(249, 115, 22, 0.25);
+  --border-glow: rgba(249, 115, 22, 0.4);
+}
+
+[data-theme="thermal"] .floating-island-hud {
+  background: rgba(22, 14, 10, 0.92);
+  border-color: rgba(249, 115, 22, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(249, 115, 22, 0.25);
+}
+
+[data-theme="thermal"] .hud-frame::before,
+[data-theme="thermal"] .hud-frame::after {
+  border-color: #f97316;
+}
+
+/* Responsive Floating HUD for Mobile Screens */
+@media (max-width: 640px) {
+  .floating-island-hud {
+    bottom: 1rem;
+    gap: 0.25rem;
+    padding: 0.35rem 0.5rem;
+    width: calc(100% - 2rem);
+    max-width: 380px;
+    justify-content: space-around;
+  }
+  .floating-hud-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.7rem;
+  }
+}
+
 
 
