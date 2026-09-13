@@ -172,9 +172,10 @@ export default function App() {
       return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
     }
     if (theme === 'light') {
-      return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      return 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
     }
-    return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    // High-performance tactical dark base — 100% free, zero watermarks, no API key required
+    return 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
   };
 
   const getTileAttribution = (theme) => {
@@ -182,8 +183,8 @@ export default function App() {
     if (!navigator.onLine) return 'Offline mode: local road network view';
     if (theme === 'satellite') return '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
     if (theme === 'terrain') return '&copy; Esri &mdash; Source: Esri, USGS';
-    if (theme === 'dark') return '&copy; OpenStreetMap contributors &copy; CARTO';
-    return 'Map data: &copy; OpenStreetMap contributors';
+    if (theme === 'light') return '&copy; OpenStreetMap contributors, Tiles: Humanitarian OSM Team';
+    return '&copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ';
   };
 
   const persistAlertPreference = (key, value, setter) => {
@@ -1279,8 +1280,8 @@ export default function App() {
     try {
       const cache = await caches.open('emergency-dispatch-v7');
       const tileUrls = pack.tiles.flatMap(([x, y]) => [
-        `https://tile.openstreetmap.org/${pack.z}/${x}/${y}.png`,
-        `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${pack.z}/${y}/${x}`
+        `https://a.tile.openstreetmap.fr/hot/${pack.z}/${x}/${y}.png`,
+        `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${pack.z}/${y}/${x}`
       ]);
 
       await Promise.all(tileUrls.map(async (url) => {
