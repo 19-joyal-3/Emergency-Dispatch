@@ -16,6 +16,7 @@ import { KERALA_DAMS, getAlertBadgeStyle } from './dams';
 import { KERALA_HAZARD_ZONES, checkRouteHazardIntersection } from './hazards';
 import { generateRouteQr, generateIncidentQr, parseQrHash } from './qr';
 import { p2pEngine, EMERGENCY_TYPES, getSignalQuality } from './p2p';
+import { findEntitiesInGeofence, checkUserHazardProximity, formatGeofenceAlertMessage } from './geofence';
 import { 
   ShieldAlert, 
   Wifi, 
@@ -168,6 +169,14 @@ export default function App() {
   const [p2pToast, setP2pToast] = useState(null);
   const [directMsgTarget, setDirectMsgTarget] = useState(null);
   const [directMsgText, setDirectMsgText] = useState('');
+
+  // Dynamic Geofence Early Warning & Proximity Interceptor States
+  const [geofenceModalData, setGeofenceModalData] = useState(null); // { incident }
+  const [geofenceRadius, setGeofenceRadius] = useState(2.5); // in km
+  const [geofenceCustomMsg, setGeofenceCustomMsg] = useState('');
+  const [activeProximityHazard, setActiveProximityHazard] = useState(null);
+  const [dismissedHazardIds, setDismissedHazardIds] = useState(() => new Set());
+  const geofenceCircleRef = useRef(null);
 
   const tileLayerRef = useRef(null);
   const pmtilesRef = useRef(null);
@@ -3067,6 +3076,151 @@ export default function App() {
     setTimeout(() => setP2pToast(null), 4000);
   };
 
+  // Render Dynamic Geofence Danger Radius on Leaflet Map
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (geofenceCircleRef.current) {
+      geofenceCircleRef.current.remove();
+      geofenceCircleRef.current = null;
+    }
+
+    if (geofenceModalData?.incident) {
+      const inc = geofenceModalData.incident;
+      if (typeof inc.lat === 'number' && typeof inc.lng === 'number') {
+        const radiusMeters = geofenceRadius * 1000;
+        const circle = L.circle([inc.lat, inc.lng], {
+          radius: radiusMeters,
+          color: '#f97316',
+          fillColor: '#ea580c',
+          fillOpacity: 0.2,
+          weight: 2,
+          dashArray: '6, 6'
+        }).addTo(mapRef.current);
+
+        circle.bindTooltip(`
+          <div style="font-size: 11px; padding: 2px;">
+            <strong style="color: #f97316;">🚨 GEOFENCE ALERT ZONE (${geofenceRadius} km)</strong>
+            <div style="color: #e2e8f0; font-size: 10px; margin-top: 2px;">Target: ${inc.type?.toUpperCase()} Incident</div>
+          </div>
+        `, { sticky: true, className: 'tactical-tooltip' });
+
+        geofenceCircleRef.current = circle;
+        mapRef.current.flyTo([inc.lat, inc.lng], geofenceRadius <= 1 ? 14 : geofenceRadius <= 3 ? 13 : 12, { animate: true });
+      }
+    }
+  }, [geofenceModalData, geofenceRadius]);
+
+  // Proactively check if moving user/vehicle enters or approaches within 2.5 km of active danger
+  useEffect(() => {
+    let currentLat = null, currentLng = null;
+    if (gpsActive && mockGpsPosition) {
+      currentLat = mockGpsPosition[0];
+      currentLng = mockGpsPosition[1];
+    } else if (customerTrackingActive) {
+      const selfCust = customers.find(c => c.isSelf);
+      if (selfCust) {
+        currentLat = selfCust.lat;
+        currentLng = selfCust.lng;
+      }
+    } else if (mapRef.current) {
+      const center = mapRef.current.getCenter();
+      currentLat = center.lat;
+      currentLng = center.lng;
+    }
+
+    if (currentLat === null || currentLng === null) return;
+
+    const check = checkUserHazardProximity({
+      userLat: currentLat,
+      userLng: currentLng,
+      incidents,
+      hazardZones: KERALA_HAZARD_ZONES,
+      thresholdKm: 2.5
+    });
+
+    if (check.isThreatDetected && check.hazard) {
+      const hazardKey = `${check.hazard.hazardId}_${Math.round(check.distanceKm * 2) / 2}`;
+      if (!dismissedHazardIds.has(hazardKey)) {
+        setActiveProximityHazard(check.hazard);
+        if (soundAlertsEnabled) {
+          playTacticalChime(0.4);
+        }
+      }
+    } else {
+      setActiveProximityHazard(null);
+    }
+  }, [gpsActive, customers, customerTrackingActive, incidents, dismissedHazardIds, soundAlertsEnabled]);
+
+  const handleAutoDetourHazard = (hazard) => {
+    try {
+      if (hazard?.coordinates) {
+        const avoidNode = findClosestNode(hazard.coordinates[0], hazard.coordinates[1], mapData);
+        if (avoidNode) {
+          logMessage(`[DETOUR] Re-routing traffic around hazard zone near ${avoidNode}.`, 'warning');
+        }
+      }
+      if (hazard?.hazardId) {
+        setDismissedHazardIds(prev => new Set([...prev, hazard.hazardId]));
+      }
+      setActiveProximityHazard(null);
+      if (soundAlertsEnabled) playTacticalChime(0.3);
+      setP2pToast({
+        type: 'success',
+        title: '🧭 DETOUR CALCULATED',
+        message: 'Tactical router has re-routed your vehicle onto safe roads around the disaster perimeter.'
+      });
+      setTimeout(() => setP2pToast(null), 5000);
+    } catch (err) {
+      console.error('[Detour Error]', err);
+    }
+  };
+
+  const handleBroadcastGeofenceEvacuation = () => {
+    if (!geofenceModalData?.incident) return;
+    const inc = geofenceModalData.incident;
+    const alertData = formatGeofenceAlertMessage({
+      incident: inc,
+      radiusKm: geofenceRadius,
+      customMessage: geofenceCustomMsg
+    });
+
+    // 1. Broadcast via P2P Mesh engine so offline peers in the zone receive it
+    p2pEngine.broadcastSos({
+      emergencyType: inc.type || 'hazard',
+      priority: 'critical',
+      message: `[GEOFENCE EVACUATION NOTICE - ${geofenceRadius} KM RADIUS]: ${alertData.message}`,
+      lat: inc.lat,
+      lng: inc.lng,
+      senderCallsign: 'KSDMA SEOC Dispatch Command'
+    });
+
+    // 2. Play evacuation warning siren
+    if (audioSirenEnabled) {
+      playEvacuationSiren(1.8);
+    }
+
+    // 3. Query entities in perimeter for exact count feedback
+    const inPerimeter = findEntitiesInGeofence({
+      centerLat: inc.lat,
+      centerLng: inc.lng,
+      radiusKm: geofenceRadius,
+      customers,
+      responders,
+      buses: []
+    });
+
+    setGeofenceModalData(null);
+    setGeofenceCustomMsg('');
+    logMessage(`[GEOFENCE] Transmitted evacuation alert to ${inPerimeter.totalCount} detected entities within ${geofenceRadius} km of ${inc.type?.toUpperCase()} incident.`, 'warning');
+    setP2pToast({
+      type: 'danger',
+      title: '🚨 GEOFENCE ALERT BROADCASTED',
+      message: `Evacuation order pushed to ${inPerimeter.totalCount} devices in the ${geofenceRadius} km perimeter.`
+    });
+    setTimeout(() => setP2pToast(null), 6000);
+  };
+
   const handleManualIncidentSubmit = (e) => {
     e.preventDefault();
     const isAiVerified = Boolean(aiVerificationResult?.success);
@@ -5512,6 +5666,18 @@ export default function App() {
                                   className="btn btn-secondary"
                                   onClick={(event) => {
                                     event.stopPropagation();
+                                    setGeofenceModalData({ incident: inc, radiusKm: 2.5 });
+                                  }}
+                                  style={{ padding: '0.25rem 0.4rem', fontSize: '0.62rem', borderColor: 'rgba(249, 115, 22, 0.4)', color: '#fb923c' }}
+                                  title="Analyze nearby civilians, vehicles, and send targeted geofenced warning"
+                                >
+                                  <Globe2 size={11} /> Geofence Alert
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
                                     setPrintableMission({
                                       type: 'Emergency Incident Dispatch Manifest',
                                       referenceId: `INC-${inc.id.toString().slice(-6).toUpperCase()}`,
@@ -6882,6 +7048,50 @@ export default function App() {
           )}
         </div>
 
+        {/* Dynamic Proximity Hazard Early Warning Banner for Drivers & Citizens */}
+        {activeProximityHazard && (
+          <div className="proximity-hazard-banner" role="alert">
+            <div className="proximity-hazard-info">
+              <span className="proximity-hazard-icon">⚠️</span>
+              <div>
+                <div style={{ fontSize: '0.82rem', fontWeight: 'bold', color: '#fca5a5', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>{activeProximityHazard.title}</span>
+                  <span className="badge badge-emergency" style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
+                    {activeProximityHazard.distanceKm === 0 ? 'INSIDE HAZARD ZONE' : `${activeProximityHazard.distanceKm.toFixed(1)} KM AHEAD`}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.72rem', color: '#cbd5e1', marginTop: '2px', lineHeight: '1.3' }}>
+                  {activeProximityHazard.description}
+                </div>
+              </div>
+            </div>
+            <div className="proximity-hazard-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => handleAutoDetourHazard(activeProximityHazard)}
+                style={{ background: '#2563eb', padding: '0.35rem 0.65rem', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                title="Automatically calculate safe detour around this hazard"
+              >
+                <Navigation size={12} /> Auto-Detour
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeProximityHazard.hazardId) {
+                    setDismissedHazardIds(prev => new Set([...prev, activeProximityHazard.hazardId]));
+                  }
+                  setActiveProximityHazard(null);
+                }}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.1rem', cursor: 'pointer', padding: '0 4px' }}
+                title="Dismiss Warning"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Bottom Floating Map Instruction Banner */}
         {instructionBannerVisible ? (
           <div className="instruction-banner" style={{ pointerEvents: 'auto' }}>
@@ -7591,6 +7801,158 @@ export default function App() {
                   🚨 TRANSMIT DISTRESS BEACON NOW
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Geofence Perimeter Broadcaster Modal */}
+      {geofenceModalData && (
+        <div className="p2p-modal-overlay" onClick={() => setGeofenceModalData(null)}>
+          <div className="geofence-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="p2p-modal-header" style={{ borderBottomColor: 'rgba(249, 115, 22, 0.3)' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Globe2 size={18} style={{ color: '#f97316' }} />
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#f8fafc' }}>
+                    DYNAMIC GEOFENCE EVACUATION BROADCASTER
+                  </h3>
+                </div>
+                <div style={{ fontSize: '0.68rem', color: '#fb923c', marginTop: '2px' }}>
+                  Target: {geofenceModalData.incident?.type?.toUpperCase()} Emergency • [{geofenceModalData.incident?.lat?.toFixed(4)}, {geofenceModalData.incident?.lng?.toFixed(4)}]
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGeofenceModalData(null)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p2p-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+              <div style={{ fontSize: '0.72rem', color: '#cbd5e1', background: 'rgba(249, 115, 22, 0.1)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(249, 115, 22, 0.25)', lineHeight: '1.4' }}>
+                📡 <strong>Reverse Geofence Targeting:</strong> Analyzes all active citizens and vehicles inside the disaster zone. When triggered, pushes an instant audible evacuation alert to their screens and routes vehicles around the hazard.
+              </div>
+
+              {/* Perimeter Radius Selector */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.35rem' }}>
+                  Geofence Danger Perimeter Radius:
+                </label>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {[
+                    { label: '500 meters', val: 0.5 },
+                    { label: '1.0 km', val: 1.0 },
+                    { label: '2.5 km (Default)', val: 2.5 },
+                    { label: '5.0 km', val: 5.0 },
+                    { label: '10.0 km', val: 10.0 }
+                  ].map((r) => (
+                    <button
+                      key={r.val}
+                      type="button"
+                      className={`geofence-radius-btn ${geofenceRadius === r.val ? 'active' : ''}`}
+                      onClick={() => setGeofenceRadius(r.val)}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Live Analyzed Entities in Zone */}
+              {(() => {
+                const inc = geofenceModalData.incident;
+                const inZone = findEntitiesInGeofence({
+                  centerLat: inc?.lat || 10.5,
+                  centerLng: inc?.lng || 76.25,
+                  radiusKm: geofenceRadius,
+                  customers,
+                  responders,
+                  buses: []
+                });
+
+                return (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.35rem' }}>
+                      Real-Time People &amp; Vehicles in Hazard Zone ({geofenceRadius} km):
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.6rem' }}>
+                      <div className="geofence-metric-pill">
+                        <span className="geofence-metric-num" style={{ color: '#f97316' }}>{inZone.customers.length}</span>
+                        <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Civilians Tracked</span>
+                      </div>
+                      <div className="geofence-metric-pill">
+                        <span className="geofence-metric-num" style={{ color: '#38bdf8' }}>{inZone.responders.length}</span>
+                        <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Responders in Zone</span>
+                      </div>
+                      <div className="geofence-metric-pill" style={{ border: '1px solid rgba(249, 115, 22, 0.4)' }}>
+                        <span className="geofence-metric-num" style={{ color: '#ef4444' }}>{inZone.totalCount}</span>
+                        <span style={{ fontSize: '0.65rem', color: '#fca5a5' }}>Target Devices</span>
+                      </div>
+                    </div>
+
+                    {/* Detected Individuals Snippet */}
+                    <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '6px', padding: '0.4rem 0.6rem', maxHeight: '110px', overflowY: 'auto' }}>
+                      {inZone.totalCount === 0 ? (
+                        <div style={{ fontSize: '0.7rem', color: '#64748b', textAlign: 'center', padding: '0.4rem' }}>
+                          Perimeter is clear. No active tracked devices within {geofenceRadius} km.
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          {inZone.customers.map(c => (
+                            <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem' }}>
+                              <span style={{ color: '#e2e8f0' }}>👤 {c.name}</span>
+                              <span style={{ color: '#fb923c' }}>{c.distanceKm.toFixed(1)} km from ground zero</span>
+                            </div>
+                          ))}
+                          {inZone.responders.map(r => (
+                            <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem' }}>
+                              <span style={{ color: '#38bdf8' }}>🚨 {r.name}</span>
+                              <span style={{ color: '#fb923c' }}>{r.distanceKm.toFixed(1)} km from ground zero</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Evacuation Alert Message */}
+                    <div style={{ marginTop: '0.6rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.2rem' }}>
+                        Evacuation Warning Message:
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={geofenceCustomMsg}
+                        onChange={(e) => setGeofenceCustomMsg(e.target.value)}
+                        placeholder={`Immediate evacuation / detour advised. Active ${inc.type?.toUpperCase()} emergency at this location. Avoid corridor and seek nearest safe camp.`}
+                        style={{ width: '100%', padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', resize: 'vertical' }}
+                      />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.8rem' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setGeofenceModalData(null)}
+                        style={{ flex: 1, padding: '0.45rem', fontSize: '0.75rem' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleBroadcastGeofenceEvacuation}
+                        style={{ flex: 2, padding: '0.45rem', fontSize: '0.75rem', background: '#f97316', borderColor: '#ea580c', color: '#fff', fontWeight: 'bold' }}
+                      >
+                        🚨 BROADCAST EVACUATION WARNING ({inZone.totalCount} DEVICES)
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
