@@ -186,26 +186,38 @@ export function checkUserHazardProximity({
  */
 export function formatGeofenceAlertMessage({
   incident,
-  radiusKm,
+  radiusKm = 2.5,
   customMessage = '',
-  dispatcherName = 'SEOC Emergency Commander'
-}) {
-  const incType = incident?.type?.toUpperCase() || 'HAZARD';
+  dispatcherName = 'SEOC Emergency Commander',
+  title,
+  severity,
+  priority,
+  proofImage,
+  actionAdvice,
+  message
+} = {}) {
+  const incType = incident?.type?.toUpperCase() || (title ? title.toUpperCase() : 'HAZARD');
   const coordsStr = (typeof incident?.lat === 'number' && typeof incident?.lng === 'number')
     ? `[${incident.lat.toFixed(4)}, ${incident.lng.toFixed(4)}]`
     : 'Local Ground';
 
+  const finalSeverity = severity || priority || 'CRITICAL';
+  const resolvedPhoto = proofImage || incident?.proofImage || null;
+  const resolvedMessage = message || customMessage || actionAdvice 
+    || `Immediate evacuation or detour advised. Active ${incType} emergency at ${coordsStr}. Avoid corridor and seek nearest shelter.`;
+
   return {
     id: `GEO-${Date.now().toString(36).toUpperCase()}`,
     type: 'GEOFENCE_EVACUATION_WARNING',
-    title: `🚨 TACTICAL EVACUATION WARNING (${radiusKm} KM RADIUS)`,
+    title: title || `🚨 TACTICAL EVACUATION WARNING (${radiusKm} KM RADIUS)`,
     incidentType: incType,
-    priority: 'CRITICAL',
-    message: customMessage || `Immediate evacuation or detour advised. Active ${incType} emergency at ${coordsStr}. Avoid corridor and seek nearest shelter.`,
+    severity: finalSeverity,
+    priority: finalSeverity,
+    message: resolvedMessage,
     centerLat: incident?.lat,
     centerLng: incident?.lng,
     radiusKm,
-    proofImage: incident?.proofImage || null,
+    proofImage: resolvedPhoto,
     dispatcherName,
     timestamp: Date.now()
   };

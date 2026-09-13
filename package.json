@@ -8,6 +8,7 @@
     "autorun": "vite --open",
     "build": "vite build",
     "lint": "oxlint",
+    "test": "node tests/run-all-tests.js",
     "preview": "vite preview"
   },
   "dependencies": {
