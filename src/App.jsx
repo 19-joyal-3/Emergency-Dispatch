@@ -2992,9 +2992,9 @@ export default function App() {
 
         // Check if current user is within danger proximity of this incoming SOS / hazard alert
         let myLat = null, myLng = null;
-        if (gpsActive && mockGpsPosition) {
-          myLat = mockGpsPosition[0];
-          myLng = mockGpsPosition[1];
+        if (gpsActive && gpsCoords) {
+          myLat = gpsCoords.lat;
+          myLng = gpsCoords.lng;
         } else if (customerTrackingActive) {
           const selfCust = customers.find(c => c.isSelf);
           if (selfCust) {
@@ -3045,7 +3045,7 @@ export default function App() {
     });
 
     return () => unsubscribe();
-  }, [soundAlertsEnabled, audioSirenEnabled, gpsActive, mockGpsPosition, customerTrackingActive, customers]);
+  }, [soundAlertsEnabled, audioSirenEnabled, gpsActive, gpsCoords, customerTrackingActive, customers]);
 
   const handlePlotP2pSos = async (sos) => {
     try {
@@ -3180,9 +3180,9 @@ export default function App() {
   // Proactively check if moving user/vehicle enters or approaches within 2.5 km of active danger
   useEffect(() => {
     let currentLat = null, currentLng = null;
-    if (gpsActive && mockGpsPosition) {
-      currentLat = mockGpsPosition[0];
-      currentLng = mockGpsPosition[1];
+    if (gpsActive && gpsCoords) {
+      currentLat = gpsCoords.lat;
+      currentLng = gpsCoords.lng;
     } else if (customerTrackingActive) {
       const selfCust = customers.find(c => c.isSelf);
       if (selfCust) {
@@ -3219,7 +3219,7 @@ export default function App() {
       setActiveProximityHazard(null);
       setShowHazardInterceptModal(false);
     }
-  }, [gpsActive, mockGpsPosition, customers, customerTrackingActive, incidents, blockages, dismissedHazardIds, soundAlertsEnabled]);
+  }, [gpsActive, gpsCoords, customers, customerTrackingActive, incidents, blockages, dismissedHazardIds, soundAlertsEnabled]);
 
   const handleAutoDetourHazard = (hazard) => {
     try {
@@ -3253,9 +3253,9 @@ export default function App() {
       if (activeProximityHazard?.coordinates) {
         refLat = activeProximityHazard.coordinates[0];
         refLng = activeProximityHazard.coordinates[1];
-      } else if (mockGpsPosition) {
-        refLat = mockGpsPosition[0];
-        refLng = mockGpsPosition[1];
+      } else if (gpsCoords) {
+        refLat = gpsCoords.lat;
+        refLng = gpsCoords.lng;
       }
 
       const sortedHospitals = [...KERALA_HOSPITALS].sort((a, b) =>
