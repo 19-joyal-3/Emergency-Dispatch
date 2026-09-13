@@ -62,13 +62,15 @@ import {
 const INITIAL_RESPONDERS = [
   { id: 'resp_1', name: 'Ambulance Alpha', type: 'medical', lat: 8.5241, lng: 76.9366, status: 'idle', speed: 90 },
   { id: 'resp_2', name: 'Fire Engine Beta', type: 'fire_engine', lat: 9.9312, lng: 76.2673, status: 'idle', speed: 80 },
-  { id: 'resp_3', name: 'Rescue Boat Gamma', type: 'rescue_boat', lat: 11.2588, lng: 75.7804, status: 'idle', speed: 60 }
+  { id: 'resp_3', name: 'Rescue Boat Gamma', type: 'rescue_boat', lat: 11.2588, lng: 75.7804, status: 'idle', speed: 60 },
+  { id: 'resp_4', name: 'NDRF Rescue Unit Delta', type: 'landslide_rescue', lat: 11.6854, lng: 76.1320, status: 'idle', speed: 75 }
 ];
 
 const getResponderEmoji = (type) => {
   if (type === 'medical') return '🚑';
   if (type === 'fire_engine') return '🚒';
   if (type === 'rescue_boat') return '🛥️';
+  if (type === 'landslide_rescue') return '🚜';
   return '🚨';
 };
 
@@ -2682,24 +2684,18 @@ export default function App() {
     let aiRecommendation = 'Dispatch local emergency responder to assess situation.';
     
     const text = (desc || '').toLowerCase();
-    if (/fire|smoke|burn|landslide|collapse/i.test(text)) {
+    if (/landslide|mudslide|rockfall|collapse|debris/i.test(text) || type === 'landslide') {
       priority = 'critical';
-      aiRecommendation = 'CRITICAL: Landslide or Fire hazard. Dispatch Fire Engine Beta immediately.';
-    } else if (/heart|injury|accident|bleed|stroke|unconscious/i.test(text)) {
-      priority = 'high';
-      aiRecommendation = 'HIGH: Medical triage. Dispatch Ambulance Alpha with trauma kits.';
-    } else if (/flood|water|drain|drown/i.test(text)) {
-      priority = 'high';
-      aiRecommendation = 'HIGH: Water hazard. Dispatch Rescue Boat Gamma with flotation vests.';
-    } else if (type === 'fire') {
+      aiRecommendation = 'CRITICAL: Landslide / Terrain hazard. Dispatch NDRF Rescue Unit Delta with earthmovers immediately.';
+    } else if (/fire|smoke|burn|blaze/i.test(text) || type === 'fire') {
       priority = 'critical';
       aiRecommendation = 'CRITICAL: Fire emergency. Dispatch Fire Engine Beta immediately.';
-    } else if (type === 'medical') {
+    } else if (/heart|injury|accident|bleed|stroke|unconscious/i.test(text) || type === 'medical') {
       priority = 'high';
-      aiRecommendation = 'HIGH: Medical alert. Dispatch Ambulance Alpha.';
-    } else if (type === 'flood') {
+      aiRecommendation = 'HIGH: Medical triage. Dispatch Ambulance Alpha with trauma kits.';
+    } else if (/flood|water|drain|drown/i.test(text) || type === 'flood') {
       priority = 'high';
-      aiRecommendation = 'HIGH: Flood hazard. Dispatch Rescue Boat Gamma.';
+      aiRecommendation = 'HIGH: Flood hazard. Dispatch Rescue Boat Gamma with flotation vests.';
     }
 
     const id = `inc_${Date.now()}`;
@@ -2723,7 +2719,7 @@ export default function App() {
       if (autoAssignEnabled) {
         const compatibleTypes = type === 'medical' ? ['medical']
           : type === 'fire' ? ['fire_engine']
-          : type === 'landslide' ? ['rescue_boat', 'fire_engine']
+          : type === 'landslide' ? ['landslide_rescue', 'rescue_boat', 'fire_engine']
           : ['rescue_boat'];
         const available = responders
           .filter(responder => responder.status === 'idle' && compatibleTypes.includes(responder.type))
@@ -3492,21 +3488,56 @@ export default function App() {
     }, tickRateMs);
   };
 
-  // Sync processor
+  // Sync processor with resilient replication
   const syncQueuedActions = async () => {
     if (!navigator.onLine || isSyncing) return;
     const queue = await db.syncQueue.toArray();
     if (queue.length === 0) return;
 
     setIsSyncing(true);
-    logMessage(`[SYNC] Connectivity restored. Processing ${queue.length} queued local actions...`, 'system');
+    logMessage(`[SYNC] Connectivity restored. Replicating ${queue.length} queued local actions...`, 'system');
+
+    let syncedCount = 0;
     for (let i = 0; i < queue.length; i += 1) {
-      logMessage(`[SYNC] [${i + 1}/${queue.length}] Prepared local action: ${queue[i].action}`, 'info');
+      const item = queue[i];
+      try {
+        if (supabase && isSupabaseConfigured) {
+          if (item.action === 'ADD_INCIDENT' && item.payload) {
+            await supabase.from('incidents').upsert({
+              id: item.payload.id,
+              type: item.payload.type,
+              description: item.payload.description,
+              lat: item.payload.lat,
+              lng: item.payload.lng,
+              priority: item.payload.priority,
+              status: item.payload.status,
+              created_at: new Date(item.payload.reportedAt || item.timestamp).toISOString()
+            }).catch(() => null);
+          } else if (item.action === 'UPDATE_INCIDENT_STATUS' && item.payload) {
+            await supabase.from('incidents').update({
+              status: item.payload.status,
+              resolved_at: item.payload.resolvedAt ? new Date(item.payload.resolvedAt).toISOString() : null
+            }).eq('id', item.payload.id).catch(() => null);
+          }
+        }
+        // Remove only successfully processed queue item
+        await db.syncQueue.delete(item.id);
+        syncedCount++;
+        logMessage(`[SYNC] [${syncedCount}/${queue.length}] Replicated: ${item.action}`, 'info');
+      } catch (err) {
+        logMessage(`[SYNC] Failed to replicate action ${item.id} (${item.action}): ${err.message}. Retaining in queue.`, 'warning');
+      }
     }
-    await db.syncQueue.clear();
-    setSyncQueueLength(0);
+
+    const remainingQueue = await db.syncQueue.toArray();
+    setSyncQueueLength(remainingQueue.length);
     setIsSyncing(false);
-    logMessage('[SYNC] Local queue cleared after connectivity recovery.', 'success');
+
+    if (remainingQueue.length === 0) {
+      logMessage(`[SYNC] All ${syncedCount} queued transactions replicated successfully.`, 'success');
+    } else {
+      logMessage(`[SYNC] Partially synchronized (${syncedCount} completed, ${remainingQueue.length} pending).`, 'warning');
+    }
   };
 
   const handleSyncToggle = async (e) => {

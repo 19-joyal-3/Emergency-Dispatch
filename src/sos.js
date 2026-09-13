@@ -14,14 +14,16 @@ export function saveSosContacts(contacts) {
 }
 
 export function formatSosMessage(incident) {
-  const mapUrl = (incident.lat && incident.lng) ? `https://maps.google.com/?q=${incident.lat},${incident.lng}` : 'Coordinates pending';
-  const reportedTime = incident.reportedAt ? new Date(incident.reportedAt).toLocaleString() : new Date().toLocaleString();
+  const hasCoords = typeof incident?.lat === 'number' && typeof incident?.lng === 'number';
+  const mapUrl = hasCoords ? `https://maps.google.com/?q=${incident.lat},${incident.lng}` : 'Coordinates pending';
+  const reportedDate = incident?.reportedAt ? new Date(incident.reportedAt) : new Date();
+  const reportedTime = isNaN(reportedDate.getTime()) ? new Date().toLocaleString() : reportedDate.toLocaleString();
   return [
     'EMERGENCY ALERT',
-    `Type: ${incident.type?.toUpperCase() || 'GENERAL EMERGENCY'}`,
-    `Priority: ${incident.priority?.toUpperCase() || 'MEDIUM'}`,
-    `Details: ${incident.description || 'Immediate emergency assistance requested'}`,
-    `Location: ${incident.lat ?? 'N/A'}, ${incident.lng ?? 'N/A'}`,
+    `Type: ${incident?.type?.toUpperCase() || 'GENERAL EMERGENCY'}`,
+    `Priority: ${incident?.priority?.toUpperCase() || 'MEDIUM'}`,
+    `Details: ${incident?.description || 'Immediate emergency assistance requested'}`,
+    `Location: ${hasCoords ? `${incident.lat.toFixed(4)}, ${incident.lng.toFixed(4)}` : (incident?.lat ?? 'N/A') + ', ' + (incident?.lng ?? 'N/A')}`,
     `Map: ${mapUrl}`,
     `Time: ${reportedTime}`
   ].join('\n');
@@ -43,17 +45,21 @@ export function openWhatsAppShare(message) {
 }
 
 export function formatWhatsAppIncident(incident, responderName = null, shelterName = null) {
-  const mapUrl = `https://maps.google.com/?q=${incident.lat},${incident.lng}`;
+  const hasCoords = typeof incident?.lat === 'number' && typeof incident?.lng === 'number';
+  const mapUrl = hasCoords ? `https://maps.google.com/?q=${incident.lat},${incident.lng}` : 'https://maps.google.com';
+  const reportedDate = incident?.reportedAt ? new Date(incident.reportedAt) : new Date();
+  const timeStr = isNaN(reportedDate.getTime()) ? new Date().toLocaleTimeString() : reportedDate.toLocaleTimeString();
+
   const lines = [
     '🚨 *KERALA TACTICAL DISPATCH ALERT*',
-    `*Type:* ${incident.type?.toUpperCase() || 'EMERGENCY'}`,
-    `*Priority:* ${incident.priority?.toUpperCase() || 'MEDIUM'}`,
-    `*Details:* ${incident.description || 'Immediate emergency response requested'}`,
-    `*Location:* ${incident.lat.toFixed(4)}, ${incident.lng.toFixed(4)}`,
+    `*Type:* ${incident?.type?.toUpperCase() || 'EMERGENCY'}`,
+    `*Priority:* ${incident?.priority?.toUpperCase() || 'MEDIUM'}`,
+    `*Details:* ${incident?.description || 'Immediate emergency response requested'}`,
+    `*Location:* ${hasCoords ? `${incident.lat.toFixed(4)}, ${incident.lng.toFixed(4)}` : 'Field Location Pending'}`,
     `*Live Pin:* ${mapUrl}`,
     responderName ? `*Assigned Unit:* ${responderName}` : null,
     shelterName ? `*Nearest Camp:* ${shelterName}` : null,
-    `*Reported:* ${new Date(incident.reportedAt || Date.now()).toLocaleTimeString()}`,
+    `*Reported:* ${timeStr}`,
     '— _Dispatched via Kerala Tactical Emergency Hub_'
   ].filter(Boolean);
   return lines.join('\n');

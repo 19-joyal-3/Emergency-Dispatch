@@ -23,20 +23,62 @@ export function getHeading(p1, p2) {
   return (brng + 360) % 360;
 }
 
-// Priority Queue for Dijkstra
+// Binary Min-Heap Priority Queue for Dijkstra (O(log N) operations)
 class PriorityQueue {
   constructor() {
     this.values = [];
   }
-  enqueue(val, priority) {
-    this.values.push({ element: val, priority });
-    this.sort();
+  enqueue(element, priority) {
+    this.values.push({ element, priority });
+    this._bubbleUp(this.values.length - 1);
   }
   dequeue() {
-    return this.values.shift();
+    if (this.values.length === 0) return null;
+    const min = this.values[0];
+    const end = this.values.pop();
+    if (this.values.length > 0) {
+      this.values[0] = end;
+      this._sinkDown(0);
+    }
+    return min;
   }
-  sort() {
-    this.values.sort((a, b) => a.priority - b.priority);
+  _bubbleUp(index) {
+    const node = this.values[index];
+    while (index > 0) {
+      const parentIdx = Math.floor((index - 1) / 2);
+      const parent = this.values[parentIdx];
+      if (node.priority >= parent.priority) break;
+      this.values[index] = parent;
+      index = parentIdx;
+    }
+    this.values[index] = node;
+  }
+  _sinkDown(index) {
+    const length = this.values.length;
+    const node = this.values[index];
+    while (true) {
+      const leftChildIdx = 2 * index + 1;
+      const rightChildIdx = 2 * index + 2;
+      let swapIdx = null;
+
+      if (leftChildIdx < length) {
+        if (this.values[leftChildIdx].priority < node.priority) {
+          swapIdx = leftChildIdx;
+        }
+      }
+      if (rightChildIdx < length) {
+        if (
+          (swapIdx === null && this.values[rightChildIdx].priority < node.priority) ||
+          (swapIdx !== null && this.values[rightChildIdx].priority < this.values[leftChildIdx].priority)
+        ) {
+          swapIdx = rightChildIdx;
+        }
+      }
+      if (swapIdx === null) break;
+      this.values[index] = this.values[swapIdx];
+      index = swapIdx;
+    }
+    this.values[index] = node;
   }
   isEmpty() {
     return this.values.length === 0;
