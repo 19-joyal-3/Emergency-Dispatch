@@ -428,6 +428,8 @@ select:focus, input[type="text"]:focus, textarea:focus {
 .item-icon.medical { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
 .item-icon.flood { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
 .item-icon.blockage { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.item-icon.traffic { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+.item-icon.landslide { background: rgba(234, 179, 8, 0.2); color: #facc15; }
 
 .item-details {
   flex-grow: 1;

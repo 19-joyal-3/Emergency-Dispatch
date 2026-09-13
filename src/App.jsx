@@ -71,7 +71,8 @@ const INITIAL_RESPONDERS = [
   { id: 'resp_1', name: 'Ambulance Alpha', type: 'medical', lat: 8.5241, lng: 76.9366, status: 'idle', speed: 90 },
   { id: 'resp_2', name: 'Fire Engine Beta', type: 'fire_engine', lat: 9.9312, lng: 76.2673, status: 'idle', speed: 80 },
   { id: 'resp_3', name: 'Rescue Boat Gamma', type: 'rescue_boat', lat: 11.2588, lng: 75.7804, status: 'idle', speed: 60 },
-  { id: 'resp_4', name: 'NDRF Rescue Unit Delta', type: 'landslide_rescue', lat: 11.6854, lng: 76.1320, status: 'idle', speed: 75 }
+  { id: 'resp_4', name: 'NDRF Rescue Unit Delta', type: 'landslide_rescue', lat: 11.6854, lng: 76.1320, status: 'idle', speed: 75 },
+  { id: 'resp_5', name: 'Highway Patrol Echo', type: 'patrol', lat: 10.5276, lng: 76.2144, status: 'idle', speed: 100 }
 ];
 
 const getResponderEmoji = (type) => {
@@ -79,6 +80,7 @@ const getResponderEmoji = (type) => {
   if (type === 'fire_engine') return '🚒';
   if (type === 'rescue_boat') return '🛥️';
   if (type === 'landslide_rescue') return '🚜';
+  if (type === 'patrol') return '🚓';
   return '🚨';
 };
 
@@ -457,6 +459,20 @@ export default function App() {
         // Comprehensive disaster taxonomy mapped to ImageNet-1K output labels
         const threatCategories = [
           {
+            name: "Traffic Accident / Road Collision",
+            type: "traffic",
+            incidentTypes: ['traffic', 'accident', 'blockage', 'medical'],
+            keywords: [
+              'wreck', 'tow truck', 'trailer truck', 'moving van', 'pickup', 'garbage truck',
+              'fire engine', 'jeep', 'landrover', 'limousine', 'sports car', 'convertible',
+              'cab', 'taxi', 'minivan', 'passenger car', 'car', 'bus', 'minibus', 'school bus',
+              'trolleybus', 'motorcycle', 'moped', 'motor scooter', 'bicycle', 'crash helmet',
+              'seat belt', 'grille', 'traffic light', 'street sign', 'barrier', 'bollard',
+              'crash', 'collision', 'debris'
+            ],
+            emoji: "🚗"
+          },
+          {
             name: "Landslide / Terrain Hazard",
             type: "landslide",
             incidentTypes: ['landslide', 'fire', 'blockage'],
@@ -485,7 +501,7 @@ export default function App() {
           {
             name: "Road Blockage / Vehicle Incident",
             type: "blockage",
-            incidentTypes: ['blockage', 'medical', 'landslide'],
+            incidentTypes: ['blockage', 'traffic', 'medical', 'landslide'],
             keywords: [
               'wreck', 'tow truck', 'trailer truck', 'moving van', 'jeep', 'landrover', 'truck',
               'car', 'bus', 'freight car', 'traffic light', 'street sign', 'barrier', 'bollard',
@@ -503,7 +519,7 @@ export default function App() {
           {
             name: "Medical / Casualty Emergency",
             type: "medical",
-            incidentTypes: ['medical'],
+            incidentTypes: ['medical', 'traffic'],
             keywords: ['ambulance', 'crash', 'wreck', 'collision', 'stretcher', 'hospital', 'patient', 'crutch', 'wheelchair', 'band aid', 'syringe', 'pill bottle'],
             emoji: "🩺"
           }
@@ -1845,6 +1861,9 @@ export default function App() {
       let emoji = '🔥';
       if (inc.type === 'medical') { color = '#38bdf8'; emoji = '🩺'; }
       if (inc.type === 'flood') { color = '#3b82f6'; emoji = '🌊'; }
+      if (inc.type === 'landslide') { color = '#eab308'; emoji = '⛰️'; }
+      if (inc.type === 'traffic' || inc.type === 'accident') { color = '#f97316'; emoji = '🚗'; }
+      if (inc.type === 'blockage') { color = '#f59e0b'; emoji = '🚧'; }
 
       const iconHtml = `
         <div style="position: relative; width: 32px; height: 32px;">
@@ -2839,7 +2858,10 @@ export default function App() {
     } else if (/fire|smoke|burn|blaze/i.test(text) || type === 'fire') {
       priority = 'critical';
       aiRecommendation = 'CRITICAL: Fire emergency. Dispatch Fire Engine Beta immediately.';
-    } else if (/heart|injury|accident|bleed|stroke|unconscious/i.test(text) || type === 'medical') {
+    } else if (/traffic|accident|crash|collision|pileup|overturn|hit and run|vehicle/i.test(text) || type === 'traffic' || type === 'accident') {
+      priority = 'high';
+      aiRecommendation = 'HIGH: Traffic accident / road collision. Dispatch Highway Patrol Echo and Ambulance Alpha immediately.';
+    } else if (/heart|injury|bleed|stroke|unconscious/i.test(text) || type === 'medical') {
       priority = 'high';
       aiRecommendation = 'HIGH: Medical triage. Dispatch Ambulance Alpha with trauma kits.';
     } else if (/flood|water|drain|drown/i.test(text) || type === 'flood') {
@@ -2866,10 +2888,11 @@ export default function App() {
 
     try {
       if (autoAssignEnabled) {
-        const compatibleTypes = type === 'medical' ? ['medical']
+        const compatibleTypes = (type === 'traffic' || type === 'accident') ? ['patrol', 'medical', 'fire_engine']
+          : type === 'medical' ? ['medical']
           : type === 'fire' ? ['fire_engine']
           : type === 'landslide' ? ['landslide_rescue', 'rescue_boat', 'fire_engine']
-          : ['rescue_boat'];
+          : ['rescue_boat', 'patrol'];
         const available = responders
           .filter(responder => responder.status === 'idle' && compatibleTypes.includes(responder.type))
           .sort((a, b) => haversineDistance(newInc.lat, newInc.lng, a.lat, a.lng) -
@@ -4807,6 +4830,7 @@ export default function App() {
                       onChange={(e) => setNewIncidentType(e.target.value)}
                       disabled={simulationActive}
                     >
+                      <option value="traffic">🚗 Traffic Accident / Collision</option>
                       <option value="fire">🔥 Fire Outbreak</option>
                       <option value="landslide">⛰️ Landslide / Rockfall</option>
                       <option value="flood">🌊 Water Rescue / Flooding</option>
@@ -4874,7 +4898,7 @@ export default function App() {
                       type="text" 
                       value={newIncidentDesc} 
                       onChange={(e) => setNewIncidentDesc(e.target.value)}
-                      placeholder="e.g. NH 544 landslide warning..."
+                      placeholder="e.g. NH 544 multi-vehicle collision or landslide warning..."
                       disabled={simulationActive}
                     />
                   </div>
@@ -4976,7 +5000,7 @@ export default function App() {
                                 <span style={{ textTransform: 'capitalize' }}>{aiVerificationResult.label} ({aiVerificationResult.confidence}%)</span>
                               </div>
                               <div style={{ color: '#f87171', fontSize: '0.65rem' }}>
-                                Automated scan did not identify high-confidence disaster cues. If this is a real landslide or hazard photo, verify it directly below:
+                                Automated scan did not identify high-confidence disaster cues. If this is a real emergency photo, verify it directly below:
                               </div>
                               <button
                                 type="button"
@@ -4984,8 +5008,10 @@ export default function App() {
                                   setAiVerificationResult(prev => ({
                                     ...prev,
                                     success: true,
-                                    threatName: newIncidentType === 'landslide' ? 'Landslide / Terrain Hazard (Field Verified)' : 'Emergency Hazard (Field Verified)',
-                                    threatEmoji: newIncidentType === 'landslide' ? '⛰️' : '🚨',
+                                    threatName: newIncidentType === 'landslide' ? 'Landslide / Terrain Hazard (Field Verified)'
+                                      : newIncidentType === 'traffic' ? 'Traffic Accident / Collision (Field Verified)'
+                                      : 'Emergency Hazard (Field Verified)',
+                                    threatEmoji: newIncidentType === 'landslide' ? '⛰️' : newIncidentType === 'traffic' ? '🚗' : '🚨',
                                     label: prev?.label ? `${prev.label} (Operator Verified)` : 'Field Proof Confirmed',
                                     confidence: 95
                                   }));
@@ -5150,7 +5176,9 @@ export default function App() {
                 <div className="incident-filter-row">
                   <select value={incidentTypeFilter} onChange={(event) => setIncidentTypeFilter(event.target.value)} aria-label="Filter incidents by type">
                     <option value="all">All types</option>
-                    <option value="fire">Fire / landslide</option>
+                    <option value="traffic">Traffic / Accidents</option>
+                    <option value="fire">Fire</option>
+                    <option value="landslide">Landslide</option>
                     <option value="medical">Medical</option>
                     <option value="flood">Flood / rescue</option>
                   </select>
@@ -5170,6 +5198,8 @@ export default function App() {
                       let iconClass = 'fire';
                       if (inc.type === 'medical') iconClass = 'medical';
                       if (inc.type === 'flood') iconClass = 'flood';
+                      if (inc.type === 'traffic' || inc.type === 'accident') iconClass = 'traffic';
+                      if (inc.type === 'landslide') iconClass = 'landslide';
                       
                       return (
                         <div 
@@ -5183,6 +5213,8 @@ export default function App() {
                           }}
                         >
                           <div className={`item-icon ${iconClass}`}>
+                            {(inc.type === 'traffic' || inc.type === 'accident') && <Car size={16} />}
+                            {inc.type === 'landslide' && <AlertTriangle size={16} />}
                             {inc.type === 'fire' && <Flame size={16} />}
                             {inc.type === 'medical' && <Activity size={16} />}
                             {inc.type === 'flood' && <Droplet size={16} />}
