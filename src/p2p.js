@@ -60,6 +60,7 @@ export function formatEmergencyPacket({
   emergencyType = 'medical',
   priority = 'critical',
   message = 'Immediate emergency assistance requested.',
+  proofImage = null,
   battery = null,
   protocol = P2P_PROTOCOLS.WIFI_MESH
 }) {
@@ -74,6 +75,7 @@ export function formatEmergencyPacket({
     emergencyType,
     priority,
     message: String(message || 'Immediate field dispatch needed'),
+    proofImage: proofImage || null,
     battery: battery ?? Math.floor(65 + Math.random() * 30),
     timestamp: Date.now(),
     hops: 0

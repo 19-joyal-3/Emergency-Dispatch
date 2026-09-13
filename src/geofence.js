@@ -89,6 +89,7 @@ export function checkUserHazardProximity({
   userLng,
   incidents = [],
   hazardZones = [],
+  blockages = [],
   thresholdKm = 2.5
 }) {
   if (typeof userLat !== 'number' || typeof userLng !== 'number') {
@@ -114,12 +115,35 @@ export function checkUserHazardProximity({
         distanceKm: dist,
         priority: inc.priority || 'critical',
         coordinates: [inc.lat, inc.lng],
+        proofImage: inc.proofImage || null,
         isInsidePolygon: false
       };
     }
   }
 
-  // 2. Check official KSDMA Hazard Risk Polygons
+  // 2. Check active road blockages
+  for (const blk of blockages) {
+    if (!blk.active) continue;
+    if (typeof blk.lat !== 'number' || typeof blk.lng !== 'number') continue;
+
+    const dist = haversineDistance(userLat, userLng, blk.lat, blk.lng);
+    if (dist <= thresholdKm && dist < minDistance) {
+      minDistance = dist;
+      closestHazard = {
+        hazardId: blk.id,
+        hazardType: 'road_blockage',
+        title: `Road Closure Ahead: ${blk.name || 'Segment Blocked'}`,
+        description: `Corridor impassable at ${blk.name || 'Segment'}. Active physical obstruction or disaster damage.`,
+        distanceKm: dist,
+        priority: 'high',
+        coordinates: [blk.lat, blk.lng],
+        proofImage: blk.proofImage || null,
+        isInsidePolygon: false
+      };
+    }
+  }
+
+  // 3. Check official KSDMA Hazard Risk Polygons
   for (const zone of hazardZones) {
     const isInside = isPointInPolygon([userLat, userLng], zone.polygon);
     let dist = isInside ? 0 : Infinity;
@@ -140,6 +164,7 @@ export function checkUserHazardProximity({
         distanceKm: dist,
         priority: zone.riskLevel === 'Severe' ? 'critical' : 'high',
         coordinates: zone.center || zone.polygon[0],
+        proofImage: null,
         isInsidePolygon: isInside
       };
     }
@@ -180,6 +205,7 @@ export function formatGeofenceAlertMessage({
     centerLat: incident?.lat,
     centerLng: incident?.lng,
     radiusKm,
+    proofImage: incident?.proofImage || null,
     dispatcherName,
     timestamp: Date.now()
   };

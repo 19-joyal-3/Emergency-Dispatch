@@ -175,6 +175,7 @@ export default function App() {
   const [geofenceRadius, setGeofenceRadius] = useState(2.5); // in km
   const [geofenceCustomMsg, setGeofenceCustomMsg] = useState('');
   const [activeProximityHazard, setActiveProximityHazard] = useState(null);
+  const [showHazardInterceptModal, setShowHazardInterceptModal] = useState(false);
   const [dismissedHazardIds, setDismissedHazardIds] = useState(() => new Set());
   const geofenceCircleRef = useRef(null);
 
@@ -2936,6 +2937,31 @@ export default function App() {
       }
       await addIncidentLocal(newInc, isOnline);
       logMessage(`[INCIDENT] Reported ${type.toUpperCase()} emergency at coordinates: [${newInc.lat}, ${newInc.lng}]`, 'warning');
+
+      // Check all active citizens/vehicles/responders in proximity and broadcast early warning
+      const entitiesInDanger = findEntitiesInGeofence({
+        centerLat: newInc.lat,
+        centerLng: newInc.lng,
+        radiusKm: 2.5,
+        customers,
+        responders,
+        buses: []
+      });
+
+      // Broadcast hazard ahead message with uploaded ground photo across P2P Mesh & BroadcastChannel
+      p2pEngine.broadcastSos({
+        emergencyType: newInc.type,
+        priority: newInc.priority,
+        message: newInc.description,
+        lat: newInc.lat,
+        lng: newInc.lng,
+        proofImage: newInc.proofImage || null,
+        senderCallsign: 'Ground Field Incident Report'
+      });
+
+      if (entitiesInDanger.totalCount > 0) {
+        logMessage(`[EARLY WARNING] Spatial scan detected ${entitiesInDanger.totalCount} civilians/responders within 2.5km hazard perimeter. Sent screen alert broadcast with ground photographic evidence.`, 'warning');
+      }
       
       if (audioSirenEnabled) {
         if (newInc.priority === 'critical') {
@@ -2963,6 +2989,46 @@ export default function App() {
         if (soundAlertsEnabled) {
           playTacticalChime(0.4);
         }
+
+        // Check if current user is within danger proximity of this incoming SOS / hazard alert
+        let myLat = null, myLng = null;
+        if (gpsActive && mockGpsPosition) {
+          myLat = mockGpsPosition[0];
+          myLng = mockGpsPosition[1];
+        } else if (customerTrackingActive) {
+          const selfCust = customers.find(c => c.isSelf);
+          if (selfCust) {
+            myLat = selfCust.lat;
+            myLng = selfCust.lng;
+          }
+        } else if (mapRef.current) {
+          const center = mapRef.current.getCenter();
+          myLat = center.lat;
+          myLng = center.lng;
+        }
+
+        if (typeof myLat === 'number' && typeof myLng === 'number' && typeof data.lat === 'number' && typeof data.lng === 'number') {
+          const dist = haversineDistance(myLat, myLng, data.lat, data.lng);
+          const threatRadius = data.radiusKm || 2.5;
+          if (dist <= threatRadius) {
+            setActiveProximityHazard({
+              hazardId: data.id,
+              hazardType: data.emergencyType || 'emergency',
+              title: `Active ${data.emergencyType?.toUpperCase() || 'HAZARD'} Ahead`,
+              description: data.message || 'Incoming emergency warning in your sector.',
+              distanceKm: dist,
+              priority: data.priority || 'critical',
+              coordinates: [data.lat, data.lng],
+              proofImage: data.proofImage || null,
+              isInsidePolygon: false
+            });
+            setShowHazardInterceptModal(true);
+            if (audioSirenEnabled) {
+              playEvacuationSiren(1.2);
+            }
+          }
+        }
+
         setP2pToast({
           type: 'danger',
           title: '🚨 INCOMING P2P EMERGENCY SOS',
@@ -2979,7 +3045,7 @@ export default function App() {
     });
 
     return () => unsubscribe();
-  }, [soundAlertsEnabled]);
+  }, [soundAlertsEnabled, audioSirenEnabled, gpsActive, mockGpsPosition, customerTrackingActive, customers]);
 
   const handlePlotP2pSos = async (sos) => {
     try {
@@ -3136,6 +3202,7 @@ export default function App() {
       userLng: currentLng,
       incidents,
       hazardZones: KERALA_HAZARD_ZONES,
+      blockages,
       thresholdKm: 2.5
     });
 
@@ -3143,14 +3210,16 @@ export default function App() {
       const hazardKey = `${check.hazard.hazardId}_${Math.round(check.distanceKm * 2) / 2}`;
       if (!dismissedHazardIds.has(hazardKey)) {
         setActiveProximityHazard(check.hazard);
+        setShowHazardInterceptModal(true);
         if (soundAlertsEnabled) {
           playTacticalChime(0.4);
         }
       }
     } else {
       setActiveProximityHazard(null);
+      setShowHazardInterceptModal(false);
     }
-  }, [gpsActive, customers, customerTrackingActive, incidents, dismissedHazardIds, soundAlertsEnabled]);
+  }, [gpsActive, mockGpsPosition, customers, customerTrackingActive, incidents, blockages, dismissedHazardIds, soundAlertsEnabled]);
 
   const handleAutoDetourHazard = (hazard) => {
     try {
@@ -3164,6 +3233,7 @@ export default function App() {
         setDismissedHazardIds(prev => new Set([...prev, hazard.hazardId]));
       }
       setActiveProximityHazard(null);
+      setShowHazardInterceptModal(false);
       if (soundAlertsEnabled) playTacticalChime(0.3);
       setP2pToast({
         type: 'success',
@@ -3176,6 +3246,39 @@ export default function App() {
     }
   };
 
+  const handleLocateNearestShelter = () => {
+    try {
+      if (!mapRef.current) return;
+      let refLat = 10.5, refLng = 76.25;
+      if (activeProximityHazard?.coordinates) {
+        refLat = activeProximityHazard.coordinates[0];
+        refLng = activeProximityHazard.coordinates[1];
+      } else if (mockGpsPosition) {
+        refLat = mockGpsPosition[0];
+        refLng = mockGpsPosition[1];
+      }
+
+      const sortedHospitals = [...KERALA_HOSPITALS].sort((a, b) =>
+        haversineDistance(refLat, refLng, a.lat, a.lng) - haversineDistance(refLat, refLng, b.lat, b.lng)
+      );
+      const nearest = sortedHospitals[0];
+      if (nearest) {
+        mapRef.current.flyTo([nearest.lat, nearest.lng], 14, { animate: true });
+        const dist = haversineDistance(refLat, refLng, nearest.lat, nearest.lng);
+        logMessage(`[EVACUATION SHELTER] Targeted nearest medical shelter: ${nearest.name} (${dist.toFixed(1)} km).`, 'success');
+        setP2pToast({
+          type: 'success',
+          title: '🏥 EMERGENCY SHELTER LOCATED',
+          message: `Relief Shelter & Medical Center: ${nearest.name} (${dist.toFixed(1)} km away).`
+        });
+        setTimeout(() => setP2pToast(null), 6000);
+        setShowHazardInterceptModal(false);
+      }
+    } catch (err) {
+      console.error('[Shelter Locator Error]', err);
+    }
+  };
+
   const handleBroadcastGeofenceEvacuation = () => {
     if (!geofenceModalData?.incident) return;
     const inc = geofenceModalData.incident;
@@ -3185,13 +3288,15 @@ export default function App() {
       customMessage: geofenceCustomMsg
     });
 
-    // 1. Broadcast via P2P Mesh engine so offline peers in the zone receive it
+    // 1. Broadcast via P2P Mesh engine with attached ground photo so all peers in the zone receive it
     p2pEngine.broadcastSos({
       emergencyType: inc.type || 'hazard',
       priority: 'critical',
       message: `[GEOFENCE EVACUATION NOTICE - ${geofenceRadius} KM RADIUS]: ${alertData.message}`,
       lat: inc.lat,
       lng: inc.lng,
+      proofImage: inc.proofImage || null,
+      radiusKm: geofenceRadius,
       senderCallsign: 'KSDMA SEOC Dispatch Command'
     });
 
@@ -7049,7 +7154,7 @@ export default function App() {
         </div>
 
         {/* Dynamic Proximity Hazard Early Warning Banner for Drivers & Citizens */}
-        {activeProximityHazard && (
+        {activeProximityHazard && !showHazardInterceptModal && (
           <div className="proximity-hazard-banner" role="alert">
             <div className="proximity-hazard-info">
               <span className="proximity-hazard-icon">⚠️</span>
@@ -7059,6 +7164,11 @@ export default function App() {
                   <span className="badge badge-emergency" style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
                     {activeProximityHazard.distanceKm === 0 ? 'INSIDE HAZARD ZONE' : `${activeProximityHazard.distanceKm.toFixed(1)} KM AHEAD`}
                   </span>
+                  {activeProximityHazard.proofImage && (
+                    <span style={{ fontSize: '0.62rem', background: '#059669', color: '#fff', padding: '1px 5px', borderRadius: '4px', fontWeight: 600 }}>
+                      📸 Photo Attached
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#cbd5e1', marginTop: '2px', lineHeight: '1.3' }}>
                   {activeProximityHazard.description}
@@ -7066,6 +7176,15 @@ export default function App() {
               </div>
             </div>
             <div className="proximity-hazard-actions">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setShowHazardInterceptModal(true)}
+                style={{ background: '#ea580c', color: '#fff', padding: '0.35rem 0.65rem', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
+                title="View full hazard alert and uploaded photographic proof"
+              >
+                📷 View Photo &amp; Alert
+              </button>
               <button
                 type="button"
                 className="btn btn-primary"
@@ -7082,6 +7201,7 @@ export default function App() {
                     setDismissedHazardIds(prev => new Set([...prev, activeProximityHazard.hazardId]));
                   }
                   setActiveProximityHazard(null);
+                  setShowHazardInterceptModal(false);
                 }}
                 style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.1rem', cursor: 'pointer', padding: '0 4px' }}
                 title="Dismiss Warning"
@@ -7917,6 +8037,17 @@ export default function App() {
                       )}
                     </div>
 
+                    {/* Attached Ground Photographic Evidence Preview */}
+                    {inc.proofImage && (
+                      <div style={{ marginTop: '0.6rem', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(249, 115, 22, 0.4)', background: '#000' }}>
+                        <div style={{ fontSize: '0.68rem', color: '#fb923c', padding: '4px 8px', background: 'rgba(249, 115, 22, 0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span>📸 Attached Ground Photographic Evidence</span>
+                          <span style={{ fontSize: '0.62rem', background: '#059669', color: '#fff', padding: '1px 5px', borderRadius: '4px' }}>Transmitting with Alert</span>
+                        </div>
+                        <img src={inc.proofImage} alt="Incident Photographic Evidence" style={{ width: '100%', maxHeight: '130px', objectFit: 'cover', display: 'block' }} />
+                      </div>
+                    )}
+
                     {/* Evacuation Alert Message */}
                     <div style={{ marginTop: '0.6rem' }}>
                       <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.2rem' }}>
@@ -7953,6 +8084,144 @@ export default function App() {
                   </div>
                 );
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tactical Hazard Ahead - Ground Photo & Early Warning Screen Intercept Modal */}
+      {showHazardInterceptModal && activeProximityHazard && (
+        <div 
+          className="hazard-intercept-overlay" 
+          role="dialog" 
+          aria-modal="true" 
+          aria-labelledby="hazard-intercept-title"
+        >
+          <div className="hazard-intercept-card">
+            {/* Header with pulsating strobe and distance badge */}
+            <div className="hazard-intercept-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="hazard-intercept-strobe">⚠️</span>
+                <div>
+                  <h2 id="hazard-intercept-title" className="hazard-intercept-title">
+                    HAZARD AHEAD: IMMEDIATE DANGER INTERCEPT
+                  </h2>
+                  <div className="hazard-intercept-subtitle">
+                    KSDMA Tactical Proximity Radar • Live Location-Based Warning
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="hazard-intercept-close-btn"
+                onClick={() => setShowHazardInterceptModal(false)}
+                title="Minimize Alert to Map Banner"
+                aria-label="Minimize Alert"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Alert Status Pills */}
+            <div className="hazard-intercept-pill-row">
+              <div className="hazard-intercept-dist-pill">
+                <Navigation size={13} style={{ color: '#ef4444' }} />
+                <span>
+                  {activeProximityHazard.distanceKm === 0
+                    ? '⚠️ INSIDE ACTIVE HAZARD PERIMETER'
+                    : `🚨 ${activeProximityHazard.distanceKm.toFixed(1)} KM FROM YOUR POSITION`}
+                </span>
+              </div>
+              <div className="hazard-intercept-type-pill">
+                {activeProximityHazard.hazardType?.toUpperCase() || 'EMERGENCY'}
+              </div>
+              <div className="hazard-intercept-priority-pill">
+                {activeProximityHazard.priority?.toUpperCase() || 'CRITICAL'} PRIORITY
+              </div>
+            </div>
+
+            {/* Main Center Message Area: Uploaded Photographic Proof as Requested */}
+            <div className="hazard-intercept-body">
+              {activeProximityHazard.proofImage ? (
+                <div className="hazard-photo-container">
+                  <div className="hazard-photo-header">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      📸 <strong>Ground Photographic Evidence (Uploaded SITREP)</strong>
+                    </span>
+                    <span className="badge badge-verified" style={{ background: '#059669', color: '#fff', fontSize: '0.65rem' }}>
+                      ✓ Verified Photo
+                    </span>
+                  </div>
+                  <div className="hazard-photo-frame">
+                    <img
+                      src={activeProximityHazard.proofImage}
+                      alt="Ground Photographic Evidence of Hazard Ahead"
+                      className="hazard-photo-img"
+                    />
+                  </div>
+                  <div className="hazard-photo-footer">
+                    <span>📍 Coordinates: [{activeProximityHazard.coordinates ? activeProximityHazard.coordinates.map(c => typeof c === 'number' ? c.toFixed(4) : c).join(', ') : 'Direct Path'}]</span>
+                    <span>Transmitted to all local motorists &amp; citizens</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="hazard-radar-placeholder">
+                  <div className="hazard-radar-sweep-icon">📡</div>
+                  <div style={{ fontWeight: 'bold', color: '#fca5a5', marginTop: '6px', fontSize: '0.9rem' }}>
+                    {activeProximityHazard.title}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                    Official KSDMA Danger Zone • Spatial Evacuation Boundary Active
+                  </div>
+                </div>
+              )}
+
+              {/* Situation Report (SITREP) Message */}
+              <div className="hazard-sitrep-box">
+                <div className="hazard-sitrep-label">
+                  📢 Situation Report (SITREP Message):
+                </div>
+                <div className="hazard-sitrep-text">
+                  {activeProximityHazard.description}
+                </div>
+              </div>
+
+              {/* Driver Caution Note */}
+              <div className="hazard-caution-note">
+                <ShieldAlert size={16} style={{ color: '#f59e0b', flexShrink: 0 }} />
+                <span>
+                  <strong>Driver Warning:</strong> Approaching this sector may encounter physical road blockages, landslide debris, or flash flood waters. Detouring now circumvents impassable corridors and protects lives.
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="hazard-intercept-actions">
+              <button
+                type="button"
+                className="btn-hazard-detour"
+                onClick={() => handleAutoDetourHazard(activeProximityHazard)}
+              >
+                <Navigation size={16} />
+                <span>🧭 Calculate Safe Detour Now</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn-hazard-shelter"
+                onClick={handleLocateNearestShelter}
+              >
+                <Building2 size={15} />
+                <span>Find Safe Shelter</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn-hazard-minimize"
+                onClick={() => setShowHazardInterceptModal(false)}
+              >
+                Minimize to Banner
+              </button>
             </div>
           </div>
         </div>
