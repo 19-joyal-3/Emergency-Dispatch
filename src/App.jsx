@@ -981,7 +981,7 @@ export default function App() {
   const watchIdRef = useRef(null);
   
   // Google Maps Style Live Navigation States
-  const [activeTab, setActiveTab] = useState(null); // planner, bustle, alerts, shelters, sync
+  const [activeTab, setActiveTab] = useState('alerts'); // planner, bustle, alerts, shelters, sync
   const [isNavigating, setIsNavigating] = useState(false);
   const [nextInstruction, setNextInstruction] = useState("Head toward destination");
   const [nextTurnIcon, setNextTurnIcon] = useState("straight"); // left, right, straight, arrive
