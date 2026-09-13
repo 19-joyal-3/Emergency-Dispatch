@@ -303,6 +303,16 @@ export default function App() {
 
 
 
+  const [syncLogs, setSyncLogs] = useState([
+    '[SYSTEM] System initialized. Ready for emergency dispatch.',
+    '[SYSTEM] Kerala road network graph loaded (NH 544, MC Road, Local connections).'
+  ]);
+
+  const logMessage = useCallback((msg, _type = 'info') => {
+    const timestamp = new Date().toLocaleTimeString();
+    setSyncLogs(prev => [`[${timestamp}] ${msg}`, ...prev].slice(0, 50));
+  }, []);
+
   // App connection state
   const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
   const [syncQueueLength, setSyncQueueLength] = useState(0);
@@ -333,10 +343,6 @@ export default function App() {
       window.removeEventListener('offline', handleConnectionChange);
     };
   }, []);
-  const [syncLogs, setSyncLogs] = useState([
-    '[SYSTEM] System initialized. Ready for emergency dispatch.',
-    '[SYSTEM] Kerala road network graph loaded (NH 544, MC Road, Local connections).'
-  ]);
 
   // Data States
   const [incidents, setIncidents] = useState([]);
@@ -1126,11 +1132,6 @@ export default function App() {
       logMessage(`[ALERT] New ${incident.priority || 'medium'} priority ${incident.type} emergency received.`, 'warning');
     });
   }, [incidents, soundAlertsEnabled, vibrationAlertsEnabled]);
-
-  const logMessage = useCallback((msg, _type = 'info') => {
-    const timestamp = new Date().toLocaleTimeString();
-    setSyncLogs(prev => [`[${timestamp}] ${msg}`, ...prev].slice(0, 50));
-  }, []);
 
   const addSosContact = (e) => {
     e.preventDefault();
