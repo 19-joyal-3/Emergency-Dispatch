@@ -169,7 +169,10 @@ export default function App() {
     if (theme === 'terrain') {
       return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
     }
-    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    if (theme === 'light') {
+      return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    }
+    return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
   };
 
   const getTileAttribution = (theme) => {
@@ -1031,7 +1034,7 @@ export default function App() {
   const watchIdRef = useRef(null);
   
   // Google Maps Style Live Navigation States
-  const [activeTab, setActiveTab] = useState('alerts'); // planner, bustle, alerts, shelters, sync
+  const [activeTab, setActiveTab] = useState(null); // default to null (map-focused) so full-screen map is displayed on launch
   const [isNavigating, setIsNavigating] = useState(false);
   const [nextInstruction, setNextInstruction] = useState("Head toward destination");
   const [nextTurnIcon, setNextTurnIcon] = useState("straight"); // left, right, straight, arrive
@@ -1461,12 +1464,27 @@ export default function App() {
     }
   }, [trackedBusId, simulatedBuses]);
 
+  const fitKeralaBounds = useCallback((customPadding = [30, 30]) => {
+    if (!mapRef.current) return;
+    const allCoords = Object.values(mapData.nodes).map(n => [n.lat, n.lng]);
+    const bounds = allCoords.length > 0
+      ? L.latLngBounds(allCoords)
+      : L.latLngBounds([[8.35, 74.85], [12.85, 77.25]]);
+    mapRef.current.fitBounds(bounds, { padding: customPadding, maxZoom: 14 });
+    mapRef.current.invalidateSize();
+  }, []);
+
   // 2. Leaflet Map Setup
   useEffect(() => {
     if (!mapRef.current && mapContainerRef.current) {
+      const allCoords = Object.values(mapData.nodes).map(n => [n.lat, n.lng]);
+      const initialKeralaBounds = allCoords.length > 0
+        ? L.latLngBounds(allCoords)
+        : L.latLngBounds([[8.35, 74.85], [12.85, 77.25]]);
+
       const map = L.map(mapContainerRef.current, {
-        center: [10.61, 76.50], // Center around Vadakkencherry / Valliyode Palakkad corridor
-        zoom: 12,
+        center: [10.50, 76.25], // Centered across Kerala
+        zoom: 8,
         minZoom: 7,
         maxZoom: 18,
         doubleClickZoom: false
@@ -1482,7 +1500,8 @@ export default function App() {
       } else if (offlineTileUrl) {
         tileLayerRef.current = L.tileLayer(offlineTileUrl, {
           attribution: getTileAttribution(mapTheme),
-          maxZoom: 18
+          subdomains: 'abcd',
+          maxZoom: 19
         }).addTo(map);
       } else {
         tileLayerRef.current = null;
@@ -1509,6 +1528,9 @@ export default function App() {
       drawRoadNetwork();
       drawCities();
 
+      // Fit full Kerala road network to screen immediately
+      map.fitBounds(initialKeralaBounds, { padding: [30, 30] });
+
       // Listen to double-click on map to trigger incident or blockage report
       map.on('dblclick', (e) => {
         handleMapDoubleClick(e.latlng.lat, e.latlng.lng);
@@ -1527,7 +1549,8 @@ export default function App() {
       // Force Leaflet to calculate full container dimensions and load tiles for the entire screen
       setTimeout(() => {
         map.invalidateSize();
-      }, 100);
+        map.fitBounds(initialKeralaBounds, { padding: [30, 30] });
+      }, 150);
       setTimeout(() => {
         map.invalidateSize();
       }, 500);
@@ -1622,7 +1645,8 @@ export default function App() {
       }
       tileLayerRef.current = L.tileLayer(tileUrl, {
         attribution: getTileAttribution(mapTheme),
-        maxZoom: 18
+        subdomains: 'abcd',
+        maxZoom: 19
       }).addTo(mapRef.current);
       tileLayerRef.current.setOpacity(1);
       mapRef.current.getContainer().style.background = '';
@@ -6258,6 +6282,39 @@ export default function App() {
           gap: '0.5rem'
         }}>
           <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <button
+              type="button"
+              className="map-settings-btn"
+              onClick={() => fitKeralaBounds()}
+              title="Fit Entire Kerala Map to Screen (Recenter)"
+              style={{
+                background: 'rgba(15, 23, 42, 0.85)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(34, 197, 94, 0.4)',
+                color: '#4ade80',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                transition: 'all 0.2s',
+                fontSize: '16px',
+                outline: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.border = '1px solid rgba(34, 197, 94, 0.8)';
+                e.currentTarget.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.border = '1px solid rgba(34, 197, 94, 0.4)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
+              }}
+            >
+              🗺️
+            </button>
             <button
               type="button"
               className="map-settings-btn"
