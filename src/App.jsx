@@ -2991,42 +2991,45 @@ export default function App() {
         }
 
         // Check if current user is within danger proximity of this incoming SOS / hazard alert
-        let myLat = null, myLng = null;
-        if (gpsActive && gpsCoords) {
-          myLat = gpsCoords.lat;
-          myLng = gpsCoords.lng;
-        } else if (customerTrackingActive) {
-          const selfCust = customers.find(c => c.isSelf);
-          if (selfCust) {
-            myLat = selfCust.lat;
-            myLng = selfCust.lng;
+        try {
+          let myLat = null, myLng = null;
+          if (gpsActive && gpsCoords) {
+            myLat = gpsCoords.lat;
+            myLng = gpsCoords.lng;
+          } else if (customerTrackingActive) {
+            const selfCust = customers.find(c => c.isSelf);
+            if (selfCust) {
+              myLat = selfCust.lat;
+              myLng = selfCust.lng;
+            }
+          } else if (gpsCoords) {
+            myLat = gpsCoords.lat;
+            myLng = gpsCoords.lng;
           }
-        } else if (mapRef.current) {
-          const center = mapRef.current.getCenter();
-          myLat = center.lat;
-          myLng = center.lng;
-        }
 
-        if (typeof myLat === 'number' && typeof myLng === 'number' && typeof data.lat === 'number' && typeof data.lng === 'number') {
-          const dist = haversineDistance(myLat, myLng, data.lat, data.lng);
-          const threatRadius = data.radiusKm || 2.5;
-          if (dist <= threatRadius) {
-            setActiveProximityHazard({
-              hazardId: data.id,
-              hazardType: data.emergencyType || 'emergency',
-              title: `Active ${data.emergencyType?.toUpperCase() || 'HAZARD'} Ahead`,
-              description: data.message || 'Incoming emergency warning in your sector.',
-              distanceKm: dist,
-              priority: data.priority || 'critical',
-              coordinates: [data.lat, data.lng],
-              proofImage: data.proofImage || null,
-              isInsidePolygon: false
-            });
-            setShowHazardInterceptModal(true);
-            if (audioSirenEnabled) {
-              playEvacuationSiren(1.2);
+          if (typeof myLat === 'number' && typeof myLng === 'number' && typeof data.lat === 'number' && typeof data.lng === 'number') {
+            const dist = haversineDistance(myLat, myLng, data.lat, data.lng);
+            const threatRadius = data.radiusKm || 2.5;
+            if (dist <= threatRadius) {
+              setActiveProximityHazard({
+                hazardId: data.id,
+                hazardType: data.emergencyType || 'emergency',
+                title: `Active ${data.emergencyType?.toUpperCase() || 'HAZARD'} Ahead`,
+                description: data.message || 'Incoming emergency warning in your sector.',
+                distanceKm: dist,
+                priority: data.priority || 'critical',
+                coordinates: [data.lat, data.lng],
+                proofImage: data.proofImage || null,
+                isInsidePolygon: false
+              });
+              setShowHazardInterceptModal(true);
+              if (audioSirenEnabled) {
+                playEvacuationSiren(1.2);
+              }
             }
           }
+        } catch (err) {
+          console.warn('[SOS Proximity Catch]', err);
         }
 
         setP2pToast({
@@ -3179,45 +3182,48 @@ export default function App() {
 
   // Proactively check if moving user/vehicle enters or approaches within 2.5 km of active danger
   useEffect(() => {
-    let currentLat = null, currentLng = null;
-    if (gpsActive && gpsCoords) {
-      currentLat = gpsCoords.lat;
-      currentLng = gpsCoords.lng;
-    } else if (customerTrackingActive) {
-      const selfCust = customers.find(c => c.isSelf);
-      if (selfCust) {
-        currentLat = selfCust.lat;
-        currentLng = selfCust.lng;
-      }
-    } else if (mapRef.current) {
-      const center = mapRef.current.getCenter();
-      currentLat = center.lat;
-      currentLng = center.lng;
-    }
-
-    if (currentLat === null || currentLng === null) return;
-
-    const check = checkUserHazardProximity({
-      userLat: currentLat,
-      userLng: currentLng,
-      incidents,
-      hazardZones: KERALA_HAZARD_ZONES,
-      blockages,
-      thresholdKm: 2.5
-    });
-
-    if (check.isThreatDetected && check.hazard) {
-      const hazardKey = `${check.hazard.hazardId}_${Math.round(check.distanceKm * 2) / 2}`;
-      if (!dismissedHazardIds.has(hazardKey)) {
-        setActiveProximityHazard(check.hazard);
-        setShowHazardInterceptModal(true);
-        if (soundAlertsEnabled) {
-          playTacticalChime(0.4);
+    try {
+      let currentLat = null, currentLng = null;
+      if (gpsActive && gpsCoords) {
+        currentLat = gpsCoords.lat;
+        currentLng = gpsCoords.lng;
+      } else if (customerTrackingActive) {
+        const selfCust = customers.find(c => c.isSelf);
+        if (selfCust) {
+          currentLat = selfCust.lat;
+          currentLng = selfCust.lng;
         }
+      } else if (gpsCoords) {
+        currentLat = gpsCoords.lat;
+        currentLng = gpsCoords.lng;
       }
-    } else {
-      setActiveProximityHazard(null);
-      setShowHazardInterceptModal(false);
+
+      if (currentLat === null || currentLng === null) return;
+
+      const check = checkUserHazardProximity({
+        userLat: currentLat,
+        userLng: currentLng,
+        incidents,
+        hazardZones: KERALA_HAZARD_ZONES,
+        blockages,
+        thresholdKm: 2.5
+      });
+
+      if (check.isThreatDetected && check.hazard) {
+        const hazardKey = `${check.hazard.hazardId}_${Math.round(check.distanceKm * 2) / 2}`;
+        if (!dismissedHazardIds.has(hazardKey)) {
+          setActiveProximityHazard(check.hazard);
+          setShowHazardInterceptModal(true);
+          if (soundAlertsEnabled) {
+            playTacticalChime(0.4);
+          }
+        }
+      } else {
+        setActiveProximityHazard(null);
+        setShowHazardInterceptModal(false);
+      }
+    } catch (err) {
+      console.warn('[Hazard Proximity Hook Safe Catch]', err);
     }
   }, [gpsActive, gpsCoords, customers, customerTrackingActive, incidents, blockages, dismissedHazardIds, soundAlertsEnabled]);
 

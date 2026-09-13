@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emergency-dispatch-v7';
+const CACHE_NAME = 'emergency-dispatch-v8';
 const APP_SHELL = ['/', '/index.html', '/favicon.svg', '/icons.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {

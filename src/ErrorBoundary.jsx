@@ -15,24 +15,42 @@ export class ErrorBoundary extends React.Component {
     this.setState({ errorInfo });
   }
 
-  handleClearAndReload = () => {
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null, errorInfo: null });
+  };
+
+  handleReload = async () => {
     try {
-      localStorage.clear();
-      sessionStorage.clear();
       if ('caches' in window) {
-        caches.keys().then((names) => {
-          names.forEach((name) => caches.delete(name));
-        });
+        const names = await caches.keys();
+        await Promise.all(names.map((name) => caches.delete(name)));
       }
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((regs) => {
-          regs.forEach((reg) => reg.unregister());
-        });
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((reg) => reg.unregister()));
       }
     } catch {
       // ignore
     }
-    window.location.reload();
+    window.location.href = window.location.origin + window.location.pathname + '?nocache=' + Date.now();
+  };
+
+  handleClearAndReload = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map((name) => caches.delete(name)));
+      }
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((reg) => reg.unregister()));
+      }
+    } catch {
+      // ignore
+    }
+    window.location.href = window.location.origin + window.location.pathname + '?nocache=' + Date.now();
   };
 
   render() {
@@ -82,10 +100,26 @@ export class ErrorBoundary extends React.Component {
               {this.state.error?.toString() || 'Unknown UI Error'}
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
               <button
                 type="button"
-                onClick={() => window.location.reload()}
+                onClick={this.handleRetry}
+                style={{
+                  padding: '0.5rem 1.1rem',
+                  background: '#16a34a',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  fontWeight: 600
+                }}
+              >
+                🔄 Try Again / Resume App
+              </button>
+              <button
+                type="button"
+                onClick={this.handleReload}
                 style={{
                   padding: '0.5rem 1rem',
                   background: 'rgba(255, 255, 255, 0.08)',
@@ -96,13 +130,13 @@ export class ErrorBoundary extends React.Component {
                   fontSize: '0.85rem'
                 }}
               >
-                Reload Page
+                Reload Fresh
               </button>
               <button
                 type="button"
                 onClick={this.handleClearAndReload}
                 style={{
-                  padding: '0.5rem 1.2rem',
+                  padding: '0.5rem 1rem',
                   background: '#dc2626',
                   border: 'none',
                   borderRadius: '6px',
