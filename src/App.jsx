@@ -10,6 +10,11 @@ import { fetchWeather, fetchDistrictLiveAlerts } from './weatherApi';
 import { isSupabaseConfigured, supabase } from './supabase';
 import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
 import confetti from 'canvas-confetti';
+import { playTacticalChime, playEvacuationSiren } from './audio';
+import { searchDeoc } from './deoc';
+import { KERALA_DAMS, getAlertBadgeStyle } from './dams';
+import { KERALA_HAZARD_ZONES, checkRouteHazardIntersection } from './hazards';
+import { generateRouteQr, generateIncidentQr, parseQrHash } from './qr';
 import { 
   ShieldAlert, 
   Wifi, 
@@ -57,6 +62,9 @@ import {
   ,Mic
   ,MicOff
   ,Hospital
+  ,QrCode
+  ,Printer
+  ,Waves
 } from 'lucide-react';
 
 const INITIAL_RESPONDERS = [
@@ -361,6 +369,19 @@ export default function App() {
   const [selectedResponder, setSelectedResponder] = useState(null);
   const [dispatchRoute, setDispatchRoute] = useState(null);
 
+  // KSDMA Hazard Risk & Route Intersection States
+  const [showHazardZones, setShowHazardZones] = useState(false);
+  const [routeHazardWarnings, setRouteHazardWarnings] = useState([]);
+  const hazardLayerRef = useRef(null);
+
+  // DEOC 14-District Directory & Dam Telemetry States
+  const [deocSearch, setDeocSearch] = useState('');
+
+  // Offline QR Code, Audio Siren, & Printable Manifest States
+  const [qrModalData, setQrModalData] = useState(null); // { title, subtitle, qrDataUrl }
+  const [printableMission, setPrintableMission] = useState(null);
+  const [audioSirenEnabled, setAudioSirenEnabled] = useState(true);
+
   // Manual Form States
   const [newIncidentType, setNewIncidentType] = useState('fire');
   const [newIncidentDesc, setNewIncidentDesc] = useState('');
@@ -604,6 +625,35 @@ export default function App() {
       classifyVerificationPhoto(proofImage);
     }
   }, [classifyVerificationPhoto, mobilenetModel, proofImage]);
+
+  // Auto-import shared QR code missions via URL hash
+  useEffect(() => {
+    const handleHash = () => {
+      const parsed = parseQrHash(window.location.hash);
+      if (!parsed) return;
+
+      if (parsed.type === 'route') {
+        if (mapData.nodes[parsed.startNode] && mapData.nodes[parsed.endNode]) {
+          setSelectedStartNode(parsed.startNode);
+          setSelectedEndNode(parsed.endNode);
+          setMeansOfTransport(parsed.transport || 'car');
+          setActiveTab('planner');
+          logMessage(`[QR IMPORT] Loaded tactical route: ${mapData.nodes[parsed.startNode].name} ➔ ${mapData.nodes[parsed.endNode].name}`, 'success');
+        }
+      } else if (parsed.type === 'incident') {
+        setMapClickCoords({ lat: parsed.lat, lng: parsed.lng });
+        setNewIncidentType(parsed.incidentType || 'landslide');
+        setNewIncidentDesc(parsed.desc || 'Imported via Tactical QR');
+        setActiveTab('alerts');
+        logMessage(`[QR IMPORT] Loaded emergency incident at [${parsed.lat.toFixed(4)}, ${parsed.lng.toFixed(4)}]`, 'warning');
+      }
+    };
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, [logMessage]);
+
   const [newIncidentDistrict, setNewIncidentDistrict] = useState('tvm');
 
   // Visitor Access & IP Diagnostics States
@@ -1454,6 +1504,7 @@ export default function App() {
       setMapDataStatus('ready');
       roadsLayerRef.current = L.layerGroup().addTo(map);
       routeLayerRef.current = L.layerGroup().addTo(map);
+      hazardLayerRef.current = L.layerGroup().addTo(map);
 
       drawRoadNetwork();
       drawCities();
@@ -1476,6 +1527,34 @@ export default function App() {
       return () => mapImageObserver.disconnect();
     }
   }, [blockages]);
+
+  // Render KSDMA Landslide & Flood Hazard Risk Polygons
+  useEffect(() => {
+    if (!hazardLayerRef.current) return;
+    hazardLayerRef.current.clearLayers();
+
+    if (showHazardZones) {
+      KERALA_HAZARD_ZONES.forEach(zone => {
+        const polygon = L.polygon(zone.polygon, {
+          color: zone.color,
+          weight: 2,
+          fillColor: zone.fillColor,
+          fillOpacity: zone.fillOpacity,
+          dashArray: zone.type === 'landslide' ? '4, 4' : null
+        });
+
+        polygon.bindTooltip(`
+          <div style="font-size: 11px; padding: 2px;">
+            <strong style="color: ${zone.color};">${zone.type === 'landslide' ? '⛰️' : '🌊'} ${escapeHtml(zone.name)}</strong>
+            <div style="color: #cbd5e1; font-size: 10px; margin-top: 2px;">${escapeHtml(zone.description)}</div>
+            <div style="margin-top: 3px; font-weight: bold; color: ${zone.color};">KSDMA Risk: ${escapeHtml(zone.riskLevel)}</div>
+          </div>
+        `, { sticky: true, className: 'tactical-tooltip' });
+
+        polygon.addTo(hazardLayerRef.current);
+      });
+    }
+  }, [showHazardZones]);
 
   // Dynamic Map Theme/Base-Layer Switcher
   useEffect(() => {
@@ -2736,6 +2815,15 @@ export default function App() {
       }
       await addIncidentLocal(newInc, isOnline);
       logMessage(`[INCIDENT] Reported ${type.toUpperCase()} emergency at coordinates: [${newInc.lat}, ${newInc.lng}]`, 'warning');
+      
+      if (audioSirenEnabled) {
+        if (newInc.priority === 'critical') {
+          playEvacuationSiren(1.4);
+        } else {
+          playTacticalChime(0.35);
+        }
+      }
+
       await reloadLocalData();
     } catch (err) {
       logMessage(`Failed to report incident: ${err.message}`, 'error');
@@ -2886,6 +2974,7 @@ export default function App() {
   useEffect(() => {
     if (!selectedStartNode || !selectedEndNode) {
       setCustomRoute(null);
+      setRouteHazardWarnings([]);
       return;
     }
 
@@ -2898,12 +2987,15 @@ export default function App() {
       if (!result) {
         setCustomRoute(null);
         setMatchingBusLines([]);
+        setRouteHazardWarnings([]);
         if (!simulationActive && routeLayerRef.current) {
           routeLayerRef.current.clearLayers();
         }
         return;
       }
       setCustomRoute(result);
+      const warnings = checkRouteHazardIntersection(result.geometry || []);
+      setRouteHazardWarnings(warnings);
       
       // If dispatch simulator is not active, render the tactical path
       if (!simulationActive) {
@@ -3041,12 +3133,15 @@ export default function App() {
       if (cancelled) return;
       if (!result) {
         setDispatchRoute(null);
+        setRouteHazardWarnings([]);
         if (!simulationActive && routeLayerRef.current) {
           routeLayerRef.current.clearLayers();
         }
         return;
       }
       setDispatchRoute(result);
+      const warnings = checkRouteHazardIntersection(result.geometry || []);
+      setRouteHazardWarnings(warnings);
       if (!simulationActive) {
         drawRoutePolyline(result.geometry);
       }
@@ -3878,6 +3973,24 @@ export default function App() {
 
                   {customRoute ? (
                     <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.5rem' }}>
+                      {routeHazardWarnings.length > 0 && (
+                        <div className="hazard-route-alert">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 800, color: '#f87171' }}>
+                            <AlertTriangle size={13} />
+                            <span>KSDMA HAZARD INTERSECTION ({routeHazardWarnings.length} ZONES)</span>
+                          </div>
+                          <div>Trajectory crosses active disaster risk perimeters:</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.2rem' }}>
+                            {routeHazardWarnings.map(hz => (
+                              <div key={hz.id} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#fecaca', fontSize: '0.68rem' }}>
+                                <span>{hz.type === 'landslide' ? '⛰️' : '🌊'}</span>
+                                <strong>{hz.name}</strong>
+                                <span style={{ color: '#f87171', fontWeight: 'bold' }}>[{hz.riskLevel}]</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       {rerouteNotice && (
                         <div role="status" style={{ marginBottom: '0.5rem', padding: '0.45rem 0.55rem', borderRadius: '6px', color: '#bbf7d0', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.35)', fontSize: '0.75rem', fontWeight: 700 }}>
                           {rerouteNotice}
@@ -4021,6 +4134,84 @@ export default function App() {
                           >
                             <Share2 size={13} /> Share Route via WhatsApp
                           </button>
+
+                          <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem' }}>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const qrDataUrl = await generateRouteQr(
+                                  selectedStartNode,
+                                  selectedEndNode,
+                                  meansOfTransport
+                                );
+                                const startName = mapData.nodes[selectedStartNode]?.name || selectedStartNode;
+                                const endName = mapData.nodes[selectedEndNode]?.name || selectedEndNode;
+                                setQrModalData({
+                                  title: 'TACTICAL ROUTE QR TRANSFER',
+                                  subtitle: `${startName} ➔ ${endName} (${customRoute.distance} km)`,
+                                  qrDataUrl,
+                                  type: 'route',
+                                  data: {
+                                    start: startName,
+                                    end: endName,
+                                    dist: `${customRoute.distance} km`,
+                                    eta: `${customRoute.travelTimeMinutes} mins`,
+                                    transport: meansOfTransport
+                                  }
+                                });
+                              }}
+                              className="btn btn-secondary"
+                              style={{
+                                flex: 1,
+                                fontSize: '0.68rem',
+                                padding: '0.4rem',
+                                color: '#60a5fa',
+                                borderColor: 'rgba(59, 130, 246, 0.4)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.3rem'
+                              }}
+                              title="Generate offline QR code to transfer route to another field device"
+                            >
+                              <QrCode size={12} /> Offline QR
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const startName = mapData.nodes[selectedStartNode]?.name || selectedStartNode;
+                                const endName = mapData.nodes[selectedEndNode]?.name || selectedEndNode;
+                                setPrintableMission({
+                                  type: 'Tactical Route Clearance & Navigation Manifest',
+                                  referenceId: `RTE-${Date.now().toString(36).toUpperCase()}`,
+                                  origin: startName,
+                                  destination: endName,
+                                  distance: `${customRoute.distance} km`,
+                                  estTime: `${customRoute.travelTimeMinutes} mins`,
+                                  transport: meansOfTransport.toUpperCase(),
+                                  hazards: routeHazardWarnings.map(h => `${h.name} (${h.riskLevel})`).join(', ') || 'None detected along corridor',
+                                  timestamp: new Date().toLocaleString()
+                                });
+                                setTimeout(() => window.print(), 250);
+                              }}
+                              className="btn btn-secondary"
+                              style={{
+                                flex: 1,
+                                fontSize: '0.68rem',
+                                padding: '0.4rem',
+                                color: '#e2e8f0',
+                                borderColor: 'rgba(148, 163, 184, 0.3)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.3rem'
+                              }}
+                              title="Print or export tactical field route manifest as PDF"
+                            >
+                              <Printer size={12} /> Print Manifest
+                            </button>
+                          </div>
                         </>
                       ) : (
                         <div style={{ marginTop: '0.5rem' }}>
@@ -5012,6 +5203,54 @@ export default function App() {
                                 >
                                   <Share2 size={11} /> Share to WhatsApp
                                 </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary"
+                                  onClick={async (event) => {
+                                    event.stopPropagation();
+                                    const qrDataUrl = await generateIncidentQr(inc);
+                                    setQrModalData({
+                                      title: 'INCIDENT MISSION QR TRANSFER',
+                                      subtitle: `${inc.type.toUpperCase()} • ${inc.description}`,
+                                      qrDataUrl,
+                                      type: 'incident',
+                                      data: {
+                                        id: inc.id,
+                                        type: inc.type,
+                                        priority: inc.priority || 'standard',
+                                        location: `[${inc.lat.toFixed(4)}, ${inc.lng.toFixed(4)}]`,
+                                        reportedAt: new Date(inc.reportedAt).toLocaleString()
+                                      }
+                                    });
+                                  }}
+                                  style={{ padding: '0.25rem 0.4rem', fontSize: '0.62rem', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#60a5fa' }}
+                                  title="Generate offline QR to transfer incident parameters to field squads"
+                                >
+                                  <QrCode size={11} /> Offline QR
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setPrintableMission({
+                                      type: 'Emergency Incident Dispatch Manifest',
+                                      referenceId: `INC-${inc.id.toString().slice(-6).toUpperCase()}`,
+                                      origin: 'KSDMA State Emergency Operations Centre (SEOC)',
+                                      destination: `Incident Ground [${inc.lat.toFixed(4)}, ${inc.lng.toFixed(4)}]`,
+                                      emergencyType: `${inc.type.toUpperCase()} (${inc.priority?.toUpperCase() || 'STANDARD'})`,
+                                      responder: inc.assignedResponderName || 'Unassigned / Field Squad On Call',
+                                      description: inc.description,
+                                      aiBrief: inc.aiRecommendation || 'Follow standard SOP for localized containment.',
+                                      timestamp: new Date(inc.reportedAt || Date.now()).toLocaleString()
+                                    });
+                                    setTimeout(() => window.print(), 250);
+                                  }}
+                                  style={{ padding: '0.25rem 0.4rem', fontSize: '0.62rem' }}
+                                  title="Print or export incident field dispatch manifest as PDF"
+                                >
+                                  <Printer size={11} /> Print Manifest
+                                </button>
                               </div>
                             )}
                             {isActive && inc.aiRecommendation && (
@@ -5110,6 +5349,133 @@ export default function App() {
                       </div>
                     );
                   })}
+                </div>
+              </section>
+
+              {/* Kerala Major Dam & Reservoir Telemetry */}
+              <section className="panel-card" style={{ borderLeft: '3px solid #0284c7' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h2 className="section-title" style={{ margin: 0 }}>
+                    <span>Major Dam Telemetry</span>
+                    <Waves size={14} style={{ color: '#38bdf8' }} />
+                  </h2>
+                  <span style={{ fontSize: '0.62rem', color: '#94a3b8' }}>KSEB / Irrigation</span>
+                </div>
+                <div className="dam-grid">
+                  {KERALA_DAMS.map(dam => {
+                    const badgeStyle = getAlertBadgeStyle(dam.alertLevel);
+                    return (
+                      <div key={dam.id} className="dam-card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <strong style={{ fontSize: '0.78rem', color: '#f1f5f9' }}>{dam.name}</strong>
+                            <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
+                              {dam.district} • {dam.river}
+                            </div>
+                          </div>
+                          <span style={{
+                            background: badgeStyle.bg,
+                            border: `1px solid ${badgeStyle.border}`,
+                            color: badgeStyle.text,
+                            fontSize: '0.6rem',
+                            fontWeight: 800,
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            textTransform: 'uppercase'
+                          }}>
+                            {dam.alertLevel}
+                          </span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.2rem', fontSize: '0.7rem' }}>
+                          <span style={{ color: '#cbd5e1' }}>Storage: <strong>{dam.storagePercent}%</strong> (FRL {dam.fullReservoirLevelFt} ft)</span>
+                          <span style={{ color: dam.shutterStatus.includes('Open') || dam.shutterStatus.includes('Raised') ? '#f87171' : '#4ade80', fontWeight: 600 }}>
+                            {dam.shutterStatus}
+                          </span>
+                        </div>
+
+                        <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden', marginTop: '2px' }}>
+                          <div style={{
+                            width: `${dam.storagePercent}%`,
+                            height: '100%',
+                            background: dam.storagePercent > 85 ? '#ef4444' : dam.storagePercent > 75 ? '#f97316' : '#0284c7'
+                          }}></div>
+                        </div>
+
+                        <div style={{ fontSize: '0.62rem', color: '#94a3b8', marginTop: '2px' }}>
+                          Downstream: {dam.downstreamZones.join(', ')}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* Kerala 14-District DEOC (1077) Directory */}
+              <section className="panel-card" style={{ borderLeft: '3px solid #eab308' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h2 className="section-title" style={{ margin: 0 }}>
+                    <span>14-District DEOC (1077)</span>
+                    <PhoneCall size={14} style={{ color: '#fbbf24' }} />
+                  </h2>
+                  <span style={{ fontSize: '0.62rem', color: '#94a3b8' }}>Disaster Control</span>
+                </div>
+
+                <input
+                  type="text"
+                  className="deoc-search-input"
+                  placeholder="Filter District (e.g. Wayanad, Idukki)..."
+                  value={deocSearch}
+                  onChange={(e) => setDeocSearch(e.target.value)}
+                />
+
+                <div className="deoc-grid">
+                  {searchDeoc(deocSearch).map(dist => (
+                    <div key={dist.id} className="deoc-card">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <strong style={{ fontSize: '0.78rem', color: '#f8fafc' }}>{dist.name}</strong>
+                          <span style={{ fontSize: '0.65rem', color: '#94a3b8', marginLeft: '6px' }}>{dist.malayalam}</span>
+                        </div>
+                        <span style={{ fontSize: '0.58rem', background: 'rgba(234, 179, 8, 0.15)', color: '#fbbf24', border: '1px solid rgba(234, 179, 8, 0.3)', padding: '1px 5px', borderRadius: '3px', fontWeight: 'bold' }}>
+                          1077
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: '0.65rem', color: '#cbd5e1' }}>
+                        Direct: <a href={`tel:${dist.deocDirect.replace('-', '')}`} style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: 600 }}>{dist.deocDirect}</a>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '0.3rem', marginTop: '2px' }}>
+                        <a
+                          href="tel:1077"
+                          className="btn btn-secondary"
+                          style={{ flex: 1, padding: '3px 4px', fontSize: '0.62rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', textDecoration: 'none' }}
+                        >
+                          <Phone size={10} style={{ color: '#fbbf24' }} /> 1077
+                        </a>
+                        <a
+                          href={`tel:${dist.deocDirect.replace('-', '')}`}
+                          className="btn btn-secondary"
+                          style={{ flex: 1, padding: '3px 4px', fontSize: '0.62rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', textDecoration: 'none' }}
+                        >
+                          <PhoneCall size={10} style={{ color: '#38bdf8' }} /> Direct
+                        </a>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            const smsUrl = `sms:${dist.deocDirect.replace('-', '')}?body=EMERGENCY%20SITREP:%20Requesting%20tactical%20support%20from%20DEOC%20${dist.name}.`;
+                            window.open(smsUrl, '_blank');
+                          }}
+                          style={{ padding: '3px 6px', fontSize: '0.62rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Dispatch SOS SMS to District Operations Centre"
+                        >
+                          <MessageSquare size={10} style={{ color: '#4ade80' }} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </section>
             </>
@@ -5850,6 +6216,31 @@ export default function App() {
             <button
               type="button"
               className="map-settings-btn"
+              onClick={() => setShowHazardZones(prev => !prev)}
+              title={showHazardZones ? "Hide KSDMA Hazard Risk Zones" : "Show KSDMA Hazard Risk Zones (Landslides & Floods)"}
+              style={{
+                background: showHazardZones ? '#ef4444' : 'rgba(15, 23, 42, 0.85)',
+                backdropFilter: 'blur(8px)',
+                border: showHazardZones ? '1px solid #f87171' : '1px solid rgba(239, 68, 68, 0.4)',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                transition: 'all 0.2s',
+                fontSize: '16px',
+                outline: 'none'
+              }}
+            >
+              ⚠️
+            </button>
+            <button
+              type="button"
+              className="map-settings-btn"
               onClick={() => setMapTheme(prev => prev === 'satellite' ? 'dark' : 'satellite')}
               title={mapTheme === 'satellite' ? "Switch to Tactical Dark Map" : "Switch to Satellite Imagery"}
               style={{
@@ -5925,6 +6316,44 @@ export default function App() {
               <h4 style={{ margin: 0, fontSize: '0.8rem', textTransform: 'uppercase', color: '#c084fc', letterSpacing: '0.05em', fontWeight: 800 }}>
                 Environment HUD
               </h4>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>TACTICAL AUDIO & SIREN</label>
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => setAudioSirenEnabled(!audioSirenEnabled)}
+                    style={{
+                      flex: 1,
+                      padding: '4px 6px',
+                      fontSize: '0.65rem',
+                      background: audioSirenEnabled ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      border: audioSirenEnabled ? '1px solid #10b981' : '1px solid #ef4444',
+                      color: '#fff',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    {audioSirenEnabled ? '🔊 Siren: ON' : '🔇 Siren: OFF'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => playEvacuationSiren(1.2)}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: '0.65rem',
+                      background: 'rgba(239, 68, 68, 0.3)',
+                      border: '1px solid #ef4444',
+                      color: '#fca5a5',
+                      borderRadius: '4px'
+                    }}
+                    title="Test 100% Web Audio Offline Evacuation Siren"
+                  >
+                    🚨 Test
+                  </button>
+                </div>
+              </div>
 
               <div style={{ padding: '0.55rem', borderRadius: '6px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.25)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
@@ -6173,6 +6602,160 @@ export default function App() {
                   {tourStep === TOUR_STEPS.length - 1 ? 'Finish' : 'Next'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Offline Tactical QR Code Sharing Modal */}
+      {qrModalData && (
+        <div className="qr-modal-overlay" onClick={() => setQrModalData(null)}>
+          <div className="qr-modal-card" onClick={e => e.stopPropagation()}>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <QrCode size={16} />
+                  <span>{qrModalData.title}</span>
+                </h3>
+                <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.2rem' }}>
+                  {qrModalData.subtitle}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQrModalData(null)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.1rem', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="qr-image-wrapper">
+              {qrModalData.qrDataUrl ? (
+                <img src={qrModalData.qrDataUrl} alt="Tactical Mission QR Code" style={{ width: '220px', height: '220px', display: 'block' }} />
+              ) : (
+                <div style={{ color: '#ef4444', fontSize: '0.75rem', padding: '1rem' }}>Generating QR...</div>
+              )}
+            </div>
+
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8', textAlign: 'center', lineHeight: '1.4', background: 'rgba(255,255,255,0.03)', padding: '0.4rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              ⚡ <strong>100% Offline Peer-to-Peer:</strong> Scan with any smartphone camera or companion dispatcher screen to instantly transfer coordinates and parameters without internet or cellular connectivity.
+            </div>
+
+            {qrModalData.data && (
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.2rem', background: 'rgba(0,0,0,0.3)', padding: '0.4rem 0.6rem', borderRadius: '6px' }}>
+                {Object.entries(qrModalData.data).map(([k, v]) => (
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', padding: '0.15rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <span style={{ color: '#94a3b8', textTransform: 'capitalize' }}>{k}:</span>
+                    <span style={{ color: '#f1f5f9', fontWeight: 600 }}>{String(v)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ flex: 1, padding: '0.45rem', fontSize: '0.72rem' }}
+                onClick={() => setQrModalData(null)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ flex: 1, padding: '0.45rem', fontSize: '0.72rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.download = `tactical-mission-${Date.now()}.png`;
+                  link.href = qrModalData.qrDataUrl;
+                  link.click();
+                }}
+              >
+                <Download size={13} /> Save QR Image
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Printable Tactical Mission Manifest (Shown only when printing) */}
+      {printableMission && (
+        <div className="printable-manifest" aria-hidden="true">
+          <h1>🚨 KERALA STATE DISASTER MANAGEMENT AUTHORITY</h1>
+          <h3 style={{ margin: '0 0 12px 0', fontSize: '12pt', color: '#222' }}>
+            TACTICAL DISPATCH MISSION MANIFEST • OFFICIAL FIELD BRIEF
+          </h3>
+          <table>
+            <tbody>
+              <tr>
+                <th style={{ width: '32%' }}>Manifest Type</th>
+                <td>{printableMission.type}</td>
+              </tr>
+              <tr>
+                <th>Mission Reference ID</th>
+                <td><strong>{printableMission.referenceId}</strong></td>
+              </tr>
+              <tr>
+                <th>Dispatch Origin</th>
+                <td>{printableMission.origin}</td>
+              </tr>
+              <tr>
+                <th>Destination / Ground Target</th>
+                <td>{printableMission.destination}</td>
+              </tr>
+              {printableMission.distance && (
+                <tr>
+                  <th>Calculated Distance</th>
+                  <td>{printableMission.distance}</td>
+                </tr>
+              )}
+              {printableMission.estTime && (
+                <tr>
+                  <th>Estimated Transit Time</th>
+                  <td>{printableMission.estTime}</td>
+                </tr>
+              )}
+              {printableMission.transport && (
+                <tr>
+                  <th>Means of Transport</th>
+                  <td>{printableMission.transport}</td>
+                </tr>
+              )}
+              {printableMission.emergencyType && (
+                <tr>
+                  <th>Emergency Classification</th>
+                  <td>{printableMission.emergencyType}</td>
+                </tr>
+              )}
+              {printableMission.responder && (
+                <tr>
+                  <th>Assigned Field Unit</th>
+                  <td>{printableMission.responder}</td>
+                </tr>
+              )}
+              <tr>
+                <th>KSDMA Environmental Hazard Notice</th>
+                <td>{printableMission.hazards || printableMission.aiBrief || 'No active hazard alerts detected along corridor.'}</td>
+              </tr>
+              {printableMission.description && (
+                <tr>
+                  <th>Incident SITREP & Scope</th>
+                  <td>{printableMission.description}</td>
+                </tr>
+              )}
+              <tr>
+                <th>Authorization & Timestamp</th>
+                <td>Generated at {printableMission.timestamp} | SEOC Tactical Emergency Engine | 100% Verified Offline Record</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ width: '40%', borderTop: '1px solid #000', paddingTop: '6px', textAlign: 'center', fontSize: '9pt' }}>
+              Incident Commander / SEOC Dispatcher Signature
+            </div>
+            <div style={{ width: '40%', borderTop: '1px solid #000', paddingTop: '6px', textAlign: 'center', fontSize: '9pt' }}>
+              Field Response Squad Leader Signature
             </div>
           </div>
         </div>

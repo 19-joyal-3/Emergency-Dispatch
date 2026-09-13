@@ -2516,3 +2516,174 @@ textarea {
   border-radius: 3px;
   border-color: rgba(255, 255, 255, 0.2);
 }
+
+/* ==========================================
+   OFFLINE QR CODE MODAL
+   ========================================== */
+.qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.qr-modal-card {
+  background: #0f172a;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 380px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.qr-image-wrapper {
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================
+   DEOC 14-DISTRICT DIRECTORY
+   ========================================== */
+.deoc-search-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.deoc-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.deoc-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+}
+
+.deoc-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+/* ==========================================
+   DAM STORAGE & SPILLWAY TELEMETRY
+   ========================================== */
+.dam-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.dam-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* ==========================================
+   HAZARD ROUTE ALERT BANNER
+   ========================================== */
+.hazard-route-alert {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: #fca5a5;
+}
+
+/* ==========================================
+   TACTICAL MISSION MANIFEST (@media print)
+   ========================================== */
+.printable-manifest {
+  display: none;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  .app-container, .tab-toolbar, .map-viewport, .leaflet-control-container, .instruction-banner, .btn, .hud-panel, .map-overlay-card, .quick-actions-bar, .modal-backdrop, .qr-modal-overlay {
+    display: none !important;
+  }
+
+  .printable-manifest {
+    display: block !important;
+    padding: 20px;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .printable-manifest h1 {
+    font-size: 18pt;
+    border-bottom: 2px solid #000;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+  }
+
+  .printable-manifest table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+  }
+
+  .printable-manifest th, .printable-manifest td {
+    border: 1px solid #333;
+    padding: 6px 8px;
+    font-size: 10pt;
+    text-align: left;
+  }
+
+  .printable-manifest th {
+    background: #f0f0f0 !important;
+    font-weight: bold;
+  }
+}
