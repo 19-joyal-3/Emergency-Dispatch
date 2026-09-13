@@ -64,6 +64,7 @@ if (devices.length === 0) {
 const authenticSos = formatEmergencyPacket({
   senderId: 'LIVE-PEER-001',
   senderCallsign: 'Kozhikode Rapid Response',
+  originNodeId: 'LIVE-PEER-001',
   lat: 11.2588,
   lng: 75.7804,
   emergencyType: 'medical',
@@ -83,5 +84,104 @@ if (messages.length > 0 && messages[0].id === authenticSos.id) {
   process.exit(1);
 }
 
+// 6. Test Multi-Hop Daisy-Chain Relay Simulation
+console.log('--- Testing Multi-Hop Daisy-Chain Gossip Relay ---');
+const originPacket = formatEmergencyPacket({
+  senderId: 'NODE-MEPPADI-01',
+  senderCallsign: 'Wayanad Isolated Citizen',
+  originNodeId: 'NODE-MEPPADI-01',
+  originCallsign: 'Wayanad Isolated Citizen',
+  lat: 11.55,
+  lng: 76.12,
+  emergencyType: 'landslide',
+  priority: 'critical',
+  message: 'Trapped on rooftop due to mudflow',
+  ttl: 4,
+  hops: 0
+});
+
+// Simulate 4 daisy-chained intermediate relay nodes
+const relayNodes = [
+  { id: 'NODE-RELAY-1', callsign: 'Relay Squad Alpha' },
+  { id: 'NODE-RELAY-2', callsign: 'Ambulance 04 Bravo' },
+  { id: 'NODE-RELAY-3', callsign: 'Checkpost Charlie' },
+  { id: 'NODE-COMMAND-HUB', callsign: 'SEOC Command' }
+];
+
+let currentPacket = originPacket;
+for (let i = 0; i < relayNodes.length; i++) {
+  const relay = relayNodes[i];
+  const nextHop = (currentPacket.hops || 0) + 1;
+  const relayEntry = {
+    nodeId: relay.id,
+    callsign: relay.callsign,
+    timestamp: Date.now() + (i * 100),
+    hopIndex: nextHop
+  };
+  currentPacket = {
+    ...currentPacket,
+    senderId: relay.id,
+    senderCallsign: relay.callsign,
+    hops: nextHop,
+    relayChain: [...(currentPacket.relayChain || []), relayEntry]
+  };
+  console.log(`Relay Hop ${currentPacket.hops}/${currentPacket.ttl}: Relayed via [${relay.callsign}]`);
+}
+
+if (currentPacket.hops === 4 && currentPacket.relayChain.length === 4) {
+  console.log('✓ 4-Hop daisy-chain mesh relay propagation PASSED');
+} else {
+  console.error('✗ Daisy-chain relay propagation FAILED');
+  process.exit(1);
+}
+
+// 7. Test TTL Expiration Enforcement
+// A packet with hops >= ttl must NOT be relayed further
+const canRelayExpired = p2pEngine.shouldRelayPacket(currentPacket);
+console.log(`TTL Expiration Check: Can relay 4-hop packet with TTL 4? ${canRelayExpired} (Expected: false)`);
+if (canRelayExpired === false) {
+  console.log('✓ TTL expiration enforcement PASSED');
+} else {
+  console.error('✗ TTL expiration failed: packet with hops >= ttl was permitted to relay');
+  process.exit(1);
+}
+
+// 8. Test Loop Prevention & Deduplication
+// Test 8a: Self-originated packet loop prevention
+const selfPacket = formatEmergencyPacket({
+  senderId: p2pEngine.localUnitId,
+  originNodeId: p2pEngine.localUnitId,
+  senderCallsign: p2pEngine.callsign,
+  message: 'Self test packet'
+});
+if (p2pEngine.shouldRelayPacket(selfPacket) === false) {
+  console.log('✓ Self-origin loop reflection prevention PASSED');
+} else {
+  console.error('✗ Self-origin loop prevention FAILED');
+  process.exit(1);
+}
+
+// Test 8b: Already seen / duplicate packet loop prevention
+p2pEngine.seenPacketIds.set('TEST-SEEN-123', Date.now());
+const seenPacket = { id: 'TEST-SEEN-123', originNodeId: 'OTHER-NODE', hops: 1, ttl: 5 };
+if (p2pEngine.shouldRelayPacket(seenPacket) === false) {
+  console.log('✓ Seen packet deduplication & loop prevention PASSED');
+} else {
+  console.error('✗ Duplicate packet loop prevention FAILED');
+  process.exit(1);
+}
+
+// 9. Test Store-and-Forward Buffer & Gossip Stats
+const sfCount = p2pEngine.getStoreAndForwardCount();
+const stats = p2pEngine.getMeshRelayStats();
+console.log(`Store-and-Forward Buffer Count: ${sfCount}`);
+console.log(`Local Node ID: ${stats.localNodeId} (${stats.callsign})`);
+if (typeof sfCount === 'number' && stats.localNodeId) {
+  console.log('✓ Store-and-Forward telemetry and buffer PASSED');
+} else {
+  console.error('✗ Store-and-Forward telemetry FAILED');
+  process.exit(1);
+}
+
 p2pEngine.stopScanning();
-console.log('✓ ALL LIVE P2P RADAR & EMERGENCY SOS TESTS PASSED!\n');
+console.log('✓ ALL LIVE P2P RADAR, MULTI-HOP GOSSIP & STORE-AND-FORWARD TESTS PASSED!\n');

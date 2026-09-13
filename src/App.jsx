@@ -15,6 +15,7 @@ import { searchDeoc } from './deoc';
 import { KERALA_HAZARD_ZONES, checkRouteHazardIntersection } from './hazards';
 import { generateRouteQr, generateIncidentQr, parseQrHash } from './qr';
 import { p2pEngine, EMERGENCY_TYPES, getSignalQuality } from './p2p';
+import { nativeBackgroundMesh } from './nativeBackground';
 import { findEntitiesInGeofence, checkUserHazardProximity, formatGeofenceAlertMessage } from './geofence';
 import { 
   ShieldAlert, 
@@ -167,6 +168,9 @@ export default function App() {
   const [p2pToast, setP2pToast] = useState(null);
   const [directMsgTarget, setDirectMsgTarget] = useState(null);
   const [directMsgText, setDirectMsgText] = useState('');
+  const [storeForwardCount, setStoreForwardCount] = useState(() => p2pEngine.getStoreAndForwardCount());
+  const [backgroundMeshActive, setBackgroundMeshActive] = useState(() => nativeBackgroundMesh.isActive());
+  const [batteryExemptionStatus, setBatteryExemptionStatus] = useState(null);
 
   // Dynamic Geofence Early Warning & Proximity Interceptor States
   const [geofenceModalData, setGeofenceModalData] = useState(null); // { incident }
@@ -3043,10 +3047,21 @@ export default function App() {
         setP2pScanning(false);
       } else if (event === 'MESSAGES_CLEARED') {
         setP2pMessages([]);
+        setStoreForwardCount(0);
+      } else if (event === 'STORE_AND_FORWARD_UPDATED' || event === 'PACKET_RELAYED') {
+        setStoreForwardCount(p2pEngine.getStoreAndForwardCount());
+        setP2pMessages([...p2pEngine.getMessages()]);
       }
     });
 
-    return () => unsubscribe();
+    const unsubNative = nativeBackgroundMesh.subscribe((active) => {
+      setBackgroundMeshActive(active);
+    });
+
+    return () => {
+      unsubscribe();
+      unsubNative();
+    };
   }, [soundAlertsEnabled, audioSirenEnabled, gpsActive, gpsCoords, customerTrackingActive, customers]);
 
   const handlePlotP2pSos = async (sos) => {
@@ -7632,6 +7647,75 @@ export default function App() {
               </button>
             </div>
 
+            {/* Low-Power Mesh & Anti-Entropy Background Relay Ribbon */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '8px',
+              padding: '6px 14px',
+              background: 'rgba(15, 23, 42, 0.85)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              fontSize: '0.72rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <span style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Radio size={13} style={{ color: '#38bdf8' }} />
+                  <span>Daisy-Chain Mesh:</span>
+                  <strong style={{ color: '#34d399' }}>Active (TTL 7)</strong>
+                </span>
+                <span style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span>📦 Store-and-Forward:</span>
+                  <strong style={{ color: storeForwardCount > 0 ? '#fbbf24' : '#64748b' }}>
+                    {storeForwardCount} buffered
+                  </strong>
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={async () => {
+                    const next = await nativeBackgroundMesh.toggle();
+                    setBackgroundMeshActive(next);
+                  }}
+                  style={{
+                    padding: '3px 8px',
+                    fontSize: '0.68rem',
+                    borderRadius: '4px',
+                    background: backgroundMeshActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                    border: backgroundMeshActive ? '1px solid #10b981' : '1px solid #475569',
+                    color: backgroundMeshActive ? '#6ee7b7' : '#94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    cursor: 'pointer'
+                  }}
+                  title={nativeBackgroundMesh.isNativeApp() ? "Keep BLE & mesh radio active via Android Foreground Service when phone is locked" : "Keep mesh radio active via Screen Wake Lock"}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: backgroundMeshActive ? '#10b981' : '#64748b', display: 'inline-block' }}></span>
+                  {backgroundMeshActive ? 'Background Service: ON' : 'Background Service: OFF'}
+                </button>
+
+                {nativeBackgroundMesh.isNativeApp() && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={async () => {
+                      const res = await nativeBackgroundMesh.requestBatteryOptimizationExemption();
+                      setBatteryExemptionStatus(res?.exempted ? 'Exempted' : 'Requested');
+                    }}
+                    style={{ padding: '3px 8px', fontSize: '0.68rem' }}
+                    title="Exempt Vanguard Geo from Android Doze/Battery Saver to sustain offline relay"
+                  >
+                    🔋 {batteryExemptionStatus || 'Battery Exemption'}
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Sub-tabs */}
             <div className="p2p-tabs">
               <button
@@ -7962,14 +8046,35 @@ export default function App() {
                                 </div>
                               </div>
                             </div>
-                            <span className={`badge badge-${msg.priority || 'critical'}`} style={{ textTransform: 'uppercase', fontSize: '0.62rem' }}>
-                              {msg.priority || 'CRITICAL'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span className="badge-hops" title={`Multi-hop mesh distance: ${msg.hops || 1} of ${msg.ttl || 7} maximum hops`}>
+                                🔗 Hop {msg.hops || 1}/{msg.ttl || 7}
+                              </span>
+                              <span className={`badge badge-${msg.priority || 'critical'}`} style={{ textTransform: 'uppercase', fontSize: '0.62rem' }}>
+                                {msg.priority || 'CRITICAL'}
+                              </span>
+                            </div>
                           </div>
 
-                          <div style={{ fontSize: '0.78rem', color: '#f1f5f9', margin: '0.5rem 0', lineHeight: 1.4 }}>
+                          <div style={{ fontSize: '0.78rem', color: '#f1f5f9', margin: '0.5rem 0 0.3rem 0', lineHeight: 1.4 }}>
                             {msg.message}
                           </div>
+
+                          {/* Multi-Hop Daisy Chain Provenance Trace */}
+                          {msg.relayChain && msg.relayChain.length > 0 && (
+                            <div className="mesh-relay-chain-trace">
+                              <span className="mesh-trace-label">Daisy-Chain:</span>
+                              <span className="mesh-trace-node origin" title="Origin Node">{msg.originCallsign || msg.originNodeId || 'Origin'}</span>
+                              {msg.relayChain.map((relayId, idx) => (
+                                <React.Fragment key={idx}>
+                                  <span className="mesh-trace-arrow">➔</span>
+                                  <span className="mesh-trace-node relay" title={`Relayed by intermediary mesh node ${relayId}`}>{relayId}</span>
+                                </React.Fragment>
+                              ))}
+                              <span className="mesh-trace-arrow">➔</span>
+                              <span className="mesh-trace-node current" title="Current Local Node">This Device</span>
+                            </div>
+                          )}
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', paddingTop: '0.4rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                             <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
@@ -8019,7 +8124,7 @@ export default function App() {
 
             <div className="p2p-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div style={{ fontSize: '0.72rem', color: '#fca5a5', background: 'rgba(239, 68, 68, 0.12)', padding: '0.4rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                ⚡ Transmits directly over <strong>Bluetooth Low Energy &amp; Local Wi-Fi Mesh</strong>. All devices within radio range will receive this alert instantly without cell towers.
+                ⚡ Transmits directly over <strong>Bluetooth Low Energy &amp; Multi-Hop Gossip Mesh (TTL 7)</strong>. Neighboring peers automatically relay distress signals across daisy-chained devices without cell towers.
               </div>
 
               {/* Emergency Classification */}

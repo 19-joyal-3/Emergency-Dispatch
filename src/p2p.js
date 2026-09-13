@@ -47,8 +47,10 @@ export function getSignalQuality(rssi) {
   return { bars: 1, text: 'Weak', color: '#ef4444' };
 }
 
+export const DEFAULT_MESH_TTL = 7;
+
 /**
- * Generate a unique emergency distress packet
+ * Generate a unique emergency distress packet with multi-hop relay telemetry
  */
 export function formatEmergencyPacket({
   senderId,
@@ -61,13 +63,23 @@ export function formatEmergencyPacket({
   message = 'Immediate emergency assistance requested.',
   proofImage = null,
   battery = null,
-  protocol = P2P_PROTOCOLS.WIFI_MESH
+  protocol = P2P_PROTOCOLS.WIFI_MESH,
+  ttl = DEFAULT_MESH_TTL,
+  hops = 0,
+  originNodeId = null,
+  originCallsign = null,
+  relayChain = []
 }) {
+  const originId = originNodeId || senderId || `UNIT-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  const originSign = originCallsign || senderCallsign || 'Kerala Field Squad';
+
   return {
     id: `SOS-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
     protocol,
-    senderId: senderId || `UNIT-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-    senderCallsign: senderCallsign || 'Kerala Field Squad',
+    senderId: senderId || originId,
+    senderCallsign: senderCallsign || originSign,
+    originNodeId: originId,
+    originCallsign: originSign,
     senderRole,
     lat: typeof lat === 'number' ? Number(lat.toFixed(5)) : 9.9312,
     lng: typeof lng === 'number' ? Number(lng.toFixed(5)) : 76.2673,
@@ -77,7 +89,9 @@ export function formatEmergencyPacket({
     proofImage: proofImage || null,
     battery: battery ?? Math.floor(65 + Math.random() * 30),
     timestamp: Date.now(),
-    hops: 0
+    ttl: typeof ttl === 'number' ? ttl : DEFAULT_MESH_TTL,
+    hops: typeof hops === 'number' ? hops : 0,
+    relayChain: Array.isArray(relayChain) ? [...relayChain] : []
   };
 }
 
@@ -86,14 +100,19 @@ class P2PEmergencyMeshEngine {
     this.broadcastChannel = null;
     this.discoveredDevices = new Map();
     this.receivedMessages = [];
+    this.seenPacketIds = new Map(); // packetId -> timestamp
+    this.storeAndForwardBuffer = new Map(); // packetId -> packet
+    this.relayedPacketsCount = 0;
     this.isScanning = false;
     this.listeners = new Set();
     this.localUnitId = `NODE-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     this.callsign = 'Mobile Dispatcher';
     this.lastKnownPosition = { lat: 9.9312, lng: 76.2673 };
+    this.gossipInterval = null;
 
     this.initBroadcastChannel();
     this.loadCachedMessages();
+    this.loadStoreAndForwardBuffer();
   }
 
   initBroadcastChannel() {
@@ -114,6 +133,9 @@ class P2PEmergencyMeshEngine {
       const cached = localStorage.getItem('kerala_p2p_sos_messages');
       if (cached) {
         this.receivedMessages = JSON.parse(cached);
+        this.receivedMessages.forEach(m => {
+          if (m && m.id) this.seenPacketIds.set(m.id, m.timestamp || Date.now());
+        });
       }
     } catch {
       this.receivedMessages = [];
@@ -125,6 +147,33 @@ class P2PEmergencyMeshEngine {
       localStorage.setItem('kerala_p2p_sos_messages', JSON.stringify(this.receivedMessages.slice(0, 50)));
     } catch {
       // Storage quota or disabled
+    }
+  }
+
+  loadStoreAndForwardBuffer() {
+    try {
+      const cached = localStorage.getItem('kerala_p2p_store_forward_queue');
+      if (cached) {
+        const list = JSON.parse(cached);
+        const now = Date.now();
+        list.forEach(pkt => {
+          if (pkt && pkt.id && (now - (pkt.timestamp || 0) < 86400000)) {
+            this.storeAndForwardBuffer.set(pkt.id, pkt);
+            this.seenPacketIds.set(pkt.id, pkt.timestamp || now);
+          }
+        });
+      }
+    } catch {
+      this.storeAndForwardBuffer = new Map();
+    }
+  }
+
+  saveStoreAndForwardBuffer() {
+    try {
+      const list = Array.from(this.storeAndForwardBuffer.values()).slice(0, 100);
+      localStorage.setItem('kerala_p2p_store_forward_queue', JSON.stringify(list));
+    } catch {
+      // Quota exceeded
     }
   }
 
@@ -220,12 +269,25 @@ class P2PEmergencyMeshEngine {
     this.isScanning = true;
     this.notify('SCAN_STARTED');
 
-    // Broadcast our own discovery heartbeat over the local mesh network
+    // 1. Broadcast immediate discovery heartbeat over local mesh network
     this.broadcastHeartbeat();
+
+    // 2. Set up continuous heartbeat and anti-entropy gossip intervals
+    if (typeof window !== 'undefined') {
+      this.heartbeatInterval = setInterval(() => {
+        if (this.isScanning) this.broadcastHeartbeat();
+      }, 5000);
+
+      this.gossipInterval = setInterval(() => {
+        if (this.isScanning) this.broadcastGossipDigest();
+      }, 10000);
+    }
   }
 
   stopScanning() {
     this.isScanning = false;
+    if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
+    if (this.gossipInterval) clearInterval(this.gossipInterval);
     this.notify('SCAN_STOPPED');
   }
 
@@ -237,6 +299,7 @@ class P2PEmergencyMeshEngine {
       senderCallsign: this.callsign,
       lat: this.lastKnownPosition.lat,
       lng: this.lastKnownPosition.lng,
+      storeAndForwardCount: this.storeAndForwardBuffer.size,
       timestamp: Date.now()
     };
     try {
@@ -254,10 +317,17 @@ class P2PEmergencyMeshEngine {
       ...incidentData,
       senderId: this.localUnitId,
       senderCallsign: this.callsign,
+      originNodeId: this.localUnitId,
+      originCallsign: this.callsign,
       lat: incidentData.lat ?? this.lastKnownPosition.lat,
       lng: incidentData.lng ?? this.lastKnownPosition.lng,
       protocol: P2P_PROTOCOLS.WIFI_MESH
     });
+
+    // Mark as seen and store in local store-and-forward queue
+    this.seenPacketIds.set(packet.id, Date.now());
+    this.storeAndForwardBuffer.set(packet.id, packet);
+    this.saveStoreAndForwardBuffer();
 
     // 1. Send across local network mesh channel
     if (this.broadcastChannel) {
@@ -307,11 +377,148 @@ class P2PEmergencyMeshEngine {
     return packet;
   }
 
+  /**
+   * Determine if a received packet should be forwarded across the mesh
+   */
+  shouldRelayPacket(packet) {
+    if (!packet || !packet.id) return false;
+
+    // 1. Loop Prevention: Do not relay packets originated by this local unit
+    if (packet.originNodeId === this.localUnitId) {
+      return false;
+    }
+
+    // 2. Loop Prevention: Do not relay if this unit is already recorded in the daisy-chain path
+    if (Array.isArray(packet.relayChain) && packet.relayChain.some(hop => hop.nodeId === this.localUnitId)) {
+      return false;
+    }
+
+    // 3. Loop Prevention: Do not relay if this packet has already been seen / processed
+    if (this.seenPacketIds.has(packet.id)) {
+      return false;
+    }
+
+    // 4. TTL / Hop Limit: Do not relay if hops have reached or exceeded TTL
+    const maxTtl = typeof packet.ttl === 'number' ? packet.ttl : DEFAULT_MESH_TTL;
+    const currentHops = typeof packet.hops === 'number' ? packet.hops : 0;
+    if (currentHops >= maxTtl) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Relay a packet to downstream peers with incremented hop count & provenance trace
+   */
+  relayMeshPacket(incomingPacket) {
+    if (!this.shouldRelayPacket(incomingPacket)) return null;
+
+    const nextHop = (incomingPacket.hops || 0) + 1;
+    const relayEntry = {
+      nodeId: this.localUnitId,
+      callsign: this.callsign,
+      timestamp: Date.now(),
+      hopIndex: nextHop,
+      lat: this.lastKnownPosition.lat,
+      lng: this.lastKnownPosition.lng
+    };
+
+    const relayedPacket = {
+      ...incomingPacket,
+      senderId: this.localUnitId,
+      senderCallsign: this.callsign,
+      hops: nextHop,
+      relayChain: [...(incomingPacket.relayChain || []), relayEntry]
+    };
+
+    // Mark as seen and persist in buffer
+    this.seenPacketIds.set(relayedPacket.id, Date.now());
+    this.storeAndForwardBuffer.set(relayedPacket.id, relayedPacket);
+    this.saveStoreAndForwardBuffer();
+    this.relayedPacketsCount++;
+
+    // Re-broadcast across local mesh channels
+    if (this.broadcastChannel) {
+      try {
+        this.broadcastChannel.postMessage({
+          type: 'P2P_EMERGENCY_SOS',
+          packet: relayedPacket
+        });
+      } catch (err) {
+        console.warn('[P2P Relay Error]', err);
+      }
+    }
+
+    this.notify('PACKET_RELAYED', relayedPacket);
+    return relayedPacket;
+  }
+
+  /**
+   * Anti-Entropy Gossip: Broadcast digest of stored packet IDs to nearby peers
+   */
+  broadcastGossipDigest() {
+    if (!this.broadcastChannel) return;
+    const knownIds = Array.from(this.storeAndForwardBuffer.keys());
+    try {
+      this.broadcastChannel.postMessage({
+        type: 'P2P_GOSSIP_DIGEST',
+        senderId: this.localUnitId,
+        senderCallsign: this.callsign,
+        knownIds,
+        timestamp: Date.now()
+      });
+    } catch {
+      // Gossip digest broadcast failed
+    }
+  }
+
+  handleGossipDigest(data) {
+    if (!data || data.senderId === this.localUnitId) return;
+    const peerKnownIds = new Set(data.knownIds || []);
+
+    // 1. Store-and-Forward Push: If we have packets the peer does not have, forward them!
+    this.storeAndForwardBuffer.forEach((pkt, id) => {
+      if (!peerKnownIds.has(id)) {
+        if ((pkt.hops || 0) < (pkt.ttl || DEFAULT_MESH_TTL)) {
+          this.relayMeshPacket(pkt);
+        }
+      }
+    });
+
+    // 2. Pull Request: If the peer has packet IDs we haven't seen, request them
+    const missingIds = (data.knownIds || []).filter(id => !this.seenPacketIds.has(id) && !this.storeAndForwardBuffer.has(id));
+    if (missingIds.length > 0 && this.broadcastChannel) {
+      try {
+        this.broadcastChannel.postMessage({
+          type: 'P2P_GOSSIP_REQUEST',
+          senderId: this.localUnitId,
+          targetPeerId: data.senderId,
+          requestedIds: missingIds.slice(0, 10)
+        });
+      } catch {
+        // Request post failed
+      }
+    }
+  }
+
+  handleGossipRequest(data) {
+    if (!data || data.targetPeerId !== this.localUnitId) return;
+    const requested = data.requestedIds || [];
+    requested.forEach(id => {
+      const pkt = this.storeAndForwardBuffer.get(id);
+      if (pkt) {
+        this.relayMeshPacket(pkt);
+      }
+    });
+  }
+
   handleIncomingMeshPacket(data) {
     if (!data) return;
 
     if (data.type === 'P2P_HEARTBEAT' && data.senderId !== this.localUnitId) {
-      // New peer discovered on local Wi-Fi router / hotspot!
+      // New peer discovered on local mesh!
+      const isFirstDiscovery = !this.discoveredDevices.has(data.senderId);
       const rssi = -52 - Math.floor(Math.random() * 20);
       const angle = Math.floor(Math.random() * 360);
       const peer = {
@@ -329,23 +536,49 @@ class P2PEmergencyMeshEngine {
       this.discoveredDevices.set(peer.id, peer);
       this.notify('DEVICE_FOUND', peer);
       this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
+
+      // When encountering a newly joined peer, immediately initiate anti-entropy gossip
+      if (isFirstDiscovery) {
+        this.broadcastGossipDigest();
+      }
+    }
+
+    if (data.type === 'P2P_GOSSIP_DIGEST') {
+      this.handleGossipDigest(data);
+    }
+
+    if (data.type === 'P2P_GOSSIP_REQUEST') {
+      this.handleGossipRequest(data);
     }
 
     if (data.type === 'P2P_EMERGENCY_SOS' && data.packet) {
       const sos = data.packet;
-      // Prevent duplicates
-      if (!this.receivedMessages.some(m => m.id === sos.id)) {
+      const alreadyLogged = this.receivedMessages.some(m => m.id === sos.id);
+      
+      if (!alreadyLogged) {
+        const canRelay = !sos.isSelfBroadcast && this.shouldRelayPacket(sos);
+
         this.receivedMessages.unshift(sos);
         this.saveMessages();
+        this.seenPacketIds.set(sos.id, Date.now());
+        this.storeAndForwardBuffer.set(sos.id, sos);
+        this.saveStoreAndForwardBuffer();
         this.notify('SOS_ALERT_RECEIVED', sos);
+
+        // MULTI-HOP RELAY: If packet has remaining TTL and we did not originate it, relay downstream!
+        if (canRelay) {
+          this.relayMeshPacket(sos);
+        }
       }
     }
   }
 
-
   clearHistory() {
     this.receivedMessages = [];
+    this.storeAndForwardBuffer.clear();
+    this.seenPacketIds.clear();
     localStorage.removeItem('kerala_p2p_sos_messages');
+    localStorage.removeItem('kerala_p2p_store_forward_queue');
     this.notify('MESSAGES_CLEARED');
   }
 
@@ -355,6 +588,21 @@ class P2PEmergencyMeshEngine {
 
   getMessages() {
     return this.receivedMessages;
+  }
+
+  getStoreAndForwardCount() {
+    return this.storeAndForwardBuffer.size;
+  }
+
+  getMeshRelayStats() {
+    return {
+      localNodeId: this.localUnitId,
+      callsign: this.callsign,
+      totalRelayed: this.relayedPacketsCount,
+      totalSeen: this.seenPacketIds.size,
+      storeAndForwardCount: this.storeAndForwardBuffer.size,
+      connectedPeers: this.discoveredDevices.size
+    };
   }
 }
 
