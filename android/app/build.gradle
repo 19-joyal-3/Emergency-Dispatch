@@ -4,7 +4,7 @@ android {
     namespace = "com.yourorganization.emergencydispatch"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.yourorganization.emergencydispatch"
+        applicationId "com.vanguardgeo.emergencydispatch"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
