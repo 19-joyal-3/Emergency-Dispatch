@@ -15,6 +15,7 @@ import { searchDeoc } from './deoc';
 import { KERALA_DAMS, getAlertBadgeStyle } from './dams';
 import { KERALA_HAZARD_ZONES, checkRouteHazardIntersection } from './hazards';
 import { generateRouteQr, generateIncidentQr, parseQrHash } from './qr';
+import { p2pEngine, EMERGENCY_TYPES, getSignalQuality } from './p2p';
 import { 
   ShieldAlert, 
   Wifi, 
@@ -149,6 +150,24 @@ export default function App() {
   const [incidentTypeFilter, setIncidentTypeFilter] = useState('all');
   const [incidentPriorityFilter, setIncidentPriorityFilter] = useState('all');
   const [emergencyNumbers, setEmergencyNumbers] = useState(() => getStoredJson('dispatch_emergency_numbers', DISPATCH_CONFIG.emergencyNumbers));
+
+  // Zero-Connectivity P2P Radar & Emergency Messenger States
+  const [showP2pModal, setShowP2pModal] = useState(false);
+  const [p2pTab, setP2pTab] = useState('radar'); // 'radar', 'devices', 'messages'
+  const [p2pScanning, setP2pScanning] = useState(false);
+  const [p2pDevices, setP2pDevices] = useState(() => p2pEngine.getDevicesList());
+  const [p2pMessages, setP2pMessages] = useState(() => p2pEngine.getMessages());
+  const [p2pSosModalOpen, setP2pSosModalOpen] = useState(false);
+  const [p2pSosForm, setP2pSosForm] = useState({
+    emergencyType: 'medical',
+    priority: 'critical',
+    message: '',
+    senderCallsign: 'Kerala Field Squad #1'
+  });
+  const [selectedRadarBlip, setSelectedRadarBlip] = useState(null);
+  const [p2pToast, setP2pToast] = useState(null);
+  const [directMsgTarget, setDirectMsgTarget] = useState(null);
+  const [directMsgText, setDirectMsgText] = useState('');
 
   const tileLayerRef = useRef(null);
   const pmtilesRef = useRef(null);
@@ -2923,6 +2942,131 @@ export default function App() {
     }
   };
 
+  // Zero-Connectivity P2P Mesh & Proximity Radar Handlers
+  useEffect(() => {
+    const unsubscribe = p2pEngine.subscribe((event, data) => {
+      if (event === 'DEVICES_UPDATED') {
+        setP2pDevices([...data]);
+      } else if (event === 'DEVICE_FOUND') {
+        setP2pDevices(p2pEngine.getDevicesList());
+      } else if (event === 'SOS_ALERT_RECEIVED') {
+        setP2pMessages([...p2pEngine.getMessages()]);
+        if (soundAlertsEnabled) {
+          playTacticalChime(0.4);
+        }
+        setP2pToast({
+          type: 'danger',
+          title: '🚨 INCOMING P2P EMERGENCY SOS',
+          message: `${data.senderCallsign || 'Nearby Device'} (${data.distanceMeters || '10'}m): ${data.message}`
+        });
+        setTimeout(() => setP2pToast(null), 8000);
+      } else if (event === 'SCAN_STARTED') {
+        setP2pScanning(true);
+      } else if (event === 'SCAN_STOPPED') {
+        setP2pScanning(false);
+      } else if (event === 'MESSAGES_CLEARED') {
+        setP2pMessages([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [soundAlertsEnabled]);
+
+  const handlePlotP2pSos = async (sos) => {
+    try {
+      setShowP2pModal(false);
+      const targetLat = typeof sos.lat === 'number' ? sos.lat : 10.5;
+      const targetLng = typeof sos.lng === 'number' ? sos.lng : 76.25;
+
+      if (mapRef.current) {
+        mapRef.current.flyTo([targetLat, targetLng], 14, { animate: true });
+      }
+
+      await reportIncident(
+        sos.emergencyType || 'medical',
+        targetLat,
+        targetLng,
+        `[P2P SOS from ${sos.senderCallsign}]: ${sos.message}`,
+        sos.priority || 'critical',
+        `Received offline via ${sos.protocol}. Proximity distance: ${sos.distanceMeters || 'Local'}m.`
+      );
+
+      const closest = findClosestNode(targetLat, targetLng, mapData);
+      if (closest) {
+        setSelectedEndNode(closest);
+      }
+      logMessage(`[P2P] Plotted emergency distress coordinates for ${sos.senderCallsign} on tactical map.`, 'warning');
+    } catch (err) {
+      console.error('[P2P Plot Error]', err);
+    }
+  };
+
+  const handleBroadcastP2pSos = () => {
+    if (!p2pSosForm.message.trim()) {
+      alert('Please enter an emergency description or situation report before broadcasting.');
+      return;
+    }
+    const center = mapRef.current ? mapRef.current.getCenter() : { lat: 10.5, lng: 76.25 };
+    p2pEngine.broadcastSos({
+      emergencyType: p2pSosForm.emergencyType,
+      priority: p2pSosForm.priority,
+      message: p2pSosForm.message,
+      senderCallsign: p2pSosForm.senderCallsign || 'Field Response Squad',
+      lat: center.lat,
+      lng: center.lng
+    });
+    if (soundAlertsEnabled) {
+      playTacticalChime(0.35);
+    }
+    setP2pSosModalOpen(false);
+    setP2pSosForm(prev => ({ ...prev, message: '' }));
+    setP2pToast({
+      type: 'success',
+      title: '📡 SOS BROADCAST TRANSMITTED',
+      message: 'Distress packet broadcasted across local Wi-Fi mesh and BLE channels.'
+    });
+    setTimeout(() => setP2pToast(null), 5000);
+  };
+
+  const handleBleScan = async () => {
+    try {
+      const device = await p2pEngine.scanForBluetoothDevice();
+      if (device) {
+        setP2pToast({
+          type: 'success',
+          title: '📶 BLE DEVICE DETECTED',
+          message: `Connected to ${device.name} (${device.distanceMeters}m, ${device.rssi} dBm)`
+        });
+        setTimeout(() => setP2pToast(null), 5000);
+      }
+    } catch (err) {
+      alert(`Bluetooth scan notice: ${err.message}`);
+    }
+  };
+
+  const handleSimulateDrill = () => {
+    const drillSos = p2pEngine.simulateIncomingSos();
+    setP2pToast({
+      type: 'warning',
+      title: '🧪 TACTICAL DRILL INCOMING SOS',
+      message: `Simulated distress beacon from ${drillSos.senderCallsign} (${drillSos.distanceMeters || '12'}m)`
+    });
+    setTimeout(() => setP2pToast(null), 6000);
+  };
+
+  const handleSendDirectMessage = (deviceId) => {
+    if (!directMsgText.trim()) return;
+    p2pEngine.sendDirectMessage(deviceId, directMsgText);
+    setDirectMsgTarget(null);
+    setDirectMsgText('');
+    setP2pToast({
+      type: 'success',
+      title: '💬 DIRECT SITREP DISPATCHED',
+      message: 'Direct emergency message transmitted to field unit.'
+    });
+    setTimeout(() => setP2pToast(null), 4000);
+  };
+
   const handleManualIncidentSubmit = (e) => {
     e.preventDefault();
     const isAiVerified = Boolean(aiVerificationResult?.success);
@@ -3859,6 +4003,20 @@ export default function App() {
           >
             <HelpCircle size={18} />
             <span className="tab-label">Help</span>
+          </button>
+          <button 
+            type="button"
+            className="tab-btn"
+            onClick={() => {
+              setShowP2pModal(true);
+              if (!p2pScanning) p2pEngine.startScanning(true);
+            }}
+            title="Zero-Connectivity Bluetooth & Wi-Fi Proximity Radar & Emergency SOS"
+            style={{ position: 'relative' }}
+          >
+            <Radio size={18} style={{ color: p2pScanning ? '#34d399' : '#94a3b8' }} />
+            {p2pMessages.length > 0 && <span className="tab-badge" style={{ background: '#ef4444' }}>{p2pMessages.length}</span>}
+            <span className="tab-label">P2P Radar</span>
           </button>
         </div>
         <div className="toolbar-footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', paddingBottom: '10px' }}>
@@ -5335,6 +5493,25 @@ export default function App() {
                                   className="btn btn-secondary"
                                   onClick={(event) => {
                                     event.stopPropagation();
+                                    setP2pSosForm({
+                                      emergencyType: inc.type || 'medical',
+                                      priority: inc.priority || 'critical',
+                                      message: inc.description || 'Immediate emergency response requested',
+                                      senderCallsign: inc.assignedResponderName || 'SEOC Dispatch Squad'
+                                    });
+                                    setP2pSosModalOpen(true);
+                                    setShowP2pModal(true);
+                                  }}
+                                  style={{ padding: '0.25rem 0.4rem', fontSize: '0.62rem', borderColor: 'rgba(16, 185, 129, 0.4)', color: '#34d399' }}
+                                  title="Broadcast this incident over Bluetooth and Wi-Fi Mesh to nearby field units"
+                                >
+                                  <Radio size={11} /> Broadcast P2P
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
                                     setPrintableMission({
                                       type: 'Emergency Incident Dispatch Manifest',
                                       referenceId: `INC-${inc.id.toString().slice(-6).toUpperCase()}`,
@@ -6401,6 +6578,55 @@ export default function App() {
             <button
               type="button"
               className="map-settings-btn"
+              onClick={() => {
+                setShowP2pModal(true);
+                if (!p2pScanning) p2pEngine.startScanning(true);
+              }}
+              title="Zero-Connectivity Bluetooth & Wi-Fi Proximity Radar & Emergency SOS"
+              style={{
+                background: showP2pModal || p2pScanning ? '#059669' : 'rgba(15, 23, 42, 0.85)',
+                backdropFilter: 'blur(8px)',
+                border: showP2pModal || p2pScanning ? '1px solid #10b981' : '1px solid rgba(16, 185, 129, 0.4)',
+                color: '#34d399',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                transition: 'all 0.2s',
+                fontSize: '16px',
+                outline: 'none',
+                position: 'relative'
+              }}
+            >
+              📡
+              {p2pMessages.length > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  background: '#ef4444',
+                  color: '#fff',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  borderRadius: '50%',
+                  width: '16px',
+                  height: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid #0f172a'
+                }}>
+                  {p2pMessages.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              className="map-settings-btn"
               onClick={() => setShowSettingsPanel(!showSettingsPanel)}
               title="Configure Map Environment HUD"
               style={{
@@ -6809,6 +7035,562 @@ export default function App() {
               >
                 <Download size={13} /> Save QR Image
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* P2P Emergency Floating Notification Toast */}
+      {p2pToast && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 10000,
+          background: p2pToast.type === 'danger' ? '#7f1d1d' : p2pToast.type === 'warning' ? '#78350f' : '#064e3b',
+          border: `1px solid ${p2pToast.type === 'danger' ? '#ef4444' : p2pToast.type === 'warning' ? '#f59e0b' : '#10b981'}`,
+          borderRadius: '8px',
+          padding: '10px 14px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
+          maxWidth: '380px',
+          color: '#fff',
+          animation: 'p2pFadeIn 0.2s ease-out'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <strong style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {p2pToast.title}
+            </strong>
+            <button
+              type="button"
+              onClick={() => setP2pToast(null)}
+              style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '12px' }}
+            >
+              ✕
+            </button>
+          </div>
+          <div style={{ fontSize: '0.72rem', opacity: 0.95 }}>{p2pToast.message}</div>
+          {p2pToast.type === 'danger' && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => { setShowP2pModal(true); setP2pTab('messages'); setP2pToast(null); }}
+              style={{ marginTop: '6px', padding: '2px 8px', fontSize: '0.68rem', background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+            >
+              View in P2P Feed ➔
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Zero-Connectivity P2P Proximity Radar & Emergency Messenger Modal */}
+      {showP2pModal && (
+        <div className="p2p-modal-overlay" onClick={() => setShowP2pModal(false)}>
+          <div className="p2p-modal-card" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="p2p-modal-header">
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Radio size={18} style={{ color: '#34d399' }} />
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#f8fafc', letterSpacing: '0.5px' }}>
+                    OFFLINE P2P RADAR &amp; EMERGENCY MESSENGER
+                  </h3>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '0.68rem', color: '#34d399', background: 'rgba(52, 211, 153, 0.12)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(52, 211, 153, 0.25)' }}>
+                    ⚡ 0% Cellular / Internet Required
+                  </span>
+                  <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                    Bluetooth Low Energy &amp; Local Wi-Fi Mesh
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowP2pModal(false)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px 8px' }}
+                title="Close P2P Radar"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Sub-tabs */}
+            <div className="p2p-tabs">
+              <button
+                type="button"
+                className={`p2p-tab-btn ${p2pTab === 'radar' ? 'active' : ''}`}
+                onClick={() => setP2pTab('radar')}
+              >
+                <Compass size={14} /> Tactical Radar Scope
+              </button>
+              <button
+                type="button"
+                className={`p2p-tab-btn ${p2pTab === 'devices' ? 'active' : ''}`}
+                onClick={() => setP2pTab('devices')}
+              >
+                <Users size={14} /> Discovered Devices ({p2pDevices.length})
+              </button>
+              <button
+                type="button"
+                className={`p2p-tab-btn ${p2pTab === 'messages' ? 'active' : ''}`}
+                onClick={() => setP2pTab('messages')}
+              >
+                <AlertTriangle size={14} /> Received SOS Feed ({p2pMessages.length})
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p2p-modal-body">
+              {p2pTab === 'radar' && (
+                <div className="p2p-radar-wrapper">
+                  {/* Circular Radar Screen */}
+                  <div className="p2p-radar-screen">
+                    <div className="p2p-radar-cross-h"></div>
+                    <div className="p2p-radar-cross-v"></div>
+
+                    {/* Concentric Range Rings */}
+                    <div className="p2p-radar-ring r1">
+                      <span className="p2p-radar-ring-label">10m</span>
+                    </div>
+                    <div className="p2p-radar-ring r2">
+                      <span className="p2p-radar-ring-label">25m</span>
+                    </div>
+                    <div className="p2p-radar-ring r3">
+                      <span className="p2p-radar-ring-label">50m</span>
+                    </div>
+                    <div className="p2p-radar-ring r4">
+                      <span className="p2p-radar-ring-label">100m</span>
+                    </div>
+
+                    {/* Rotating Sweep Beam */}
+                    {p2pScanning && <div className="p2p-radar-sweep"></div>}
+
+                    {/* Center Operator Pin */}
+                    <div className="p2p-radar-center-pin" title="You (Mobile Dispatcher Node)"></div>
+
+                    {/* Render Discovered Devices as Blips */}
+                    {p2pDevices.map((dev) => {
+                      const angle = dev.bearingAngle || 45;
+                      const rad = (angle * Math.PI) / 180;
+                      // Normalize distance 0..100m to 0..46% radius
+                      const rPct = Math.min(46, Math.max(8, (dev.distanceMeters / 100) * 46));
+                      const x = 50 + rPct * Math.sin(rad);
+                      const y = 50 - rPct * Math.cos(rad);
+                      const isEmergency = dev.type === 'trapped' || dev.type === 'medical';
+
+                      return (
+                        <div
+                          key={dev.id}
+                          className={`p2p-radar-blip ${isEmergency ? 'emergency' : ''}`}
+                          style={{ left: `${x}%`, top: `${y}%` }}
+                          onClick={() => setSelectedRadarBlip(dev)}
+                          title={`${dev.name} (${dev.distanceMeters}m)`}
+                        >
+                          <div className="p2p-radar-blip-dot">
+                            {dev.type === 'rescue_boat' ? '🛥️' : dev.type === 'medical' ? '🚑' : dev.type === 'patrol' ? '🚓' : '📱'}
+                          </div>
+                          <div className="p2p-radar-blip-tooltip">
+                            {dev.name} ({dev.distanceMeters}m)
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Selected Blip Detail Card */}
+                  {selectedRadarBlip && (
+                    <div style={{
+                      width: '100%',
+                      maxWidth: '500px',
+                      background: 'rgba(30, 41, 59, 0.8)',
+                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      borderRadius: '8px',
+                      padding: '0.6rem 0.8rem',
+                      marginBottom: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '0.75rem'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: '#38bdf8' }}>{selectedRadarBlip.name}</div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.68rem', marginTop: '2px' }}>
+                          Estimated Proximity: <strong>{selectedRadarBlip.distanceMeters}m</strong> • Signal: {selectedRadarBlip.rssi} dBm • {selectedRadarBlip.protocol}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.68rem' }}
+                          onClick={() => {
+                            setDirectMsgTarget(selectedRadarBlip.id);
+                            setP2pTab('devices');
+                          }}
+                        >
+                          💬 Direct SOS
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          style={{ padding: '0.25rem 0.4rem', fontSize: '0.68rem' }}
+                          onClick={() => setSelectedRadarBlip(null)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tactical Radar Command Controls */}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '600px' }}>
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => {
+                        if (p2pScanning) {
+                          p2pEngine.stopScanning();
+                        } else {
+                          p2pEngine.startScanning(true);
+                        }
+                      }}
+                      style={{
+                        padding: '0.45rem 0.8rem',
+                        fontSize: '0.75rem',
+                        background: p2pScanning ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                        border: p2pScanning ? '1px solid #ef4444' : '1px solid #10b981',
+                        color: p2pScanning ? '#fca5a5' : '#6ee7b7'
+                      }}
+                    >
+                      {p2pScanning ? '⏹ Stop Radar' : '▶ Start Radar Scan'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleBleScan}
+                      style={{ padding: '0.45rem 0.8rem', fontSize: '0.75rem', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#93c5fd' }}
+                      title="Scan for hardware Bluetooth Low Energy (BLE) peripherals using Web Bluetooth"
+                    >
+                      📶 Scan BLE Radio
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleSimulateDrill}
+                      style={{ padding: '0.45rem 0.8rem', fontSize: '0.75rem', borderColor: 'rgba(168, 85, 247, 0.4)', color: '#d8b4fe' }}
+                      title="Simulate an authentic incoming disaster distress beacon from a trapped civilian"
+                    >
+                      🧪 Trigger Distress Drill
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => setP2pSosModalOpen(true)}
+                      style={{ padding: '0.45rem 0.9rem', fontSize: '0.75rem', background: '#ef4444', borderColor: '#f87171', color: '#fff', fontWeight: 'bold' }}
+                    >
+                      🚨 1-Tap Broadcast SOS
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {p2pTab === 'devices' && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                      Showing <strong>{p2pDevices.length}</strong> discovered peers sorted by closest proximity
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => p2pEngine.startScanning(true)}
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.68rem' }}
+                    >
+                      🔄 Refresh Radios
+                    </button>
+                  </div>
+
+                  {directMsgTarget && (
+                    <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#93c5fd', marginBottom: '0.4rem' }}>
+                        Send Direct SITREP to: {p2pDevices.find(d => d.id === directMsgTarget)?.name || directMsgTarget}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <input
+                          type="text"
+                          value={directMsgText}
+                          onChange={(e) => setDirectMsgText(e.target.value)}
+                          placeholder="Type situation update or direct order..."
+                          style={{ flex: 1, padding: '0.35rem 0.6rem', fontSize: '0.75rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: '#fff' }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={() => handleSendDirectMessage(directMsgTarget)}
+                          style={{ padding: '0.35rem 0.75rem', fontSize: '0.72rem' }}
+                        >
+                          Send
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => setDirectMsgTarget(null)}
+                          style={{ padding: '0.35rem 0.5rem', fontSize: '0.72rem' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {p2pDevices.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b', fontSize: '0.8rem' }}>
+                      No devices detected in range yet. Ensure Bluetooth is enabled or click "Start Radar Scan".
+                    </div>
+                  ) : (
+                    p2pDevices.map((dev) => {
+                      const sig = getSignalQuality(dev.rssi);
+                      return (
+                        <div key={dev.id} className="p2p-device-card">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ fontSize: '20px' }}>
+                              {dev.type === 'rescue_boat' ? '🛥️' : dev.type === 'medical' ? '🚑' : dev.type === 'patrol' ? '🚓' : '📱'}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#f1f5f9' }}>{dev.name}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+                                <span className={`badge-protocol ${dev.protocol.includes('Bluetooth') ? 'ble' : dev.protocol.includes('Wi-Fi') ? 'wifi' : 'sim'}`}>
+                                  {dev.protocol}
+                                </span>
+                                <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                                  Distance: <strong style={{ color: '#38bdf8' }}>{dev.distanceMeters}m</strong> ({sig.text})
+                                </span>
+                                {dev.battery && (
+                                  <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                                    🔋 {dev.battery}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {/* Signal Meter Bars */}
+                            <div className="signal-meter" title={`Signal: ${dev.rssi} dBm (${sig.text})`}>
+                              <div className={`signal-bar b1 active ${sig.text.toLowerCase()}`}></div>
+                              <div className={`signal-bar b2 ${sig.bars >= 2 ? 'active ' + sig.text.toLowerCase() : ''}`}></div>
+                              <div className={`signal-bar b3 ${sig.bars >= 3 ? 'active ' + sig.text.toLowerCase() : ''}`}></div>
+                              <div className={`signal-bar b4 ${sig.bars >= 4 ? 'active ' + sig.text.toLowerCase() : ''}`}></div>
+                            </div>
+
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => setDirectMsgTarget(dev.id)}
+                              style={{ padding: '0.3rem 0.5rem', fontSize: '0.68rem' }}
+                            >
+                              Direct SITREP
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => {
+                                setShowP2pModal(false);
+                                if (mapRef.current && dev.lat && dev.lng) {
+                                  mapRef.current.flyTo([dev.lat, dev.lng], 15, { animate: true });
+                                }
+                              }}
+                              style={{ padding: '0.3rem 0.5rem', fontSize: '0.68rem' }}
+                            >
+                              Locate
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {p2pTab === 'messages' && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                      Distress tickets received directly from nearby field devices without internet
+                    </span>
+                    {p2pMessages.length > 0 && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => p2pEngine.clearHistory()}
+                        style={{ padding: '0.2rem 0.5rem', fontSize: '0.68rem', color: '#fca5a5' }}
+                      >
+                        Clear Feed
+                      </button>
+                    )}
+                  </div>
+
+                  {p2pMessages.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2.5rem', color: '#64748b', fontSize: '0.8rem' }}>
+                      No incoming emergency alerts. Click "Trigger Distress Drill" in the Radar tab to test an incoming distress ticket.
+                    </div>
+                  ) : (
+                    p2pMessages.map((msg) => {
+                      const typeObj = EMERGENCY_TYPES.find(t => t.id === msg.emergencyType) || EMERGENCY_TYPES[0];
+                      const isCritical = msg.priority === 'critical';
+
+                      return (
+                        <div key={msg.id} className={`p2p-sos-card ${isCritical ? 'critical' : ''}`}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '18px' }}>{typeObj.icon}</span>
+                              <div>
+                                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#f8fafc' }}>
+                                  {msg.senderCallsign || 'Civilian Device'}
+                                </div>
+                                <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
+                                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • Via {msg.protocol} {msg.distanceMeters ? `(${msg.distanceMeters}m away)` : ''}
+                                </div>
+                              </div>
+                            </div>
+                            <span className={`badge badge-${msg.priority || 'critical'}`} style={{ textTransform: 'uppercase', fontSize: '0.62rem' }}>
+                              {msg.priority || 'CRITICAL'}
+                            </span>
+                          </div>
+
+                          <div style={{ fontSize: '0.78rem', color: '#f1f5f9', margin: '0.5rem 0', lineHeight: 1.4 }}>
+                            {msg.message}
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', paddingTop: '0.4rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                            <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
+                              Coordinates: <strong>[{msg.lat?.toFixed(4)}, {msg.lng?.toFixed(4)}]</strong>
+                            </span>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => handlePlotP2pSos(msg)}
+                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', background: '#2563eb', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}
+                              >
+                                <Navigation size={12} /> Plot on Map &amp; Route
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 1-Tap Emergency SOS Broadcast Composer Modal */}
+      {p2pSosModalOpen && (
+        <div className="p2p-modal-overlay" onClick={() => setP2pSosModalOpen(false)}>
+          <div className="p2p-modal-card" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="p2p-modal-header" style={{ borderBottomColor: 'rgba(239, 68, 68, 0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertTriangle size={18} style={{ color: '#ef4444' }} />
+                <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#f8fafc' }}>
+                  BROADCAST EMERGENCY SOS BEACON
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setP2pSosModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p2p-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div style={{ fontSize: '0.72rem', color: '#fca5a5', background: 'rgba(239, 68, 68, 0.12)', padding: '0.4rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                ⚡ Transmits directly over <strong>Bluetooth Low Energy &amp; Local Wi-Fi Mesh</strong>. All devices within radio range will receive this alert instantly without cell towers.
+              </div>
+
+              {/* Emergency Classification */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.3rem' }}>
+                  Emergency Classification:
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
+                  {EMERGENCY_TYPES.map((type) => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => setP2pSosForm(prev => ({ ...prev, emergencyType: type.id }))}
+                      style={{
+                        padding: '0.4rem',
+                        fontSize: '0.7rem',
+                        borderRadius: '6px',
+                        border: p2pSosForm.emergencyType === type.id ? `2px solid ${type.color}` : '1px solid rgba(255,255,255,0.1)',
+                        background: p2pSosForm.emergencyType === type.id ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <span>{type.icon}</span>
+                      <span>{type.label.split(' ')[0]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Callsign / Unit Identification */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.2rem' }}>
+                  Sender Callsign / Identity:
+                </label>
+                <input
+                  type="text"
+                  value={p2pSosForm.senderCallsign}
+                  onChange={(e) => setP2pSosForm(prev => ({ ...prev, senderCallsign: e.target.value }))}
+                  style={{ width: '100%', padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
+                />
+              </div>
+
+              {/* Situation Report / Distress Message */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.2rem' }}>
+                  Situation Report (SITREP) / Exact Need:
+                </label>
+                <textarea
+                  rows={3}
+                  value={p2pSosForm.message}
+                  onChange={(e) => setP2pSosForm(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Describe emergency, number of casualties/trapped persons, water level, or urgent supplies needed..."
+                  style={{ width: '100%', padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff', resize: 'vertical' }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setP2pSosModalOpen(false)}
+                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleBroadcastP2pSos}
+                  style={{ flex: 2, padding: '0.5rem', fontSize: '0.78rem', background: '#ef4444', borderColor: '#f87171', color: '#fff', fontWeight: 'bold' }}
+                >
+                  🚨 TRANSMIT DISTRESS BEACON NOW
+                </button>
+              </div>
             </div>
           </div>
         </div>
