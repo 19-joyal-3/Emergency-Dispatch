@@ -584,27 +584,29 @@ select:focus, input[type="text"]:focus, textarea:focus {
 /* Map instructions floating banner */
 .instruction-banner {
   position: absolute;
-  bottom: 5.4rem;
+  bottom: 4.8rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 998;
-  background: rgba(17, 24, 39, 0.88);
-  border: 1px solid var(--border-color);
-  padding: 0.5rem 1.1rem;
+  z-index: 999;
+  background: rgba(11, 19, 29, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 0.4rem 1rem;
   border-radius: 9999px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.12);
   font-size: 0.78rem;
   font-weight: 500;
-  pointer-events: none;
-  backdrop-filter: blur(12px);
+  pointer-events: auto;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--text-secondary);
+  color: #94a3b8;
+  white-space: nowrap;
 }
 
 .instruction-banner strong {
-  color: var(--text-primary);
+  color: #f8fafc;
 }
 
 /* Map Markers */
@@ -1713,12 +1715,53 @@ select option {
     right: 8px !important;
   }
 
+  /* Position floating island above the 56px mobile tab bar */
+  .floating-island-hud {
+    bottom: 68px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100% - 16px) !important;
+    max-width: 480px !important;
+    padding: 0.35rem 0.5rem !important;
+    gap: 0.25rem !important;
+    z-index: 1005 !important;
+    justify-content: space-evenly !important;
+  }
+
+  .floating-hud-btn {
+    padding: 0.35rem 0.55rem !important;
+    font-size: 0.68rem !important;
+    gap: 0.25rem !important;
+  }
+
+  /* Lift instruction banner above floating island HUD on mobile */
   .instruction-banner {
-    bottom: 70px !important;
-    left: 8px !important;
-    right: 8px !important;
+    bottom: 122px !important;
+    left: 10px !important;
+    right: 10px !important;
     width: auto !important;
-    font-size: 0.65rem !important;
+    max-width: 480px !important;
+    margin: 0 auto !important;
+    transform: none !important;
+    font-size: 0.72rem !important;
+    padding: 0.45rem 0.8rem !important;
+    white-space: normal !important;
+    text-align: center !important;
+    justify-content: center !important;
+    z-index: 1004 !important;
+  }
+
+  .instruction-restore-btn {
+    bottom: 68px !important;
+    right: 10px !important;
+    z-index: 1006 !important;
+  }
+
+  /* Hide map HUD overlays when mobile drawer sidebar is open */
+  .app-container.sidebar-open .floating-island-hud,
+  .app-container.sidebar-open .instruction-banner,
+  .app-container.sidebar-open .instruction-restore-btn {
+    display: none !important;
   }
 
   .tour-card {
@@ -3702,16 +3745,16 @@ textarea {
 /* Responsive Floating HUD for Mobile Screens */
 @media (max-width: 640px) {
   .floating-island-hud {
-    bottom: 1rem;
-    gap: 0.25rem;
-    padding: 0.35rem 0.5rem;
-    width: calc(100% - 2rem);
-    max-width: 380px;
-    justify-content: space-around;
+    bottom: 68px !important;
+    gap: 0.2rem;
+    padding: 0.3rem 0.45rem;
+    width: calc(100% - 12px);
+    max-width: 420px;
+    justify-content: space-between;
   }
   .floating-hud-btn {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.7rem;
+    padding: 0.32rem 0.48rem;
+    font-size: 0.65rem;
   }
 }
 
