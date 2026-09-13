@@ -10,8 +10,7 @@
 
 export const P2P_PROTOCOLS = {
   BLE: 'Bluetooth Low Energy',
-  WIFI_MESH: 'Local Wi-Fi Mesh',
-  SIMULATED: 'Tactical Drill Beacon'
+  WIFI_MESH: 'Local Wi-Fi Mesh'
 };
 
 export const EMERGENCY_TYPES = [
@@ -89,7 +88,6 @@ class P2PEmergencyMeshEngine {
     this.receivedMessages = [];
     this.isScanning = false;
     this.listeners = new Set();
-    this.simulationInterval = null;
     this.localUnitId = `NODE-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     this.callsign = 'Mobile Dispatcher';
     this.lastKnownPosition = { lat: 9.9312, lng: 76.2673 };
@@ -215,128 +213,20 @@ class P2PEmergencyMeshEngine {
   }
 
   /**
-   * Start continuous scanning across Wi-Fi Mesh and Tactical Beacons
+   * Start continuous scanning across Wi-Fi Mesh and real hardware Bluetooth beacons
    */
-  startScanning(enableSimulation = true) {
+  startScanning() {
     if (this.isScanning) return;
     this.isScanning = true;
     this.notify('SCAN_STARTED');
 
     // Broadcast our own discovery heartbeat over the local mesh network
     this.broadcastHeartbeat();
-
-    // In simulation mode, spawn realistic tactical field units
-    if (enableSimulation) {
-      this.seedSimulatedUnits();
-      this.simulationInterval = setInterval(() => {
-        this.pulseSimulatedUnits();
-      }, 3500);
-    }
   }
 
   stopScanning() {
     this.isScanning = false;
-    if (this.simulationInterval) {
-      clearInterval(this.simulationInterval);
-      this.simulationInterval = null;
-    }
     this.notify('SCAN_STOPPED');
-  }
-
-  seedSimulatedUnits() {
-    const baseLat = this.lastKnownPosition.lat;
-    const baseLng = this.lastKnownPosition.lng;
-
-    const SIMULATED_BEACONS = [
-      {
-        id: 'sim_resp_1',
-        name: '🚑 Ambulance Alpha (Trauma Response)',
-        protocol: P2P_PROTOCOLS.WIFI_MESH,
-        rssi: -56,
-        distanceMeters: 4.8,
-        bearingAngle: 42,
-        battery: 92,
-        lat: baseLat + 0.0004,
-        lng: baseLng + 0.0005,
-        type: 'medical',
-        role: 'Mobile Intensive Care Unit'
-      },
-      {
-        id: 'sim_resp_2',
-        name: '🛥️ NDRF Rescue Boat Gamma',
-        protocol: P2P_PROTOCOLS.BLE,
-        rssi: -64,
-        distanceMeters: 14.2,
-        bearingAngle: 135,
-        battery: 78,
-        lat: baseLat - 0.0008,
-        lng: baseLng + 0.0011,
-        type: 'rescue_boat',
-        role: 'Flood Evacuation Unit'
-      },
-      {
-        id: 'sim_resp_3',
-        name: '🚓 Highway Patrol Echo (Kerala Police)',
-        protocol: P2P_PROTOCOLS.WIFI_MESH,
-        rssi: -72,
-        distanceMeters: 28.5,
-        bearingAngle: 220,
-        battery: 64,
-        lat: baseLat - 0.0014,
-        lng: baseLng - 0.0012,
-        type: 'patrol',
-        role: 'Traffic & Hazard Interceptor'
-      },
-      {
-        id: 'sim_resp_4',
-        name: '🆘 Citizen Distress Node #482 (Wayanad)',
-        protocol: P2P_PROTOCOLS.BLE,
-        rssi: -78,
-        distanceMeters: 42.0,
-        bearingAngle: 310,
-        battery: 31,
-        lat: baseLat + 0.0021,
-        lng: baseLng - 0.0018,
-        type: 'trapped',
-        role: 'Stranded Civilian Beacon'
-      },
-      {
-        id: 'sim_resp_5',
-        name: '🚜 Heavy Earthmover Delta (Landslide Ops)',
-        protocol: P2P_PROTOCOLS.SIMULATED,
-        rssi: -84,
-        distanceMeters: 65.0,
-        bearingAngle: 85,
-        battery: 80,
-        lat: baseLat + 0.0018,
-        lng: baseLng + 0.0032,
-        type: 'landslide_rescue',
-        role: 'Route Clearance Unit'
-      }
-    ];
-
-    SIMULATED_BEACONS.forEach(beacon => {
-      this.discoveredDevices.set(beacon.id, {
-        ...beacon,
-        lastSeen: Date.now()
-      });
-    });
-
-    this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
-  }
-
-  pulseSimulatedUnits() {
-    // Slightly jitter distance and RSSI to simulate live RF radio propagation
-    this.discoveredDevices.forEach((device, id) => {
-      if (id.startsWith('sim_')) {
-        const jitter = (Math.random() - 0.5) * 4;
-        const newRssi = Math.max(-95, Math.min(-45, Math.round(device.rssi + jitter)));
-        device.rssi = newRssi;
-        device.distanceMeters = rssiToDistance(newRssi);
-        device.lastSeen = Date.now();
-      }
-    });
-    this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
   }
 
   broadcastHeartbeat() {
@@ -452,31 +342,6 @@ class P2PEmergencyMeshEngine {
     }
   }
 
-  /**
-   * Trigger an authentic simulated emergency SOS broadcast from a nearby victim
-   * Useful for operator training without physical hardware
-   */
-  simulateIncomingSos() {
-    const mockSos = formatEmergencyPacket({
-      senderId: 'CIV-WAYANAD-482',
-      senderCallsign: 'Meppadi Evacuation Beacon #482',
-      senderRole: 'Civilian in Distress',
-      lat: this.lastKnownPosition.lat + 0.0025,
-      lng: this.lastKnownPosition.lng - 0.0018,
-      emergencyType: 'flood',
-      priority: 'critical',
-      message: 'Urgent: Flash water entering residential ground floor. 4 family members isolated on rooftop.',
-      battery: 28,
-      protocol: P2P_PROTOCOLS.BLE
-    });
-
-    this.handleIncomingMeshPacket({
-      type: 'P2P_EMERGENCY_SOS',
-      packet: mockSos
-    });
-
-    return mockSos;
-  }
 
   clearHistory() {
     this.receivedMessages = [];

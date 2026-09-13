@@ -2651,28 +2651,6 @@ textarea {
 }
 
 /* ==========================================
-   DAM STORAGE & SPILLWAY TELEMETRY
-   ========================================== */
-.dam-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  max-height: 240px;
-  overflow-y: auto;
-  padding-right: 2px;
-}
-
-.dam-card {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  padding: 0.5rem 0.65rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-/* ==========================================
    HAZARD ROUTE ALERT BANNER
    ========================================== */
 .hazard-route-alert {

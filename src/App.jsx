@@ -12,7 +12,6 @@ import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
 import confetti from 'canvas-confetti';
 import { playTacticalChime, playEvacuationSiren } from './audio';
 import { searchDeoc } from './deoc';
-import { KERALA_DAMS, getAlertBadgeStyle } from './dams';
 import { KERALA_HAZARD_ZONES, checkRouteHazardIntersection } from './hazards';
 import { generateRouteQr, generateIncidentQr, parseQrHash } from './qr';
 import { p2pEngine, EMERGENCY_TYPES, getSignalQuality } from './p2p';
@@ -66,7 +65,6 @@ import {
   ,Hospital
   ,QrCode
   ,Printer
-  ,Waves
 } from 'lucide-react';
 
 const INITIAL_RESPONDERS = [
@@ -3122,16 +3120,6 @@ export default function App() {
     }
   };
 
-  const handleSimulateDrill = () => {
-    const drillSos = p2pEngine.simulateIncomingSos();
-    setP2pToast({
-      type: 'warning',
-      title: '🧪 TACTICAL DRILL INCOMING SOS',
-      message: `Simulated distress beacon from ${drillSos.senderCallsign} (${drillSos.distanceMeters || '12'}m)`
-    });
-    setTimeout(() => setP2pToast(null), 6000);
-  };
-
   const handleSendDirectMessage = (deviceId) => {
     if (!directMsgText.trim()) return;
     p2pEngine.sendDirectMessage(deviceId, directMsgText);
@@ -5908,65 +5896,6 @@ export default function App() {
                 </div>
               </section>
 
-              {/* Kerala Major Dam & Reservoir Telemetry */}
-              <section className="panel-card" style={{ borderLeft: '3px solid #0284c7' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <h2 className="section-title" style={{ margin: 0 }}>
-                    <span>Major Dam Telemetry</span>
-                    <Waves size={14} style={{ color: '#38bdf8' }} />
-                  </h2>
-                  <span style={{ fontSize: '0.62rem', color: '#94a3b8' }}>KSEB / Irrigation</span>
-                </div>
-                <div className="dam-grid">
-                  {KERALA_DAMS.map(dam => {
-                    const badgeStyle = getAlertBadgeStyle(dam.alertLevel);
-                    return (
-                      <div key={dam.id} className="dam-card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div>
-                            <strong style={{ fontSize: '0.78rem', color: '#f1f5f9' }}>{dam.name}</strong>
-                            <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
-                              {dam.district} • {dam.river}
-                            </div>
-                          </div>
-                          <span style={{
-                            background: badgeStyle.bg,
-                            border: `1px solid ${badgeStyle.border}`,
-                            color: badgeStyle.text,
-                            fontSize: '0.6rem',
-                            fontWeight: 800,
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            textTransform: 'uppercase'
-                          }}>
-                            {dam.alertLevel}
-                          </span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.2rem', fontSize: '0.7rem' }}>
-                          <span style={{ color: '#cbd5e1' }}>Storage: <strong>{dam.storagePercent}%</strong> (FRL {dam.fullReservoirLevelFt} ft)</span>
-                          <span style={{ color: dam.shutterStatus.includes('Open') || dam.shutterStatus.includes('Raised') ? '#f87171' : '#4ade80', fontWeight: 600 }}>
-                            {dam.shutterStatus}
-                          </span>
-                        </div>
-
-                        <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden', marginTop: '2px' }}>
-                          <div style={{
-                            width: `${dam.storagePercent}%`,
-                            height: '100%',
-                            background: dam.storagePercent > 85 ? '#ef4444' : dam.storagePercent > 75 ? '#f97316' : '#0284c7'
-                          }}></div>
-                        </div>
-
-                        <div style={{ fontSize: '0.62rem', color: '#94a3b8', marginTop: '2px' }}>
-                          Downstream: {dam.downstreamZones.join(', ')}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
               {/* Kerala 14-District DEOC (1077) Directory */}
               <section className="panel-card" style={{ borderLeft: '3px solid #eab308' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -7587,7 +7516,7 @@ export default function App() {
                         if (p2pScanning) {
                           p2pEngine.stopScanning();
                         } else {
-                          p2pEngine.startScanning(true);
+                          p2pEngine.startScanning(false);
                         }
                       }}
                       style={{
@@ -7611,15 +7540,6 @@ export default function App() {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-secondary"
-                      onClick={handleSimulateDrill}
-                      style={{ padding: '0.45rem 0.8rem', fontSize: '0.75rem', borderColor: 'rgba(168, 85, 247, 0.4)', color: '#d8b4fe' }}
-                      title="Simulate an authentic incoming disaster distress beacon from a trapped civilian"
-                    >
-                      🧪 Trigger Distress Drill
-                    </button>
-                    <button
-                      type="button"
                       className="btn btn-primary"
                       onClick={() => setP2pSosModalOpen(true)}
                       style={{ padding: '0.45rem 0.9rem', fontSize: '0.75rem', background: '#ef4444', borderColor: '#f87171', color: '#fff', fontWeight: 'bold' }}
@@ -7639,7 +7559,7 @@ export default function App() {
                     <button
                       type="button"
                       className="btn btn-secondary"
-                      onClick={() => p2pEngine.startScanning(true)}
+                      onClick={() => p2pEngine.startScanning(false)}
                       style={{ padding: '0.2rem 0.5rem', fontSize: '0.68rem' }}
                     >
                       🔄 Refresh Radios
@@ -7768,7 +7688,7 @@ export default function App() {
 
                   {p2pMessages.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '2.5rem', color: '#64748b', fontSize: '0.8rem' }}>
-                      No incoming emergency alerts. Click "Trigger Distress Drill" in the Radar tab to test an incoming distress ticket.
+                      No incoming emergency alerts detected on the local peer mesh or BLE radios.
                     </div>
                   ) : (
                     p2pMessages.map((msg) => {
