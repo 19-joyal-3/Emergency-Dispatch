@@ -14,15 +14,16 @@ export function saveSosContacts(contacts) {
 }
 
 export function formatSosMessage(incident) {
-  const mapUrl = `https://maps.google.com/?q=${incident.lat},${incident.lng}`;
+  const mapUrl = (incident.lat && incident.lng) ? `https://maps.google.com/?q=${incident.lat},${incident.lng}` : 'Coordinates pending';
+  const reportedTime = incident.reportedAt ? new Date(incident.reportedAt).toLocaleString() : new Date().toLocaleString();
   return [
     'EMERGENCY ALERT',
-    `Type: ${incident.type}`,
-    `Priority: ${incident.priority || 'medium'}`,
-    `Details: ${incident.description}`,
-    `Location: ${incident.lat}, ${incident.lng}`,
+    `Type: ${incident.type?.toUpperCase() || 'GENERAL EMERGENCY'}`,
+    `Priority: ${incident.priority?.toUpperCase() || 'MEDIUM'}`,
+    `Details: ${incident.description || 'Immediate emergency assistance requested'}`,
+    `Location: ${incident.lat ?? 'N/A'}, ${incident.lng ?? 'N/A'}`,
     `Map: ${mapUrl}`,
-    `Time: ${new Date(incident.reportedAt).toLocaleString()}`
+    `Time: ${reportedTime}`
   ].join('\n');
 }
 

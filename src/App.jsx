@@ -364,7 +364,7 @@ export default function App() {
   const [mobilenetModel, setMobilenetModel] = useState(null);
   const [modelStatus, setModelStatus] = useState('loading'); // 'loading', 'ready', 'classifying', 'failed'
   const [aiVerificationResult, setAiVerificationResult] = useState(null);
-  const [_overrideAiVerification, setOverrideAiVerification] = useState(false);
+  const [overrideAiVerification, setOverrideAiVerification] = useState(false);
 
   // Load TensorFlow.js and MobileNet scripts dynamically
   const loadModelScripts = () => {
@@ -426,31 +426,31 @@ export default function App() {
           {
             name: "Flood Threat",
             incidentTypes: ['flood'],
-            keywords: ['flood', 'floodwater', 'river', 'stream', 'canal', 'waterfall', 'dam'],
+            keywords: ['flood', 'floodwater', 'river', 'stream', 'canal', 'waterfall', 'dam', 'lakeside', 'seashore', 'sandbar', 'water'],
             emoji: "🌊"
           },
           {
             name: "Landslide Threat",
-            incidentTypes: ['fire'],
-            keywords: ['landslide', 'rockslide', 'mudslide', 'avalanche', 'debris', 'debris flow', 'boulder', 'cliff', 'rock', 'stone', 'earth', 'mud', 'slope', 'mountain', 'valley', 'volcano', 'quarry', 'badlands', 'soil', 'dirt', 'rubble', 'gravel'],
+            incidentTypes: ['landslide', 'fire'],
+            keywords: ['landslide', 'rockslide', 'mudslide', 'avalanche', 'debris', 'debris flow', 'boulder', 'cliff', 'rock', 'stone', 'earth', 'mud', 'slope', 'mountain', 'valley', 'volcano', 'quarry', 'badlands', 'soil', 'dirt', 'rubble', 'gravel', 'alp', 'promontory'],
             emoji: "⛰️"
           },
           {
             name: "Traffic Threat",
-            incidentTypes: ['medical'],
-            keywords: ['traffic', 'collision', 'crash', 'wreck', 'intersection'],
+            incidentTypes: ['medical', 'blockage'],
+            keywords: ['traffic', 'collision', 'crash', 'wreck', 'intersection', 'car', 'truck', 'bus'],
             emoji: "🚦"
           },
           {
             name: "Fire Threat",
             incidentTypes: ['fire'],
-            keywords: ['fire', 'flame', 'smoke', 'blaze', 'bonfire'],
+            keywords: ['fire', 'flame', 'smoke', 'blaze', 'bonfire', 'volcano'],
             emoji: "🔥"
           },
           {
             name: "Medical/Crash Threat",
             incidentTypes: ['medical'],
-            keywords: ['ambulance', 'crash', 'wreck', 'collision', 'stretcher', 'hospital'],
+            keywords: ['ambulance', 'crash', 'wreck', 'collision', 'stretcher', 'hospital', 'patient'],
             emoji: "🩺"
           }
         ];
@@ -2657,7 +2657,8 @@ export default function App() {
       if (autoAssignEnabled) {
         const compatibleTypes = type === 'medical' ? ['medical']
           : type === 'fire' ? ['fire_engine']
-            : ['rescue_boat'];
+          : type === 'landslide' ? ['rescue_boat', 'fire_engine']
+          : ['rescue_boat'];
         const available = responders
           .filter(responder => responder.status === 'idle' && compatibleTypes.includes(responder.type))
           .sort((a, b) => haversineDistance(newInc.lat, newInc.lng, a.lat, a.lng) -
@@ -2680,12 +2681,16 @@ export default function App() {
 
   const handleManualIncidentSubmit = (e) => {
     e.preventDefault();
-    if (!proofImage) {
-      logMessage('Failed to file report: Photographical proof is required.', 'error');
+    const isAiVerified = Boolean(aiVerificationResult?.success);
+    const isOfflineOrUnavailable = modelStatus === 'offline' || modelStatus === 'failed' || !mobilenetModel;
+    const canBypassAi = overrideAiVerification || isOfflineOrUnavailable;
+
+    if (!proofImage && !canBypassAi) {
+      logMessage('Failed to file report: Photographical proof is required unless emergency manual override is enabled.', 'error');
       return;
     }
-    if (modelStatus !== 'ready' || !aiVerificationResult?.success) {
-      logMessage('Failed to file report: Uploaded image did not pass hazard verification.', 'error');
+    if (!isAiVerified && !canBypassAi) {
+      logMessage('Failed to file report: Uploaded image did not pass hazard verification. Enable Emergency Manual Override if this is an active incident.', 'error');
       return;
     }
 
@@ -2711,6 +2716,8 @@ export default function App() {
     setMapClickCoords(null);
     setProofImage(null);
     setProofPreview(null);
+    setAiVerificationResult(null);
+    setOverrideAiVerification(false);
   };
 
   // 11. Toggle Road Blockage
@@ -4442,9 +4449,10 @@ export default function App() {
                       onChange={(e) => setNewIncidentType(e.target.value)}
                       disabled={simulationActive}
                     >
-                      <option value="fire">🔥 Fire / Landslide</option>
-                      <option value="medical">🩺 Medical Emergency</option>
+                      <option value="fire">🔥 Fire Outbreak</option>
+                      <option value="landslide">⛰️ Landslide / Rockfall</option>
                       <option value="flood">🌊 Water Rescue / Flooding</option>
+                      <option value="medical">🩺 Medical Emergency</option>
                     </select>
                   </div>
                   
@@ -4619,25 +4627,60 @@ export default function App() {
 
                       {modelStatus === 'failed' && (
                         <div style={{ color: '#f87171', fontWeight: 'bold' }}>
-                          This image could not be verified as a recognized hazard or emergency scene. Submission blocked.
+                          This image could not be verified automatically. Check "Emergency Manual Override" below to submit.
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Offline or Failed Verification Fallback / Manual Override */}
+                  {(!aiVerificationResult?.success || !proofImage || modelStatus === 'offline' || modelStatus === 'failed' || !mobilenetModel) && (
+                    <div style={{
+                      marginTop: '0.6rem',
+                      padding: '0.6rem 0.75rem',
+                      background: 'rgba(245, 158, 11, 0.08)',
+                      border: '1px solid rgba(245, 158, 11, 0.35)',
+                      borderRadius: '6px',
+                      fontSize: '0.72rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', cursor: 'pointer', color: '#fbbf24', fontWeight: 600 }}>
+                          <input
+                            type="checkbox"
+                            checked={overrideAiVerification}
+                            onChange={(e) => {
+                              setOverrideAiVerification(e.target.checked);
+                              if (e.target.checked) {
+                                logMessage('[DISPATCH] Emergency operator manual override enabled for report.', 'warning');
+                              }
+                            }}
+                            style={{ cursor: 'pointer', accentColor: '#f59e0b' }}
+                          />
+                          <span>Emergency Manual Override (Bypass AI Gate)</span>
+                        </label>
+                        <span style={{ fontSize: '0.62rem', color: '#94a3b8', fontWeight: 600 }}>
+                          {modelStatus === 'offline' ? '📡 Offline Mode' : '⚠️ Field Bypass'}
+                        </span>
+                      </div>
+                      <p style={{ margin: '0.35rem 0 0', color: '#cbd5e1', fontSize: '0.65rem', lineHeight: 1.4 }}>
+                        Allows immediate reporting when offline, in zero-connectivity disaster zones, or when AI cannot recognize complex terrain.
+                      </p>
                     </div>
                   )}
 
                   <button 
                     type="submit" 
                     className="btn btn-primary" 
-                    style={{ marginTop: '0.5rem' }} 
+                    style={{ marginTop: '0.75rem', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }} 
                     disabled={
                       simulationActive || 
-                      !proofImage || 
-                      modelStatus === 'classifying' || 
-                      !aiVerificationResult || 
-                      !aiVerificationResult.success
+                      (!aiVerificationResult?.success && !overrideAiVerification && modelStatus !== 'offline' && modelStatus !== 'failed' && Boolean(mobilenetModel))
                     }
                   >
-                    File Incident Report
+                    <PlusCircle size={14} />
+                    {overrideAiVerification || modelStatus === 'offline' || modelStatus === 'failed' || !mobilenetModel
+                      ? 'File Incident Report (Bypass Active)' 
+                      : 'File Incident Report'}
                   </button>
                 </form>
               </section>
@@ -5599,7 +5642,7 @@ export default function App() {
                             }}></div>
                           </div>
                           <button 
-                            onClick={stopSimulation} 
+                            onClick={stopCustomSimulation} 
                             className="btn btn-primary" 
                             style={{ marginTop: '0.5rem' }}
                           >

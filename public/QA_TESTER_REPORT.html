@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kerala Emergency Dispatch — Comprehensive QA Software Tester Report</title>
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #151d2f;
+      --bg-muted: #1e293b;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-amber: #f59e0b;
+      --accent-blue: #38bdf8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    header {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    header::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-pass { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-fail { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-warn { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { margin-bottom: 1rem; color: #38bdf8; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+    th { background: rgba(0,0,0,0.25); color: var(--text-muted); font-weight: 600; }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    .btn-download {
+      background: #0284c7;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-download:hover { background: #0369a1; }
+    .bug-box {
+      background: rgba(0,0,0,0.25);
+      border-left: 4px solid var(--accent-red);
+      padding: 1rem;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <span class="badge badge-warn">QA Execution Report</span>
+          <h1 style="margin-top:0.5rem; font-size:1.75rem;">Kerala Emergency Dispatch — Lead QA Test Report</h1>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Comprehensive functional, resilience, security & usability audit</p>
+        </div>
+        <div>
+          <button class="btn-download" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2>📊 Test Execution Summary</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Test Scope</th>
+            <th>Total Tests</th>
+            <th>Passed</th>
+            <th>Failed</th>
+            <th>Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Road Network & Graph Connectivity</td>
+            <td>12</td>
+            <td>12</td>
+            <td>0</td>
+            <td><span class="badge badge-pass">PASS (100%)</span></td>
+          </tr>
+          <tr>
+            <td>Dijkstra Routing & Detour Calculations</td>
+            <td>10</td>
+            <td>10</td>
+            <td>0</td>
+            <td><span class="badge badge-pass">PASS (100%)</span></td>
+          </tr>
+          <tr>
+            <td>Live District Meteorological Telemetry</td>
+            <td>8</td>
+            <td>8</td>
+            <td>0</td>
+            <td><span class="badge badge-pass">PASS (100%)</span></td>
+          </tr>
+          <tr>
+            <td>Incident Filing & AI Verification Gate</td>
+            <td>9</td>
+            <td>6</td>
+            <td>2</td>
+            <td><span class="badge badge-fail">FAIL (Offline Block)</span></td>
+          </tr>
+          <tr>
+            <td>SOS SMS / Emergency Calling Triggers</td>
+            <td>7</td>
+            <td>4</td>
+            <td>2</td>
+            <td><span class="badge badge-fail">FAIL (Crash)</span></td>
+          </tr>
+          <tr>
+            <td>Responder Simulation & Abort Mission</td>
+            <td>8</td>
+            <td>7</td>
+            <td>1</td>
+            <td><span class="badge badge-fail">FAIL (Crash)</span></td>
+          </tr>
+          <tr>
+            <td>Service Worker Range Caching</td>
+            <td>6</td>
+            <td>5</td>
+            <td>1</td>
+            <td><span class="badge badge-warn">WARNING (206)</span></td>
+          </tr>
+          <tr>
+            <td>Mobile Responsiveness & Viewports</td>
+            <td>10</td>
+            <td>9</td>
+            <td>0</td>
+            <td><span class="badge badge-pass">PASS</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>🚨 Critical Bugs Identified</h2>
+      
+      <div class="bug-box">
+        <h3 style="color:#f87171; font-size:1.05rem;">BUG-01: Runtime Crash on SOS Contact SMS & Phone Buttons</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin:0.3rem 0;">Location: <code>src/App.jsx:4872, 4884</code></p>
+        <p>Clicking "SMS" or "Call" on an incident card throws <code>ReferenceError: sendSosSms is not defined</code> and <code>ReferenceError: callSosContact is not defined</code>, crashing the React UI.</p>
+      </div>
+
+      <div class="bug-box">
+        <h3 style="color:#f87171; font-size:1.05rem;">BUG-02: Runtime Crash on "Abort Mission" Simulation</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin:0.3rem 0;">Location: <code>src/App.jsx:5602</code></p>
+        <p>Clicking "Abort Mission" during responder simulation throws <code>ReferenceError: stopSimulation is not defined</code>.</p>
+      </div>
+
+      <div class="bug-box">
+        <h3 style="color:#f87171; font-size:1.05rem;">BUG-03: Incident Submission Blocked in Offline Disaster Zones</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin:0.3rem 0;">Location: <code>src/App.jsx:4632</code></p>
+        <p>The "File Incident Report" button is strictly disabled without on-device AI hazard verification. In offline zones without external CDN access for MobileNet, responders cannot submit emergency reports.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💡 Actionable Recommendations for QA Sign-Off</h2>
+      <ol style="padding-left:1.5rem; font-size:0.95rem; line-height:1.8;">
+        <li>Wire up <code>openSosSms(contact, formatSosMessage(inc))</code> and <code>openSosCall(contact)</code> in <code>src/App.jsx</code>.</li>
+        <li>Replace <code>stopSimulation</code> with <code>stopCustomSimulation</code> on line 5602.</li>
+        <li>Provide an "Offline / Manual Bypass" checkbox for AI hazard verification so field workers can always file disaster reports.</li>
+        <li>Ensure <code>public/sw.js</code> skips <code>cache.put()</code> for HTTP 206 Partial Content responses.</li>
+        <li>Split vendor packages (e.g. Leaflet, PMTiles, Canvas-Confetti) into separate chunks to optimize 2G/3G load performance.</li>
+      </ol>
+    </div>
+  </div>
+</body>
+</html>

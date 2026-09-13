@@ -28,8 +28,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const networkRequest = fetch(event.request).then((networkResponse) => {
-        if (networkResponse.ok || isMapTile || isPmtilesRangeRequest) {
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
+        if ((networkResponse.ok || isMapTile) && networkResponse.status === 200) {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()).catch(() => undefined));
         }
         return networkResponse;
       });
