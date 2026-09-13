@@ -896,7 +896,7 @@ export default function App() {
 
   // Geolocation / Live Navigation States
   const [gpsActive, setGpsActive] = useState(false);
-  const [instructionBannerVisible, setInstructionBannerVisible] = useState(true);
+  const [instructionBannerVisible, setInstructionBannerVisible] = useState(false);
   const [gpsCoords, setGpsCoords] = useState(null);
   const [weatherRefreshKey, setWeatherRefreshKey] = useState(0);
   const knownIncidentIdsRef = useRef(new Set());

@@ -584,19 +584,19 @@ select:focus, input[type="text"]:focus, textarea:focus {
 /* Map instructions floating banner */
 .instruction-banner {
   position: absolute;
-  bottom: 2rem;
+  bottom: 5.4rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000;
-  background: rgba(17, 24, 39, 0.85);
+  z-index: 998;
+  background: rgba(17, 24, 39, 0.88);
   border: 1px solid var(--border-color);
-  padding: 0.6rem 1.2rem;
+  padding: 0.5rem 1.1rem;
   border-radius: 9999px;
   box-shadow: var(--shadow-lg);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
   pointer-events: none;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -2555,13 +2555,13 @@ label {
 }
 
 .tab-btn.active {
-  background: #0f172a;
-  color: #ffffff;
-  box-shadow: inset 3px 0 0 #16a34a;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(15, 23, 42, 0.95)) !important;
+  color: #38bdf8 !important;
+  box-shadow: inset 3px 0 0 #38bdf8, 0 0 16px rgba(56, 189, 248, 0.25) !important;
 }
 
 .tab-btn.active svg {
-  filter: none;
+  filter: drop-shadow(0 0 6px #38bdf8) !important;
 }
 
 input[type="text"],
