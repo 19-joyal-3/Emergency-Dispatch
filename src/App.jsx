@@ -6227,6 +6227,116 @@ export default function App() {
               )}
             </>
           )}
+
+          {activeTab === 'help' && (
+            <>
+              {/* Technical Reports & Documentation Hub */}
+              <section className="panel-card" style={{ borderLeft: '3px solid #38bdf8', marginBottom: '0.85rem' }}>
+                <h2 className="section-title">
+                  <span>Technical Innovation Reports</span>
+                  <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', borderRadius: '4px', fontWeight: 'bold' }}>DOWNLOADABLE</span>
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.75rem' }}>
+                  <div style={{ background: 'rgba(56, 189, 248, 0.06)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '8px', padding: '0.65rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <strong style={{ color: '#38bdf8', fontSize: '0.8rem' }}>Unique Features &amp; Innovation Report</strong>
+                      <span className="badge badge-cyan" style={{ fontSize: '9px', padding: '1px 5px' }}>WHITE PAPER</span>
+                    </div>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', margin: '0 0 8px 0', lineHeight: 1.4 }}>
+                      Detailed technical catalog of 12 groundbreaking capabilities not present anywhere else (P2P BLE Hardware Radar, RSSI Distance Model, Spatial Photo Threat Intercept, Road Vector Cutting).
+                    </p>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <a
+                        href="/UNIQUE_FEATURES_REPORT.html"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-primary"
+                        style={{ flex: 1, padding: '5px 8px', fontSize: '0.68rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', textDecoration: 'none' }}
+                      >
+                        <FileText size={12} /> Open Full Report
+                      </a>
+                      <a
+                        href="/UNIQUE_FEATURES_REPORT.html"
+                        download="Kerala_Emergency_Dispatch_Unique_Features_Report.html"
+                        className="btn btn-secondary"
+                        style={{ padding: '5px 8px', fontSize: '0.68rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', textDecoration: 'none' }}
+                        title="Download Standalone HTML Document"
+                      >
+                        <Download size={12} /> Download
+                      </a>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.65rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <strong style={{ color: '#f8fafc', fontSize: '0.78rem' }}>Comprehensive System Architecture</strong>
+                      <span style={{ fontSize: '9px', color: '#94a3b8' }}>AUDIT</span>
+                    </div>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.68rem', margin: '0 0 6px 0' }}>
+                      Full architectural code audit, performance metrics, database topology, and failover design.
+                    </p>
+                    <a
+                      href="/PROJECT_ANALYSIS_REPORT.html"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn btn-secondary"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 8px', fontSize: '0.68rem', textDecoration: 'none' }}
+                    >
+                      <FileText size={11} /> View Architecture Report
+                    </a>
+                  </div>
+                </div>
+              </section>
+
+              {/* Step-by-Step Operator Guide */}
+              <section className="panel-card" style={{ marginBottom: '0.85rem' }}>
+                <h2 className="section-title">
+                  <span>Operator Tactical Guide</span>
+                  <HelpCircle size={14} style={{ color: '#c084fc' }} />
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.72rem', color: '#cbd5e1' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>1. Tactical Route Navigation</strong>
+                    Double-click the map to place an incident or select nodes in the Routing tab. Click "Start Live Simulation" for real-time turn-by-turn guidance.
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <strong style={{ color: '#ef4444', display: 'block', marginBottom: '2px' }}>2. Road Blockage &amp; Severance</strong>
+                    Single-click any road segment to sever it. The routing engine instantly calculates an alternate detour around the flooded or blocked zone.
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <strong style={{ color: '#10b981', display: 'block', marginBottom: '2px' }}>3. Zero-Connectivity P2P Radar</strong>
+                    Tap the Radar button to scan for nearby peer radios over Bluetooth Low Energy. Distance is calculated via hardware RSSI signal strength.
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <strong style={{ color: '#f59e0b', display: 'block', marginBottom: '2px' }}>4. Air-Gapped QR Handoff</strong>
+                    Generate an offline QR code from any incident or custom route to transfer parameters screen-to-screen to field rescue teams.
+                  </div>
+                </div>
+              </section>
+
+              {/* Emergency Helpline Quick Dial */}
+              <section className="panel-card" style={{ borderLeft: '3px solid #ef4444' }}>
+                <h2 className="section-title">
+                  <span>Kerala Emergency Helplines</span>
+                  <Phone size={14} style={{ color: '#ef4444' }} />
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', fontSize: '0.72rem' }}>
+                  <a href="tel:112" className="btn btn-secondary" style={{ padding: '6px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    🚨 Police: <strong>112</strong>
+                  </a>
+                  <a href="tel:108" className="btn btn-secondary" style={{ padding: '6px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    🩺 Ambulance: <strong>108</strong>
+                  </a>
+                  <a href="tel:101" className="btn btn-secondary" style={{ padding: '6px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    🔥 Fire: <strong>101</strong>
+                  </a>
+                  <a href="tel:1077" className="btn btn-secondary" style={{ padding: '6px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    🛡️ DEOC: <strong>1077</strong>
+                  </a>
+                </div>
+              </section>
+            </>
+          )}
         </div>
       </aside>
       {/* Main Interactive Map Viewport */}
