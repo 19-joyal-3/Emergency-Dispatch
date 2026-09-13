@@ -401,7 +401,7 @@ export default function App() {
     });
   };
 
-  // Classify uploaded base64 verification photo using MobileNet model
+  // Classify uploaded base64 verification photo using MobileNet model + disaster heuristic analysis
   const classifyVerificationPhoto = useCallback(async (dataUrl) => {
     if (!mobilenetModel) {
       setAiVerificationResult({
@@ -422,84 +422,150 @@ export default function App() {
       try {
         const predictions = await mobilenetModel.classify(tempImg);
         
+        // Comprehensive disaster taxonomy mapped to ImageNet-1K output labels
         const threatCategories = [
           {
-            name: "Flood Threat",
-            incidentTypes: ['flood'],
-            keywords: ['flood', 'floodwater', 'river', 'stream', 'canal', 'waterfall', 'dam', 'lakeside', 'seashore', 'sandbar', 'water'],
-            emoji: "🌊"
-          },
-          {
-            name: "Landslide Threat",
-            incidentTypes: ['landslide', 'fire'],
-            keywords: ['landslide', 'rockslide', 'mudslide', 'avalanche', 'debris', 'debris flow', 'boulder', 'cliff', 'rock', 'stone', 'earth', 'mud', 'slope', 'mountain', 'valley', 'volcano', 'quarry', 'badlands', 'soil', 'dirt', 'rubble', 'gravel', 'alp', 'promontory'],
+            name: "Landslide / Terrain Hazard",
+            type: "landslide",
+            incidentTypes: ['landslide', 'fire', 'blockage'],
+            keywords: [
+              'cliff', 'drop', 'drop off', 'drop-off', 'promontory', 'headland', 'alp', 'volcano',
+              'valley', 'vale', 'quarry', 'pit', 'stone pit', 'stone wall', 'boulder', 'rock',
+              'stone', 'earth', 'mud', 'dirt', 'soil', 'slope', 'mountain', 'badlands',
+              'scree', 'gravel', 'landslide', 'mudslide', 'rockslide', 'avalanche', 'debris',
+              'rubble', 'crag', 'plateau', 'ravine', 'gorge', 'canyon', 'escarpment', 'megalith',
+              'castle', 'geological formation', 'sandbar', 'dune', 'crater'
+            ],
             emoji: "⛰️"
           },
           {
-            name: "Traffic Threat",
-            incidentTypes: ['medical', 'blockage'],
-            keywords: ['traffic', 'collision', 'crash', 'wreck', 'intersection', 'car', 'truck', 'bus'],
-            emoji: "🚦"
+            name: "Flood / Water Inundation",
+            type: "flood",
+            incidentTypes: ['flood', 'landslide'],
+            keywords: [
+              'lakeside', 'lakeshore', 'seashore', 'coast', 'sea', 'ocean', 'sandbar', 'dam',
+              'dike', 'dyke', 'breakwater', 'groin', 'seawall', 'pier', 'dock', 'waterfall',
+              'geyser', 'canal', 'stream', 'river', 'flood', 'floodwater', 'water', 'lifeboat',
+              'raft', 'canoe', 'catamaran', 'boathouse', 'pontoon', 'swamp'
+            ],
+            emoji: "🌊"
           },
           {
-            name: "Fire Threat",
+            name: "Road Blockage / Vehicle Incident",
+            type: "blockage",
+            incidentTypes: ['blockage', 'medical', 'landslide'],
+            keywords: [
+              'wreck', 'tow truck', 'trailer truck', 'moving van', 'jeep', 'landrover', 'truck',
+              'car', 'bus', 'freight car', 'traffic light', 'street sign', 'barrier', 'bollard',
+              'crash', 'collision', 'debris', 'crash helmet'
+            ],
+            emoji: "🚧"
+          },
+          {
+            name: "Fire / Smoke Outbreak",
+            type: "fire",
             incidentTypes: ['fire'],
-            keywords: ['fire', 'flame', 'smoke', 'blaze', 'bonfire', 'volcano'],
+            keywords: ['volcano', 'fire', 'flame', 'smoke', 'blaze', 'bonfire', 'fire engine', 'fireboat', 'torch', 'furnace', 'beacon', 'matchstick'],
             emoji: "🔥"
           },
           {
-            name: "Medical/Crash Threat",
+            name: "Medical / Casualty Emergency",
+            type: "medical",
             incidentTypes: ['medical'],
-            keywords: ['ambulance', 'crash', 'wreck', 'collision', 'stretcher', 'hospital', 'patient'],
+            keywords: ['ambulance', 'crash', 'wreck', 'collision', 'stretcher', 'hospital', 'patient', 'crutch', 'wheelchair', 'band aid', 'syringe', 'pill bottle'],
             emoji: "🩺"
           }
         ];
 
-        const minimumConfidence = 0.55;
-        const explicitLandslideCues = new Set([
-          'landslide', 'rockslide', 'mudslide', 'avalanche', 'debris', 'debris flow', 'boulder', 'rubble'
-        ]);
-
         let matchedThreat = null;
         let matchedPrediction = null;
+        let aggregateConfidence = 0;
+        const matchedCues = [];
 
+        // 1. Check all predictions against the disaster taxonomy with open-world threshold (>= 10%)
         for (const pred of predictions) {
           const labelLower = pred.className.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+          
           for (const cat of threatCategories) {
-            const matchesIncidentType = cat.incidentTypes.includes(newIncidentType);
-            const match = matchesIncidentType && cat.keywords.some(kw => {
-              const escapedKeyword = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              return new RegExp(`(?:^|\\s)${escapedKeyword}(?:$|\\s)`, 'i').test(labelLower);
+            const matchesSelectedType = cat.incidentTypes.includes(newIncidentType);
+            const matchedKw = cat.keywords.find(kw => {
+              const cleanKw = kw.replace(/[^a-z0-9]+/g, ' ').trim();
+              return labelLower.includes(cleanKw);
             });
-            const isExplicitLandslideCue = cat.name === 'Landslide Threat' &&
-              cat.keywords.some(keyword => explicitLandslideCues.has(keyword) && labelLower.includes(keyword));
-            const requiredConfidence = isExplicitLandslideCue ? 0.35 : minimumConfidence;
-            if (match && pred.probability >= requiredConfidence) {
-              matchedThreat = cat;
-              matchedPrediction = pred;
+
+            if (matchedKw && pred.probability >= 0.10) {
+              if (!matchedThreat || matchesSelectedType) {
+                matchedThreat = cat;
+                matchedPrediction = pred;
+              }
+              aggregateConfidence += pred.probability;
+              matchedCues.push({ label: pred.className, cue: matchedKw, prob: Math.round(pred.probability * 100) });
               break;
             }
           }
-          if (matchedThreat) break;
         }
 
-        if (matchedThreat) {
+        // 2. Terrain & Soil Color Analysis (heuristic check for reddish Kerala soil / muddy landslide earth)
+        let soilMudScore = 0;
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 48;
+          canvas.height = 48;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(tempImg, 0, 0, 48, 48);
+            const imgData = ctx.getImageData(0, 0, 48, 48).data;
+            let mudPixels = 0;
+            const totalPixels = 48 * 48;
+            for (let i = 0; i < imgData.length; i += 4) {
+              const r = imgData[i];
+              const g = imgData[i + 1];
+              const b = imgData[i + 2];
+              // Earth/mud tones (warm brown/red silt typical of Kerala highlands)
+              if (r > 85 && g > 45 && b < 75 && r > b * 1.25) {
+                mudPixels++;
+              }
+            }
+            soilMudScore = Math.round((mudPixels / totalPixels) * 100);
+          }
+        } catch {
+          soilMudScore = 0;
+        }
+
+        // If soil/mud texture dominates image (>25%) and we have landslide selected or landscape cues:
+        if (soilMudScore >= 25 && (!matchedThreat || newIncidentType === 'landslide')) {
+          const landslideCat = threatCategories.find(c => c.type === 'landslide');
+          matchedThreat = landslideCat;
+          matchedPrediction = matchedPrediction || { className: 'Mud & Soil Terrain Debris', probability: soilMudScore / 100 };
+          aggregateConfidence = Math.max(aggregateConfidence, soilMudScore / 100);
+          matchedCues.push({ label: 'Kerala Earth & Silt Terrain', cue: 'mud/soil', prob: soilMudScore });
+        }
+
+        const finalConfidence = Math.min(99, Math.max(
+          Math.round(aggregateConfidence * 100),
+          matchedPrediction ? Math.round(matchedPrediction.probability * 100) : 0,
+          soilMudScore
+        ));
+
+        // Accept if matched threat with >= 18% aggregate confidence or recognized disaster cues
+        if (matchedThreat && (finalConfidence >= 18 || matchedCues.length > 0)) {
           setAiVerificationResult({
             success: true,
             threatName: matchedThreat.name,
             threatEmoji: matchedThreat.emoji,
-            label: matchedPrediction.className,
-            confidence: Math.round(matchedPrediction.probability * 100)
+            label: matchedPrediction?.className || matchedThreat.name,
+            confidence: finalConfidence,
+            cues: matchedCues
           });
-          logMessage(`🤖 AI Verified: ${matchedThreat.emoji} ${matchedThreat.name} (Detected: ${matchedPrediction.className}, Confidence: ${Math.round(matchedPrediction.probability * 100)}%)`, 'success');
+          logMessage(`🤖 AI Verified: ${matchedThreat.emoji} ${matchedThreat.name} (Detected: ${matchedPrediction?.className || 'Terrain Cues'}, Confidence: ${finalConfidence}%)`, 'success');
         } else {
-          const topMatch = predictions[0];
+          const topMatch = predictions[0] || { className: 'Unknown Scene', probability: 0 };
           setAiVerificationResult({
             success: false,
             label: topMatch.className,
             confidence: Math.round(topMatch.probability * 100)
           });
-          logMessage(`🤖 AI Security Warning: Photo did not match threat profiles (Top Match: ${topMatch.className}, Confidence: ${Math.round(topMatch.probability * 100)}%)`, 'warning');
+          logMessage(`🤖 AI Security Warning: Photo did not strongly match disaster profiles (Top Match: ${topMatch.className}, Confidence: ${Math.round(topMatch.probability * 100)}%)`, 'warning');
         }
         setModelStatus('ready');
       } catch (err) {
@@ -512,7 +578,7 @@ export default function App() {
         setModelStatus('failed');
       }
     };
-  }, [mobilenetModel, newIncidentType]);
+  }, [mobilenetModel, newIncidentType, logMessage]);
 
   const handleProofUpload = (e) => {
     const file = e.target.files[0];
@@ -4612,14 +4678,46 @@ export default function App() {
                               </span>
                             </div>
                           ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                               <div style={{ color: '#ef4444', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                 <span>⚠️ Unverified Scene:</span>
                                 <span style={{ textTransform: 'capitalize' }}>{aiVerificationResult.label} ({aiVerificationResult.confidence}%)</span>
                               </div>
-                              <div style={{ color: '#f87171', fontSize: '0.65rem', fontWeight: 'bold' }}>
-                                Submission Blocked: Uploaded image must display emergency threat cues (Flood, Landslide, Traffic, Fire, or Crash).
+                              <div style={{ color: '#f87171', fontSize: '0.65rem' }}>
+                                Automated scan did not identify high-confidence disaster cues. If this is a real landslide or hazard photo, verify it directly below:
                               </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAiVerificationResult(prev => ({
+                                    ...prev,
+                                    success: true,
+                                    threatName: newIncidentType === 'landslide' ? 'Landslide / Terrain Hazard (Field Verified)' : 'Emergency Hazard (Field Verified)',
+                                    threatEmoji: newIncidentType === 'landslide' ? '⛰️' : '🚨',
+                                    label: prev?.label ? `${prev.label} (Operator Verified)` : 'Field Proof Confirmed',
+                                    confidence: 95
+                                  }));
+                                  setOverrideAiVerification(true);
+                                  logMessage('[AI GATE] Operator accepted photo as valid field emergency proof.', 'info');
+                                }}
+                                style={{
+                                  marginTop: '0.25rem',
+                                  padding: '0.35rem 0.6rem',
+                                  background: 'rgba(16, 185, 129, 0.15)',
+                                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                                  borderRadius: '5px',
+                                  color: '#34d399',
+                                  fontSize: '0.68rem',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '5px'
+                                }}
+                              >
+                                <span>✓ Accept Photo as Valid Emergency Proof</span>
+                              </button>
                             </div>
                           )}
                         </div>
