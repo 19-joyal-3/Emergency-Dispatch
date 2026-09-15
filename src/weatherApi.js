@@ -1,3 +1,5 @@
+import { evaluateStatewideHazardAI } from './aiPrediction';
+
 const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast';
 
 const WEATHER_LABELS = {
@@ -290,6 +292,17 @@ export async function fetch7DayClimatePrediction(lat, lng, districtName = 'Keral
       squallColor = '#eab308';
     }
 
+    // Evaluate Unified 14-District Statewide AI Hazard Model
+    const aiHazard = evaluateStatewideHazardAI({
+      districtId: (districtName || '').toLowerCase(),
+      rain1h: Number(data.current?.precipitation ?? 0),
+      rain24h: days[0]?.precipMm ?? 0,
+      rain72h: days.slice(0, 3).reduce((acc, d) => acc + d.precipMm, 0),
+      rain7d: total7DayRain,
+      windGusts: maxGustOverall,
+      pressure: 1010
+    });
+
     const payload = {
       isOffline: false,
       fetchedAt: new Date().toISOString(),
@@ -314,7 +327,8 @@ export async function fetch7DayClimatePrediction(lat, lng, districtName = 'Keral
         flashFloodColor,
         squallRisk,
         squallColor,
-        maxGustOverall
+        maxGustOverall,
+        aiHazard
       }
     };
 

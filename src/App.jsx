@@ -6522,6 +6522,83 @@ export default function App() {
                 </section>
               )}
 
+              {/* Statewide 14-District AI Disaster Hazard Radar Card */}
+              {climateData && climateData.summary?.aiHazard && (
+                <section className="panel-card" style={{
+                  marginBottom: '0.85rem',
+                  background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85))',
+                  border: `1px solid ${climateData.summary.aiHazard.riskColor}66`,
+                  borderLeft: `5px solid ${climateData.summary.aiHazard.riskColor}`,
+                  boxShadow: `0 4px 18px ${climateData.summary.aiHazard.riskColor}22`
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '15px' }}>🧠</span>
+                      <h2 className="section-title" style={{ margin: 0, fontSize: '0.82rem' }}>
+                        <span>Statewide AI Hazard Radar</span>
+                      </h2>
+                    </div>
+                    <span style={{
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '0.62rem',
+                      fontWeight: 'bold',
+                      background: `${climateData.summary.aiHazard.riskColor}22`,
+                      color: climateData.summary.aiHazard.riskColor,
+                      border: `1px solid ${climateData.summary.aiHazard.riskColor}66`
+                    }}>
+                      {climateData.summary.aiHazard.alertBadge}
+                    </span>
+                  </div>
+
+                  {/* Probability Gauge Meter */}
+                  <div style={{ background: 'rgba(0, 0, 0, 0.35)', borderRadius: '8px', padding: '0.6rem 0.8rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>24H DISASTER PROBABILITY</span>
+                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: climateData.summary.aiHazard.riskColor }}>
+                        {climateData.summary.aiHazard.probabilityPct}%
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{
+                        width: `${climateData.summary.aiHazard.probabilityPct}%`,
+                        height: '100%',
+                        background: climateData.summary.aiHazard.riskColor,
+                        boxShadow: `0 0 8px ${climateData.summary.aiHazard.riskColor}`,
+                        transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }} />
+                    </div>
+
+                    <div style={{ fontSize: '0.68rem', color: '#cbd5e1', marginTop: '6px', lineHeight: '1.35' }}>
+                      {climateData.summary.aiHazard.recommendation}
+                    </div>
+                  </div>
+
+                  {/* Primary AI Factors & Model Provenance */}
+                  <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {climateData.summary.aiHazard.primaryDrivers.map((driver, dIdx) => (
+                      <span key={dIdx} style={{
+                        fontSize: '0.6rem',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: '#cbd5e1'
+                      }}>
+                        • {driver}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div style={{ marginTop: '0.45rem', fontSize: '0.58rem', color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Model: XGBoost • ERA5 Physics</span>
+                    <span>14 Districts (488,558 hrs • ROC 0.938)</span>
+                  </div>
+                </section>
+              )}
+
               {/* Predictive Disaster Susceptibility Indices */}
               {climateData && climateData.summary && (
                 <section className="panel-card" style={{ marginBottom: '0.85rem' }}>
