@@ -194,6 +194,12 @@ export default function App() {
   const tileLayerRef = useRef(null);
   const pmtilesRef = useRef(null);
   const hospitalMarkersRef = useRef(new Map());
+  const liveTrafficLayerRef = useRef(null);
+  const [tomtomApiKey, setTomtomApiKey] = useState(() => {
+    return localStorage.getItem('vanguard_tomtom_api_key') || import.meta.env.VITE_TOMTOM_API_KEY || '';
+  });
+  const [showTrafficKeyModal, setShowTrafficKeyModal] = useState(false);
+  const [tempTrafficKey, setTempTrafficKey] = useState('');
 
   // Voice Dictation & Offline Map Pack States
   const [isListening, setIsListening] = useState(false);
@@ -1724,6 +1730,49 @@ export default function App() {
       drawRoadNetwork();
     }
   }, [blockages, showTraffic]);
+
+  // Live Real-Time Traffic Tile Layer (TomTom / Leaflet)
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (showTraffic && tomtomApiKey && tomtomApiKey.trim() && isOnline) {
+      const cleanKey = tomtomApiKey.trim();
+      if (!liveTrafficLayerRef.current) {
+        try {
+          // TomTom Real-Time Traffic Flow Raster Tile Layer
+          liveTrafficLayerRef.current = L.tileLayer(
+            `https://{s}.api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${encodeURIComponent(cleanKey)}`,
+            {
+              subdomains: ['a', 'b', 'c', 'd'],
+              maxZoom: 19,
+              opacity: 0.85,
+              zIndex: 650,
+              attribution: 'Live Traffic &copy; TomTom'
+            }
+          ).addTo(mapRef.current);
+          logMessage('[TRAFFIC] Real-time TomTom satellite traffic flow layer connected.', 'success');
+        } catch (err) {
+          console.warn('[TRAFFIC] Failed to attach live traffic layer:', err);
+        }
+      }
+    } else {
+      if (liveTrafficLayerRef.current && mapRef.current) {
+        try {
+          mapRef.current.removeLayer(liveTrafficLayerRef.current);
+        } catch {}
+        liveTrafficLayerRef.current = null;
+      }
+    }
+
+    return () => {
+      if (liveTrafficLayerRef.current && mapRef.current) {
+        try {
+          mapRef.current.removeLayer(liveTrafficLayerRef.current);
+        } catch {}
+        liveTrafficLayerRef.current = null;
+      }
+    };
+  }, [showTraffic, tomtomApiKey, isOnline]);
 
   // 3. Draw Road Network
   const drawRoadNetwork = () => {
@@ -7647,7 +7696,12 @@ export default function App() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>TRAFFIC OVERLAY</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>LIVE TRAFFIC OVERLAY</label>
+                  {tomtomApiKey && (
+                    <span style={{ fontSize: '0.58rem', color: '#4ade80', fontWeight: 700 }}>● TomTom Live</span>
+                  )}
+                </div>
                 <button 
                   type="button"
                   className="btn"
@@ -7669,6 +7723,31 @@ export default function App() {
                 >
                   🚦 {showTraffic ? 'Live Traffic: ON' : 'Live Traffic: OFF'}
                 </button>
+                {showTraffic && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                    <span style={{ fontSize: '0.58rem', color: tomtomApiKey ? '#6ee7b7' : '#f59e0b' }}>
+                      {tomtomApiKey ? '✓ Real-time flows active' : '⚡ Local closure flows'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTempTrafficKey(tomtomApiKey);
+                        setShowTrafficKeyModal(true);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#38bdf8',
+                        fontSize: '0.58rem',
+                        cursor: 'pointer',
+                        padding: 0,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      {tomtomApiKey ? 'Edit API Key' : '+ Connect TomTom Live'}
+                    </button>
+                  </div>
+                )}
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -8964,6 +9043,120 @@ export default function App() {
               >
                 Minimize to Banner
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Real-Time Live Traffic Settings Modal */}
+      {showTrafficKeyModal && (
+        <div 
+          className="hazard-intercept-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowTrafficKeyModal(false)}
+        >
+          <div 
+            className="hazard-intercept-card hud-frame"
+            style={{ maxWidth: '440px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="hazard-intercept-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>🚦</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#38bdf8', fontWeight: 800 }}>
+                    Real-Time Live Traffic Layer
+                  </h3>
+                  <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                    TomTom Satellite Traffic Flow Integration
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="hazard-intercept-close-btn"
+                onClick={() => setShowTrafficKeyModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '0.8rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ fontSize: '0.72rem', color: '#cbd5e1', lineHeight: '1.4' }}>
+                To overlay <strong>real live satellite traffic congestion</strong> (speeds, jams, and delays) across Kerala and globally, enter your free TomTom API Key below.
+              </div>
+
+              <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '6px', padding: '0.5rem 0.7rem', fontSize: '0.68rem', color: '#93c5fd' }}>
+                💡 <strong>100% Free:</strong> Anyone can get a free TomTom key in 30 seconds at <a href="https://developer.tomtom.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'underline' }}>developer.tomtom.com</a> with <strong>2,500 free live tile requests every day</strong> (no credit card needed).
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: '#94a3b8', marginBottom: '0.3rem', fontWeight: 600 }}>
+                  TomTom API Key:
+                </label>
+                <input 
+                  type="text"
+                  value={tempTrafficKey}
+                  onChange={(e) => setTempTrafficKey(e.target.value)}
+                  placeholder="Paste your TomTom API key here..."
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.7rem',
+                    fontSize: '0.78rem',
+                    background: '#0f172a',
+                    border: '1px solid #334155',
+                    borderRadius: '6px',
+                    color: '#fff',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
+
+              {tomtomApiKey && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: '#4ade80' }}>
+                  <span>✓</span>
+                  <span>Currently active on map</span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
+                {tomtomApiKey && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setTomtomApiKey('');
+                      setTempTrafficKey('');
+                      localStorage.removeItem('vanguard_tomtom_api_key');
+                      setShowTrafficKeyModal(false);
+                      logMessage('[TRAFFIC] Removed TomTom API key. Reverted to local closure mode.', 'info');
+                    }}
+                    style={{ flex: 1, padding: '0.45rem', fontSize: '0.75rem', color: '#f87171' }}
+                  >
+                    Clear Key
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    const clean = (tempTrafficKey || '').trim();
+                    setTomtomApiKey(clean);
+                    if (clean) {
+                      localStorage.setItem('vanguard_tomtom_api_key', clean);
+                      setShowTraffic(true);
+                      logMessage('[TRAFFIC] TomTom Live Traffic Key saved & activated.', 'success');
+                    } else {
+                      localStorage.removeItem('vanguard_tomtom_api_key');
+                    }
+                    setShowTrafficKeyModal(false);
+                  }}
+                  style={{ flex: 2, padding: '0.45rem', fontSize: '0.75rem', background: '#10b981', fontWeight: 'bold' }}
+                >
+                  Save &amp; Activate Live Traffic
+                </button>
+              </div>
             </div>
           </div>
         </div>
