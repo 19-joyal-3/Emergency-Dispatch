@@ -150,3 +150,194 @@ export async function fetchDistrictLiveAlerts(signal) {
     };
   });
 }
+
+/**
+ * fetch7DayClimatePrediction
+ * 
+ * Retrieves 7-day predictive meteorological forecast, rainfall totals,
+ * and autonomous Landslide & Flash Flood Susceptibility Indices.
+ * Cached in localStorage for zero-connectivity field operations.
+ */
+export async function fetch7DayClimatePrediction(lat, lng, districtName = 'Kerala Sector', signal) {
+  const cacheKey = `vanguard_climate_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+  
+  // High-risk Western Ghats hilly districts where landslide threshold is lower
+  const hillyNames = ['wayanad', 'idukki', 'pathanamthitta', 'palakkad', 'kannur'];
+  const isHilly = hillyNames.some(h => (districtName || '').toLowerCase().includes(h));
+
+  try {
+    const params = new URLSearchParams({
+      latitude: lat.toFixed(4),
+      longitude: lng.toFixed(4),
+      current: 'temperature_2m,relative_humidity_2m,precipitation,rain,weather_code,wind_speed_10m,wind_gusts_10m',
+      daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max',
+      forecast_days: '7',
+      timezone: 'Asia/Kolkata'
+    });
+
+    const response = await fetch(`${WEATHER_URL}?${params}`, { signal });
+    if (!response.ok) throw new Error(`Weather service returned HTTP ${response.status}`);
+    const data = await response.json();
+
+    const daily = data.daily || {};
+    const dates = daily.time || [];
+    const maxTemps = daily.temperature_2m_max || [];
+    const minTemps = daily.temperature_2m_min || [];
+    const precipSums = daily.precipitation_sum || [];
+    const precipProbs = daily.precipitation_probability_max || [];
+    const windSpeeds = daily.wind_speed_10m_max || [];
+    const windGusts = daily.wind_gusts_10m_max || [];
+    const weatherCodes = daily.weather_code || [];
+
+    const days = dates.map((dateStr, idx) => {
+      const d = new Date(dateStr);
+      const dayName = idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'short' });
+      const formattedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const rain = Number(precipSums[idx] ?? 0);
+      const prob = Number(precipProbs[idx] ?? 0);
+      const code = weatherCodes[idx] ?? 0;
+      const wind = Math.round(Number(windSpeeds[idx] ?? 0));
+      const gusts = Math.round(Number(windGusts[idx] ?? 0));
+      const tMax = Math.round(Number(maxTemps[idx] ?? 28));
+      const tMin = Math.round(Number(minTemps[idx] ?? 22));
+
+      let rainSeverity = 'safe'; // 'safe', 'caution', 'warning', 'danger'
+      if (rain >= 70 || (rain >= 45 && isHilly)) {
+        rainSeverity = 'danger'; // Torrential / Extreme
+      } else if (rain >= 35 || (rain >= 25 && isHilly)) {
+        rainSeverity = 'warning'; // Heavy
+      } else if (rain >= 10) {
+        rainSeverity = 'caution'; // Moderate
+      }
+
+      let icon = '☀️';
+      if (code >= 95) icon = '⛈️';
+      else if (code >= 80 || code === 65) icon = '🌧️';
+      else if (code >= 51) icon = '🌦️';
+      else if (code === 3 || code === 45) icon = '☁️';
+      else if (code === 1 || code === 2) icon = '⛅';
+
+      return {
+        date: dateStr,
+        dayName,
+        formattedDate,
+        code,
+        label: WEATHER_LABELS[code] || 'Clear',
+        icon,
+        tempMax: tMax,
+        tempMin: tMin,
+        precipMm: rain,
+        precipProb: prob,
+        windSpeed: wind,
+        windGusts: gusts,
+        rainSeverity
+      };
+    });
+
+    const total7DayRain = days.reduce((acc, curr) => acc + curr.precipMm, 0);
+    const peakRainDay = [...days].sort((a, b) => b.precipMm - a.precipMm)[0] || days[0];
+
+    // Compute Landslide Susceptibility Index
+    let landslideRisk = 'LOW';
+    let landslideColor = '#22c55e';
+    if (isHilly) {
+      if (total7DayRain >= 120 || peakRainDay?.precipMm >= 50) {
+        landslideRisk = 'SEVERE';
+        landslideColor = '#ef4444';
+      } else if (total7DayRain >= 70 || peakRainDay?.precipMm >= 30) {
+        landslideRisk = 'HIGH';
+        landslideColor = '#f97316';
+      } else if (total7DayRain >= 30 || peakRainDay?.precipMm >= 15) {
+        landslideRisk = 'MODERATE';
+        landslideColor = '#eab308';
+      }
+    } else {
+      if (total7DayRain >= 200 || peakRainDay?.precipMm >= 80) {
+        landslideRisk = 'HIGH';
+        landslideColor = '#f97316';
+      } else if (total7DayRain >= 100) {
+        landslideRisk = 'MODERATE';
+        landslideColor = '#eab308';
+      }
+    }
+
+    // Flash Flood Vulnerability Index
+    let flashFloodRisk = 'LOW';
+    let flashFloodColor = '#22c55e';
+    if (peakRainDay?.precipMm >= 60 || total7DayRain >= 150) {
+      flashFloodRisk = 'CRITICAL';
+      flashFloodColor = '#ef4444';
+    } else if (peakRainDay?.precipMm >= 35 || total7DayRain >= 80) {
+      flashFloodRisk = 'HIGH';
+      flashFloodColor = '#f97316';
+    } else if (peakRainDay?.precipMm >= 15 || total7DayRain >= 40) {
+      flashFloodRisk = 'MODERATE';
+      flashFloodColor = '#eab308';
+    }
+
+    // Coastal / Terrain Squall & Wind Warning
+    const maxGustOverall = Math.max(...days.map(d => d.windGusts), 0);
+    let squallRisk = 'CALM';
+    let squallColor = '#22c55e';
+    if (maxGustOverall >= 55) {
+      squallRisk = 'GALE FORCE';
+      squallColor = '#ef4444';
+    } else if (maxGustOverall >= 40) {
+      squallRisk = 'SQUALL WARNING';
+      squallColor = '#f97316';
+    } else if (maxGustOverall >= 25) {
+      squallRisk = 'MODERATE BREEZE';
+      squallColor = '#eab308';
+    }
+
+    const payload = {
+      isOffline: false,
+      fetchedAt: new Date().toISOString(),
+      districtName,
+      isHilly,
+      current: {
+        temp: Math.round(data.current?.temperature_2m ?? 28),
+        humidity: Math.round(data.current?.relative_humidity_2m ?? 75),
+        rain: Number(data.current?.precipitation ?? 0),
+        wind: Math.round(data.current?.wind_speed_10m ?? 0),
+        gusts: Math.round(data.current?.wind_gusts_10m ?? 0),
+        code: data.current?.weather_code ?? 0,
+        condition: WEATHER_LABELS[data.current?.weather_code] || 'Clear'
+      },
+      days,
+      summary: {
+        total7DayRain: parseFloat(total7DayRain.toFixed(1)),
+        peakRainDay,
+        landslideRisk,
+        landslideColor,
+        flashFloodRisk,
+        flashFloodColor,
+        squallRisk,
+        squallColor,
+        maxGustOverall
+      }
+    };
+
+    // Cache locally for offline survival
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(cacheKey, JSON.stringify(payload));
+      }
+    } catch {}
+
+    return payload;
+  } catch (err) {
+    // Offline Fallback: Retrieve from localStorage cache
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          parsed.isOffline = true;
+          return parsed;
+        }
+      } catch {}
+    }
+    throw err;
+  }
+}

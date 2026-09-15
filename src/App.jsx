@@ -6,7 +6,7 @@ import { db, addIncidentLocal, updateIncidentStatusLocal, addBlockageLocal, remo
 import { formatSosMessage, getSosContacts, openSosCall, openSosSms, saveSosContacts, openWhatsAppShare, formatWhatsAppIncident, formatWhatsAppRoute } from './sos';
 import mapData from './mapData.json';
 import { solveDijkstra, findClosestNode, getPositionAtDistance, haversineDistance } from './routing';
-import { fetchWeather, fetchDistrictLiveAlerts } from './weatherApi';
+import { fetchWeather, fetchDistrictLiveAlerts, fetch7DayClimatePrediction, KERALA_DISTRICTS } from './weatherApi';
 import { isSupabaseConfigured, supabase } from './supabase';
 import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
 import confetti from 'canvas-confetti';
@@ -29,6 +29,10 @@ import {
   Flame,
   Activity,
   Droplet,
+  CloudRain,
+  Wind,
+  Thermometer,
+  Droplets,
   Trash2,
   Play,
   Square,
@@ -171,6 +175,12 @@ export default function App() {
   const [storeForwardCount, setStoreForwardCount] = useState(() => p2pEngine.getStoreAndForwardCount());
   const [backgroundMeshActive, setBackgroundMeshActive] = useState(() => nativeBackgroundMesh.isActive());
   const [batteryExemptionStatus, setBatteryExemptionStatus] = useState(null);
+
+  // 7-Day Climate & Weather Prediction States
+  const [climateDistrictId, setClimateDistrictId] = useState('wayanad');
+  const [climateData, setClimateData] = useState(null);
+  const [climateLoading, setClimateLoading] = useState(false);
+  const [climateError, setClimateError] = useState(null);
 
   // Dynamic Geofence Early Warning & Proximity Interceptor States
   const [geofenceModalData, setGeofenceModalData] = useState(null); // { incident }
@@ -3064,6 +3074,27 @@ export default function App() {
     };
   }, [soundAlertsEnabled, audioSirenEnabled, gpsActive, gpsCoords, customerTrackingActive, customers]);
 
+  const loadClimateData = useCallback(async (districtId = climateDistrictId) => {
+    const dist = KERALA_DISTRICTS.find(d => d.id === districtId) || KERALA_DISTRICTS[11] || KERALA_DISTRICTS[0];
+    setClimateLoading(true);
+    setClimateError(null);
+    try {
+      const pred = await fetch7DayClimatePrediction(dist.lat, dist.lng, dist.name);
+      setClimateData(pred);
+    } catch (err) {
+      console.warn('[Climate] Forecast fetch error:', err);
+      setClimateError('Could not retrieve live telemetry. Operating in local mode.');
+    } finally {
+      setClimateLoading(false);
+    }
+  }, [climateDistrictId]);
+
+  useEffect(() => {
+    if (activeTab === 'climate') {
+      loadClimateData(climateDistrictId);
+    }
+  }, [activeTab, climateDistrictId, loadClimateData]);
+
   const handlePlotP2pSos = async (sos) => {
     try {
       setShowP2pModal(false);
@@ -4262,6 +4293,15 @@ export default function App() {
           </button>
           <button 
             type="button"
+            className={`tab-btn ${activeTab === 'climate' ? 'active' : ''}`}
+            onClick={() => handleTabToggle('climate')}
+            title="Climate & Weather Prediction Radar"
+          >
+            <CloudRain size={18} />
+            <span className="tab-label">Climate</span>
+          </button>
+          <button 
+            type="button"
             className={`tab-btn ${activeTab === 'shelters' ? 'active' : ''}`}
             onClick={() => handleTabToggle('shelters')}
             title="Evacuation Shelters"
@@ -4349,10 +4389,11 @@ export default function App() {
                   : activeTab === 'customers' ? 'Live Customer Tracker'
                     : activeTab === 'business' ? 'Business Operations'
                       : activeTab === 'alerts' ? 'Emergency Dispatch'
-                        : activeTab === 'shelters' ? 'Evacuation Safe Hubs'
-                          : activeTab === 'sync' ? 'System Console'
-                            : activeTab === 'help' ? 'System Help Guide'
-                              : 'Kerala Emergency Dispatch'}
+                        : activeTab === 'climate' ? 'Climate & Weather Radar'
+                          : activeTab === 'shelters' ? 'Evacuation Safe Hubs'
+                            : activeTab === 'sync' ? 'System Console'
+                              : activeTab === 'help' ? 'System Help Guide'
+                                : 'Kerala Emergency Dispatch'}
             </h1>
             <div className="brand-subtitle">
               {activeTab === 'planner' && 'Multi-modal routing & mock navigation'}
@@ -4360,6 +4401,7 @@ export default function App() {
               {activeTab === 'customers' && 'Consent-based location sharing monitor'}
               {activeTab === 'business' && 'Teams, privacy, plans & integrations'}
               {activeTab === 'alerts' && 'File incidents and coordinate response'}
+              {activeTab === 'climate' && '7-Day predictive precipitation, monsoon radar & disaster indices'}
               {activeTab === 'shelters' && 'Active camps capacity & relief tracking'}
               {activeTab === 'sync' && 'Offline sync logs & cluster updates'}
               {activeTab === 'help' && 'Step-by-step written system manual'}
@@ -6348,6 +6390,345 @@ export default function App() {
                   <a href="tel:1077" className="btn btn-secondary" style={{ padding: '6px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     🛡️ DEOC: <strong>1077</strong>
                   </a>
+                </div>
+              </section>
+            </>
+          )}
+
+          {activeTab === 'climate' && (
+            <>
+              {/* Sector Selector & Tactical Telemetry Status */}
+              <section className="panel-card" style={{ borderLeft: '3px solid #38bdf8', marginBottom: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <CloudRain size={16} style={{ color: '#38bdf8' }} />
+                    <strong style={{ fontSize: '0.82rem', color: '#f8fafc' }}>Select Target District / Basin</strong>
+                  </div>
+                  <span style={{
+                    fontSize: '0.62rem',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    background: climateData?.isOffline ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                    border: `1px solid ${climateData?.isOffline ? '#eab308' : '#22c55e'}`,
+                    color: climateData?.isOffline ? '#fde047' : '#86efac',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: climateData?.isOffline ? '#eab308' : '#22c55e' }} />
+                    {climateData?.isOffline ? 'Offline Cache' : 'Live Telemetry'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '0.6rem' }}>
+                  <select
+                    value={climateDistrictId}
+                    onChange={(e) => setClimateDistrictId(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: '0.4rem 0.6rem',
+                      background: 'rgba(15, 23, 42, 0.8)',
+                      border: '1px solid #334155',
+                      borderRadius: '6px',
+                      color: '#fff',
+                      fontSize: '0.75rem',
+                      outline: 'none'
+                    }}
+                  >
+                    {KERALA_DISTRICTS.map(dist => (
+                      <option key={dist.id} value={dist.id}>
+                        {dist.name} {['wayanad', 'idukki', 'pathanamthitta'].includes(dist.id) ? '(High Landslide Zone ⛰️)' : ''}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => loadClimateData(climateDistrictId)}
+                    disabled={climateLoading}
+                    style={{ padding: '0.35rem 0.65rem', fontSize: '0.7rem' }}
+                    title="Refresh Live Meteorological Model"
+                  >
+                    {climateLoading ? <Loader2 size={12} className="spin" /> : '🔄 Refresh'}
+                  </button>
+                </div>
+
+                {/* Quick Sector Shortcut Pills */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', fontSize: '0.65rem' }}>
+                  <span style={{ color: '#94a3b8', marginRight: '2px', display: 'flex', alignItems: 'center' }}>High-Risk:</span>
+                  {[
+                    { id: 'wayanad', label: 'Wayanad ⛰️' },
+                    { id: 'idukki', label: 'Idukki ⛰️' },
+                    { id: 'alappuzha', label: 'Alappuzha 🌊' },
+                    { id: 'kochi', label: 'Ernakulam 🚢' },
+                    { id: 'pathanamthitta', label: 'Pathanamthitta 🌧️' }
+                  ].map(pill => (
+                    <button
+                      key={pill.id}
+                      type="button"
+                      onClick={() => setClimateDistrictId(pill.id)}
+                      style={{
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        border: climateDistrictId === pill.id ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                        background: climateDistrictId === pill.id ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255,255,255,0.04)',
+                        color: climateDistrictId === pill.id ? '#38bdf8' : '#cbd5e1',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {pill.label}
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {/* Current Ambient Conditions & Real-Time Gauges */}
+              {climateData && climateData.current && (
+                <section className="panel-card" style={{ marginBottom: '0.85rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                      Current Observation • <strong>{climateData.districtName}</strong>
+                    </span>
+                    <span style={{ fontSize: '0.68rem', color: '#38bdf8', fontWeight: 600 }}>
+                      {climateData.current.condition}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', textAlign: 'center' }}>
+                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.07)', borderRadius: '6px', padding: '0.45rem 0.2rem' }}>
+                      <div style={{ fontSize: '0.62rem', color: '#94a3b8', marginBottom: '2px' }}>TEMP</div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 'bold', color: '#f8fafc' }}>{climateData.current.temp}°C</div>
+                    </div>
+                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.07)', borderRadius: '6px', padding: '0.45rem 0.2rem' }}>
+                      <div style={{ fontSize: '0.62rem', color: '#94a3b8', marginBottom: '2px' }}>RAIN</div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 'bold', color: climateData.current.rain > 0 ? '#38bdf8' : '#f8fafc' }}>
+                        {climateData.current.rain} <span style={{ fontSize: '0.6rem' }}>mm/h</span>
+                      </div>
+                    </div>
+                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.07)', borderRadius: '6px', padding: '0.45rem 0.2rem' }}>
+                      <div style={{ fontSize: '0.62rem', color: '#94a3b8', marginBottom: '2px' }}>WIND</div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 'bold', color: '#f8fafc' }}>
+                        {climateData.current.wind} <span style={{ fontSize: '0.6rem' }}>km/h</span>
+                      </div>
+                    </div>
+                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.07)', borderRadius: '6px', padding: '0.45rem 0.2rem' }}>
+                      <div style={{ fontSize: '0.62rem', color: '#94a3b8', marginBottom: '2px' }}>GUSTS</div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 'bold', color: climateData.current.gusts >= 35 ? '#f59e0b' : '#f8fafc' }}>
+                        {climateData.current.gusts} <span style={{ fontSize: '0.6rem' }}>km/h</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Predictive Disaster Susceptibility Indices */}
+              {climateData && climateData.summary && (
+                <section className="panel-card" style={{ marginBottom: '0.85rem' }}>
+                  <h2 className="section-title" style={{ marginBottom: '0.6rem' }}>
+                    <span>Disaster Threat Indices (7-Day Projection)</span>
+                    <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(239, 68, 68, 0.1)', color: '#fca5a5', borderRadius: '4px', fontWeight: 'bold' }}>EARLY WARNING</span>
+                  </h2>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {/* Landslide Threat */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.7rem',
+                      background: 'rgba(15, 23, 42, 0.6)',
+                      border: `1px solid ${climateData.summary.landslideColor}44`,
+                      borderLeft: `4px solid ${climateData.summary.landslideColor}`,
+                      borderRadius: '6px'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          ⛰️ Landslide Susceptibility
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '2px' }}>
+                          {climateData.isHilly ? 'High slope gradient & soil saturation corridor' : 'Low gradient alluvial terrain'}
+                        </div>
+                      </div>
+                      <span style={{
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.68rem',
+                        fontWeight: 'bold',
+                        background: `${climateData.summary.landslideColor}22`,
+                        color: climateData.summary.landslideColor,
+                        border: `1px solid ${climateData.summary.landslideColor}66`
+                      }}>
+                        {climateData.summary.landslideRisk}
+                      </span>
+                    </div>
+
+                    {/* Flash Flood Threat */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.7rem',
+                      background: 'rgba(15, 23, 42, 0.6)',
+                      border: `1px solid ${climateData.summary.flashFloodColor}44`,
+                      borderLeft: `4px solid ${climateData.summary.flashFloodColor}`,
+                      borderRadius: '6px'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          🌊 Flash Flood Vulnerability
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '2px' }}>
+                          Peak 24h Rain: <strong>{climateData.summary.peakRainDay?.precipMm || 0}mm</strong> • Total 7d: <strong>{climateData.summary.total7DayRain}mm</strong>
+                        </div>
+                      </div>
+                      <span style={{
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.68rem',
+                        fontWeight: 'bold',
+                        background: `${climateData.summary.flashFloodColor}22`,
+                        color: climateData.summary.flashFloodColor,
+                        border: `1px solid ${climateData.summary.flashFloodColor}66`
+                      }}>
+                        {climateData.summary.flashFloodRisk}
+                      </span>
+                    </div>
+
+                    {/* Wind & Squall */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.7rem',
+                      background: 'rgba(15, 23, 42, 0.6)',
+                      border: `1px solid ${climateData.summary.squallColor}44`,
+                      borderLeft: `4px solid ${climateData.summary.squallColor}`,
+                      borderRadius: '6px'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          💨 Wind &amp; Marine Squall
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '2px' }}>
+                          Max Peak Gust: <strong>{climateData.summary.maxGustOverall} km/h</strong>
+                        </div>
+                      </div>
+                      <span style={{
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.68rem',
+                        fontWeight: 'bold',
+                        background: `${climateData.summary.squallColor}22`,
+                        color: climateData.summary.squallColor,
+                        border: `1px solid ${climateData.summary.squallColor}66`
+                      }}>
+                        {climateData.summary.squallRisk}
+                      </span>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* 7-Day Predictive Meteorological Timeline */}
+              {climateData && climateData.days && (
+                <section className="panel-card" style={{ marginBottom: '0.85rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                    <h2 className="section-title" style={{ margin: 0 }}>
+                      <span>7-Day Rainfall &amp; Weather Barometer</span>
+                    </h2>
+                    <span style={{ fontSize: '0.68rem', color: '#38bdf8', fontWeight: 600 }}>
+                      Total: {climateData.summary?.total7DayRain} mm
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    {climateData.days.map((day, dIdx) => (
+                      <div
+                        key={dIdx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.4rem 0.6rem',
+                          background: day.rainSeverity === 'danger' ? 'rgba(239, 68, 68, 0.12)'
+                            : day.rainSeverity === 'warning' ? 'rgba(249, 115, 22, 0.1)'
+                            : day.rainSeverity === 'caution' ? 'rgba(234, 179, 8, 0.07)'
+                            : 'rgba(255, 255, 255, 0.02)',
+                          border: day.rainSeverity === 'danger' ? '1px solid rgba(239, 68, 68, 0.35)'
+                            : day.rainSeverity === 'warning' ? '1px solid rgba(249, 115, 22, 0.3)'
+                            : '1px solid rgba(255, 255, 255, 0.06)',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem'
+                        }}
+                      >
+                        <div style={{ width: '85px' }}>
+                          <div style={{ fontWeight: 600, color: '#f8fafc' }}>{day.dayName}</div>
+                          <div style={{ fontSize: '0.62rem', color: '#94a3b8' }}>{day.formattedDate}</div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, paddingLeft: '8px' }}>
+                          <span style={{ fontSize: '18px' }}>{day.icon}</span>
+                          <span style={{ fontSize: '0.68rem', color: '#cbd5e1' }}>{day.label}</span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'right' }}>
+                          <div>
+                            <div style={{
+                              fontWeight: 'bold',
+                              color: day.rainSeverity === 'danger' ? '#f87171'
+                                : day.rainSeverity === 'warning' ? '#fb923c'
+                                : day.rainSeverity === 'caution' ? '#fde047'
+                                : '#38bdf8'
+                            }}>
+                              {day.precipMm} mm
+                            </div>
+                            <div style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{day.precipProb}% rain</div>
+                          </div>
+
+                          <div style={{ minWidth: '60px', fontSize: '0.65rem', color: '#94a3b8' }}>
+                            <span style={{ color: '#f8fafc' }}>{day.tempMax}°</span> / {day.tempMin}°
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Tactical Quick Actions */}
+              <section className="panel-card" style={{ borderLeft: '3px solid #10b981' }}>
+                <h2 className="section-title">
+                  <span>Tactical Operations Dispatch</span>
+                  <Navigation size={14} style={{ color: '#10b981' }} />
+                </h2>
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      const dist = KERALA_DISTRICTS.find(d => d.id === climateDistrictId);
+                      if (dist && mapRef.current) {
+                        mapRef.current.flyTo([dist.lat, dist.lng], 12, { duration: 1.2 });
+                        logMessage(`[CLIMATE] Centered map camera on ${dist.name} weather observation zone.`, 'info');
+                      }
+                    }}
+                    style={{ flex: 1, padding: '0.45rem', fontSize: '0.72rem' }}
+                  >
+                    🧭 Fly Map to {KERALA_DISTRICTS.find(d => d.id === climateDistrictId)?.name || 'District'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      handleTabToggle('planner');
+                      logMessage('[CLIMATE] Initiated safe-corridor evacuation route planner avoiding high-precipitation zones.', 'success');
+                    }}
+                    style={{ flex: 1, padding: '0.45rem', fontSize: '0.72rem', background: '#2563eb' }}
+                  >
+                    🚨 Plan Safe Bypass
+                  </button>
                 </div>
               </section>
             </>
