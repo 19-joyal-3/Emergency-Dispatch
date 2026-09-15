@@ -1,9 +1,9 @@
 -- ==============================================================================
--- KERALA EMERGENCY DISPATCH (VANGUARD GEO) — ROW LEVEL SECURITY (RLS) POLICIES
+-- KERALA EMERGENCY DISPATCH (VANGUARD GEO) — SCHEMA & ROW LEVEL SECURITY (RLS)
 -- Target Database: Supabase PostgreSQL (Project: emergenzy)
 -- ==============================================================================
 
--- 1. Ensure the incidents table exists with necessary columns
+-- 1. CREATE THE INCIDENTS TABLE (If not already created)
 CREATE TABLE IF NOT EXISTS public.incidents (
     id TEXT PRIMARY KEY,
     type TEXT NOT NULL,
@@ -11,23 +11,24 @@ CREATE TABLE IF NOT EXISTS public.incidents (
     lat DOUBLE PRECISION NOT NULL,
     lng DOUBLE PRECISION NOT NULL,
     priority TEXT DEFAULT 'high',
-    status TEXT DEFAULT 'open',
+    status TEXT DEFAULT 'pending',
+    proof_image TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     resolved_at TIMESTAMPTZ
 );
+
+-- Index for faster spatial and status lookups
+CREATE INDEX IF NOT EXISTS idx_incidents_status ON public.incidents (status);
+CREATE INDEX IF NOT EXISTS idx_incidents_created_at ON public.incidents (created_at DESC);
 
 -- ==============================================================================
 -- 2. ENABLE ROW LEVEL SECURITY (RLS)
 -- ==============================================================================
 ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;
 
--- Force RLS for table owners as well (best practice to prevent bypass)
-ALTER TABLE public.incidents FORCE ROW LEVEL SECURITY;
-
--- Clean up any existing policies to ensure clean idempotent execution
+-- Clean up any prior conflicting policies to avoid duplicate errors
 DROP POLICY IF EXISTS "Public Read Incidents" ON public.incidents;
 DROP POLICY IF EXISTS "Allow Incident Insertion" ON public.incidents;
-DROP POLICY IF EXISTS "Authenticated Update Incidents" ON public.incidents;
 DROP POLICY IF EXISTS "Allow Incident Update" ON public.incidents;
 DROP POLICY IF EXISTS "Authenticated Delete Incidents" ON public.incidents;
 
@@ -36,17 +37,15 @@ DROP POLICY IF EXISTS "Authenticated Delete Incidents" ON public.incidents;
 -- ==============================================================================
 
 -- POLICY A: PUBLIC READ (SELECT)
--- Allows all users (civilians, rescue squads, dispatchers) to view active incidents
--- Critical for offline navigation routing and hazard avoidance to function without login.
+-- Civilians and responders can query active hazards without logging in
 CREATE POLICY "Public Read Incidents"
 ON public.incidents
 FOR SELECT
 TO public
 USING (true);
 
--- POLICY B: INSERTION / REPORTING (INSERT)
--- Allows citizens, IoT sensors, and field responders to report new emergency incidents.
--- Enforces basic coordinate validity check (Kerala bounds: Lat 8.0-13.0, Lng 74.5-78.0 or general GPS).
+-- POLICY B: INCIDENT SUBMISSION (INSERT)
+-- Allows citizens and sensors to submit distress incidents with valid coordinates
 CREATE POLICY "Allow Incident Insertion"
 ON public.incidents
 FOR INSERT
@@ -59,61 +58,20 @@ WITH CHECK (
 );
 
 -- POLICY C: RESOLVE & STATUS UPDATES (UPDATE)
--- Option 1 (Recommended): Authenticated administrators/dispatchers can update any incident.
--- Option 2: Public clients can update status when syncing resolved tickets.
+-- Allows updating lifecycle statuses (open, pending, in_progress, resolved, closed)
 CREATE POLICY "Allow Incident Update"
 ON public.incidents
 FOR UPDATE
 TO public
 USING (true)
 WITH CHECK (
-    status IN ('open', 'investigating', 'in_progress', 'resolved', 'closed', 'escalated')
+    status IN ('open', 'pending', 'investigating', 'in_progress', 'resolved', 'closed', 'escalated')
 );
 
 -- POLICY D: DELETION (DELETE)
--- STRICTLY RESTRICTED: Only authenticated dispatchers/administrators can permanently delete records.
--- Unauthenticated / anonymous users cannot delete disaster records.
+-- STRICTLY RESTRICTED: Only authenticated dispatchers can permanently delete incidents
 CREATE POLICY "Authenticated Delete Incidents"
 ON public.incidents
 FOR DELETE
 TO authenticated
 USING (true);
-
-
--- ==============================================================================
--- 4. OPTIONAL AUDIT & BLOCKAGE TABLES RLS (IF CREATED IN SUPABASE)
--- ==============================================================================
-
--- Blockages Table
-DO $$
-BEGIN
-    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'blockages') THEN
-        EXECUTE 'ALTER TABLE public.blockages ENABLE ROW LEVEL SECURITY;';
-        EXECUTE 'DROP POLICY IF EXISTS "Public Read Blockages" ON public.blockages;';
-        EXECUTE 'CREATE POLICY "Public Read Blockages" ON public.blockages FOR SELECT TO public USING (true);';
-        EXECUTE 'DROP POLICY IF EXISTS "Authenticated Modify Blockages" ON public.blockages;';
-        EXECUTE 'CREATE POLICY "Authenticated Modify Blockages" ON public.blockages FOR ALL TO authenticated USING (true);';
-    END IF;
-END $$;
-
--- Responders Table
-DO $$
-BEGIN
-    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'responders') THEN
-        EXECUTE 'ALTER TABLE public.responders ENABLE ROW LEVEL SECURITY;';
-        EXECUTE 'DROP POLICY IF EXISTS "Public Read Responders" ON public.responders;';
-        EXECUTE 'CREATE POLICY "Public Read Responders" ON public.responders FOR SELECT TO public USING (true);';
-        EXECUTE 'DROP POLICY IF EXISTS "Authenticated Modify Responders" ON public.responders;';
-        EXECUTE 'CREATE POLICY "Authenticated Modify Responders" ON public.responders FOR ALL TO authenticated USING (true);';
-    END IF;
-END $$;
-
--- ==============================================================================
--- 5. VERIFICATION QUERY
--- ==============================================================================
-SELECT 
-    schemaname,
-    tablename,
-    rowsecurity AS rls_enabled
-FROM pg_tables 
-WHERE schemaname = 'public' AND tablename IN ('incidents', 'blockages', 'responders');
