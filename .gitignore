@@ -25,3 +25,10 @@ dist-ssr
 
 # Temporary Scratch Files
 scratch/
+
+# Python Virtual Environments & Training Artifacts
+.venv*
+*.csv
+__pycache__/
+*.pyc
+
