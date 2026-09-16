@@ -209,10 +209,18 @@ export default function App() {
   const [cachedPacks, setCachedPacks] = useState(() => getStoredJson('cached_district_packs', []));
   const [packDownloading, setPackDownloading] = useState(null);
 
-  const getPmtilesUrl = () => (import.meta.env.VITE_PMTILES_URL || '').trim();
+  const getPmtilesUrl = (theme = mapTheme) => {
+    const customPmtiles = (import.meta.env.VITE_PMTILES_URL || localStorage.getItem('vanguard_pmtiles_url') || '').trim();
+    if (customPmtiles) return customPmtiles;
+    // Automatic offline fallback to bundled Copernicus Sentinel-2 PMTiles
+    if (theme === 'satellite' && !navigator.onLine) {
+      return '/kerala_satellite.pmtiles';
+    }
+    return '';
+  };
 
   const getTileUrl = (theme) => {
-    if (getPmtilesUrl()) return null;
+    if (getPmtilesUrl(theme)) return null;
     if (!navigator.onLine) return null;
     if (theme === 'satellite') {
       const customSatellite = localStorage.getItem('vanguard_custom_satellite_url') || import.meta.env.VITE_SATELLITE_TILE_URL;
@@ -229,7 +237,11 @@ export default function App() {
   };
 
   const getTileAttribution = (theme) => {
-    if (getPmtilesUrl()) return '&copy; OpenStreetMap contributors';
+    const pmtilesUrl = getPmtilesUrl(theme);
+    if (pmtilesUrl) {
+      if (pmtilesUrl.includes('satellite')) return '&copy; Copernicus Sentinel-2 / EOX IT Services (CC BY 4.0)';
+      return '&copy; OpenStreetMap contributors';
+    }
     if (!navigator.onLine) return 'Offline mode: local road network view';
     if (theme === 'satellite') return '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
     if (theme === 'terrain') return '&copy; Esri &mdash; Source: Esri, USGS';
@@ -1565,7 +1577,7 @@ export default function App() {
         doubleClickZoom: false
       });
 
-      const pmtilesUrl = getPmtilesUrl();
+      const pmtilesUrl = getPmtilesUrl(mapTheme);
       const offlineTileUrl = getTileUrl(mapTheme);
       if (pmtilesUrl) {
         pmtilesRef.current = new PMTiles(pmtilesUrl);
@@ -1703,7 +1715,7 @@ export default function App() {
   useEffect(() => {
     if (!mapRef.current) return;
 
-    const pmtilesUrl = getPmtilesUrl();
+    const pmtilesUrl = getPmtilesUrl(mapTheme);
     const tileUrl = getTileUrl(mapTheme);
     if (pmtilesUrl) {
       if (tileLayerRef.current && pmtilesRef.current) {
