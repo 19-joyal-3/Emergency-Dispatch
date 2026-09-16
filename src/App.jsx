@@ -214,7 +214,8 @@ export default function App() {
     if (getPmtilesUrl()) return null;
     if (!navigator.onLine) return null;
     if (theme === 'satellite') {
-      return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      const customSatellite = localStorage.getItem('vanguard_custom_satellite_url') || import.meta.env.VITE_SATELLITE_TILE_URL;
+      return customSatellite || 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
     }
     if (theme === 'terrain') {
       return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
@@ -1733,12 +1734,12 @@ export default function App() {
     }
   }, [mapTheme, isOnline]);
 
-  // Re-draw road network when blockages or traffic overlay state updates
+  // Re-draw road network when blockages, traffic overlay state, or mapTheme updates
   useEffect(() => {
     if (mapRef.current) {
       drawRoadNetwork();
     }
-  }, [blockages, showTraffic]);
+  }, [blockages, showTraffic, mapTheme]);
 
   // Live Real-Time Traffic Tile Layer (TomTom Orbis V2 & V4 / Leaflet)
   useEffect(() => {
@@ -1839,10 +1840,11 @@ export default function App() {
         (b.fromNode === edge.to && b.toNode === edge.from)
       );
 
-      const color = isBlocked ? '#ef4444' : (showTraffic ? getTrafficColor(edge) : '#334155');
+      const defaultRoadColor = mapTheme === 'satellite' ? '#38bdf8' : '#334155';
+      const color = isBlocked ? '#ef4444' : (showTraffic ? getTrafficColor(edge) : defaultRoadColor);
       const dashArray = isBlocked ? '5, 5' : null;
-      const weight = isBlocked ? 4 : (showTraffic ? 4 : 3);
-      const opacity = isBlocked ? 0.9 : (showTraffic ? 0.85 : 0.6);
+      const weight = isBlocked ? 4 : (showTraffic ? 4 : (mapTheme === 'satellite' ? 3.5 : 3));
+      const opacity = isBlocked ? 0.9 : (showTraffic ? 0.85 : (mapTheme === 'satellite' ? 0.85 : 0.6));
 
       const polyline = L.polyline(edge.geometry, {
         color: color,
