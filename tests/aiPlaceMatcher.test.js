@@ -29,7 +29,9 @@ const typos = [
   { query: 'munro island', expected: 'Munroe Island' },
   { query: 'kutiran', expected: 'Kuthiran' },
   { query: 'silant valey', expected: 'Silent Valley' },
-  { query: 'chembra', expected: 'Chembra' }
+  { query: 'chembra', expected: 'Chembra' },
+  { query: 'vilangad', expected: 'Vilangad' },
+  { query: 'pulurampara', expected: 'Pullurampara' }
 ];
 
 for (const { query, expected } of typos) {
