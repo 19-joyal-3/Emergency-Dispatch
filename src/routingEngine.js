@@ -223,7 +223,7 @@ export async function calculateBestRoute({
   }
 
   // 1. Try Online Routing if internet connectivity is detected
-  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const isOnline = typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean' ? navigator.onLine : true;
   if (isOnline) {
     // 1A. Attempt TomTom Orbis with Live Traffic if API key is configured
     if (tomtomApiKey && tomtomApiKey.trim()) {
