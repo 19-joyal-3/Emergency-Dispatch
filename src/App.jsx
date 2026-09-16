@@ -10,6 +10,7 @@ import { searchKeralaPlacesAI, findClosestGraphNode, searchLiveKeralaNominatim }
 import { fetchWeather, fetchDistrictLiveAlerts, fetch7DayClimatePrediction, KERALA_DISTRICTS } from './weatherApi';
 import { isSupabaseConfigured, supabase } from './supabase';
 import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
+import { calculateBestRoute, routeWithOfflineGraph } from './routingEngine';
 import confetti from 'canvas-confetti';
 import { playTacticalChime, playEvacuationSiren } from './audio';
 import { searchDeoc } from './deoc';
@@ -3690,10 +3691,16 @@ export default function App() {
 
     let fullGeom = Array.isArray(geometry) ? [...geometry] : [];
     if (startPt && typeof startPt.lat === 'number' && typeof startPt.lng === 'number') {
-      fullGeom.unshift([startPt.lat, startPt.lng]);
+      const first = fullGeom[0];
+      if (!first || haversineDistance(first[0], first[1], startPt.lat, startPt.lng) > 0.05) {
+        fullGeom.unshift([startPt.lat, startPt.lng]);
+      }
     }
     if (endPt && typeof endPt.lat === 'number' && typeof endPt.lng === 'number') {
-      fullGeom.push([endPt.lat, endPt.lng]);
+      const last = fullGeom[fullGeom.length - 1];
+      if (!last || haversineDistance(last[0], last[1], endPt.lat, endPt.lng) > 0.05) {
+        fullGeom.push([endPt.lat, endPt.lng]);
+      }
     }
 
     if (fullGeom.length === 0) return;
@@ -3744,14 +3751,25 @@ export default function App() {
 
   // Dynamic Routing Logic for Tactical Router
   useEffect(() => {
-    if (!selectedStartNode || !selectedEndNode) {
+    const startCoord = startPlaceObj?.lat
+      ? { lat: startPlaceObj.lat, lng: startPlaceObj.lng, name: startPlaceObj.name, district: startPlaceObj.district }
+      : (selectedStartNode && mapData.nodes[selectedStartNode]
+          ? { lat: mapData.nodes[selectedStartNode].lat, lng: mapData.nodes[selectedStartNode].lng, name: mapData.nodes[selectedStartNode].name }
+          : null);
+
+    const endCoord = endPlaceObj?.lat
+      ? { lat: endPlaceObj.lat, lng: endPlaceObj.lng, name: endPlaceObj.name, district: endPlaceObj.district }
+      : (selectedEndNode && mapData.nodes[selectedEndNode]
+          ? { lat: mapData.nodes[selectedEndNode].lat, lng: mapData.nodes[selectedEndNode].lng, name: mapData.nodes[selectedEndNode].name }
+          : null);
+
+    if (!startCoord || !endCoord) {
       setCustomRoute(null);
       setRouteHazardWarnings([]);
       return;
     }
 
     const controller = new AbortController();
-    const localResult = solveDijkstra(selectedStartNode, selectedEndNode, mapData.nodes, mapData.edges, blockages, meansOfTransport);
     let cancelled = false;
 
     const applyRoute = (result) => {
@@ -3771,12 +3789,12 @@ export default function App() {
       
       // If dispatch simulator is not active, render the tactical path
       if (!simulationActive) {
-        drawRoutePolyline(result.geometry, startPlaceObj, endPlaceObj);
+        drawRoutePolyline(result.geometry, startCoord, endCoord);
         
-        // Auto-center and zoom map to fit the bounds of the newly solved route (including minute hamlet pins)
+        // Auto-center and zoom map to fit the bounds of the newly solved route
         let boundsGeom = [...(result.geometry || [])];
-        if (startPlaceObj?.lat && startPlaceObj?.lng) boundsGeom.unshift([startPlaceObj.lat, startPlaceObj.lng]);
-        if (endPlaceObj?.lat && endPlaceObj?.lng) boundsGeom.push([endPlaceObj.lat, endPlaceObj.lng]);
+        if (startCoord?.lat && startCoord?.lng) boundsGeom.unshift([startCoord.lat, startCoord.lng]);
+        if (endCoord?.lat && endCoord?.lng) boundsGeom.push([endCoord.lat, endCoord.lng]);
 
         if (mapRef.current && boundsGeom.length > 0) {
           try {
@@ -3789,44 +3807,51 @@ export default function App() {
       }
 
       // Check bus availability along this path when local graph nodes are available.
-      const buses = result.nodes.length > 1
-        ? getTransitOptionsForPath(result.nodes, result.distance)
+      const busNodes = (result.nodes && result.nodes.length > 1)
+        ? result.nodes
+        : [selectedStartNode, selectedEndNode].filter(Boolean);
+      const buses = busNodes.length > 1
+        ? getTransitOptionsForPath(busNodes, result.distance)
         : [];
       setMatchingBusLines(buses);
     };
 
-    applyRoute(localResult);
-
-    // Keep the local graph authoritative while closures are active so every
-    // blocked edge is excluded exactly, in both travel directions.
-    if (isValhallaConfigured && navigator.onLine && !blockages.some((blockage) => blockage.active)) {
-      const avoidLocations = blockages.flatMap((blockage) => {
-        const from = mapData.nodes[blockage.fromNode];
-        const to = mapData.nodes[blockage.toNode];
-        return blockage.active && from && to ? [from, to] : [];
-      });
-
-      requestValhallaRoute({
-        start: mapData.nodes[selectedStartNode],
-        end: mapData.nodes[selectedEndNode],
-        nodeIds: [selectedStartNode, selectedEndNode],
-        transport: meansOfTransport,
-        avoidLocations,
-        signal: controller.signal
-      }).then((onlineResult) => {
-        if (onlineResult) applyRoute(onlineResult);
-      }).catch((error) => {
-        if (error.name !== 'AbortError') {
-          console.warn('Valhalla route unavailable; keeping local route:', error);
-        }
-      });
+    // 1. Render immediate offline route
+    const offlineQuick = routeWithOfflineGraph({
+      start: startCoord,
+      end: endCoord,
+      mapData,
+      blockages,
+      transport: meansOfTransport
+    });
+    if (offlineQuick) {
+      applyRoute(offlineQuick);
     }
+
+    // 2. Asynchronously upgrade to high-fidelity real-road network (OSRM / TomTom Orbis)
+    calculateBestRoute({
+      start: startCoord,
+      end: endCoord,
+      mapData,
+      transport: meansOfTransport,
+      blockages,
+      tomtomApiKey,
+      signal: controller.signal
+    }).then((bestRoute) => {
+      if (!cancelled && bestRoute) {
+        applyRoute(bestRoute);
+      }
+    }).catch((err) => {
+      if (err.name !== 'AbortError') {
+        console.warn('[ROUTING] Real-road calculation failed; keeping offline route:', err.message);
+      }
+    });
 
     return () => {
       cancelled = true;
       controller.abort();
     };
-  }, [selectedStartNode, selectedEndNode, startPlaceObj, endPlaceObj, blockages, simulationActive, meansOfTransport, rerouteNotice]);
+  }, [selectedStartNode, selectedEndNode, startPlaceObj, endPlaceObj, blockages, simulationActive, meansOfTransport, rerouteNotice, tomtomApiKey, isOnline]);
 
   // Re-route an active tactical simulation when a newly reported blockage closes its path.
   useEffect(() => {
@@ -3888,23 +3913,29 @@ export default function App() {
       return;
     }
 
-    let startLat, startLng;
+    let startLat, startLng, startName = 'Responder';
     if (bindGpsToUnit && gpsCoords && selectedResponder) {
       startLat = gpsCoords.lat;
       startLng = gpsCoords.lng;
+      startName = 'Live GPS Unit';
     } else if (selectedResponder) {
       startLat = selectedResponder.lat;
       startLng = selectedResponder.lng;
+      startName = selectedResponder.callsign || 'Responder';
     } else {
       return;
     }
 
-    const { id: startId } = findClosestNode(startLat, startLng, mapData.nodes);
-    const { id: endId } = findClosestNode(selectedIncident.lat, selectedIncident.lng, mapData.nodes);
+    const startCoord = { lat: startLat, lng: startLng, name: startName };
+    const endCoord = {
+      lat: selectedIncident.lat,
+      lng: selectedIncident.lng,
+      name: selectedIncident.type ? `${selectedIncident.type.toUpperCase()} Incident Scene` : 'Incident Scene'
+    };
 
     const controller = new AbortController();
     let cancelled = false;
-    const localResult = solveDijkstra(startId, endId, mapData.nodes, mapData.edges, blockages, 'car');
+
     const applyDispatchRoute = (result) => {
       if (cancelled) return;
       if (!result) {
@@ -3919,40 +3950,44 @@ export default function App() {
       const warnings = checkRouteHazardIntersection(result.geometry || []);
       setRouteHazardWarnings(warnings);
       if (!simulationActive) {
-        drawRoutePolyline(result.geometry);
+        drawRoutePolyline(result.geometry, startCoord, endCoord);
       }
     };
 
-    applyDispatchRoute(localResult);
+    // 1. Immediate offline dispatch route
+    const offlineDispatch = routeWithOfflineGraph({
+      start: startCoord,
+      end: endCoord,
+      mapData,
+      blockages,
+      transport: 'ambulance'
+    });
+    if (offlineDispatch) applyDispatchRoute(offlineDispatch);
 
-    if (isValhallaConfigured && navigator.onLine && !blockages.some((blockage) => blockage.active)) {
-      const avoidLocations = blockages.flatMap((blockage) => {
-        const from = mapData.nodes[blockage.fromNode];
-        const to = mapData.nodes[blockage.toNode];
-        return blockage.active && from && to ? [from, to] : [];
-      });
-
-      requestValhallaRoute({
-        start: { lat: startLat, lng: startLng },
-        end: { lat: selectedIncident.lat, lng: selectedIncident.lng },
-        nodeIds: [startId, endId],
-        transport: 'car',
-        avoidLocations,
-        signal: controller.signal
-      }).then((onlineResult) => {
-        if (onlineResult) applyDispatchRoute(onlineResult);
-      }).catch((error) => {
-        if (error.name !== 'AbortError') {
-          console.warn('Valhalla dispatch route unavailable; keeping local route:', error);
-        }
-      });
-    }
+    // 2. Real-road network upgrade (OSRM / TomTom)
+    calculateBestRoute({
+      start: startCoord,
+      end: endCoord,
+      mapData,
+      transport: 'ambulance',
+      blockages,
+      tomtomApiKey,
+      signal: controller.signal
+    }).then((bestRoute) => {
+      if (!cancelled && bestRoute) {
+        applyDispatchRoute(bestRoute);
+      }
+    }).catch((err) => {
+      if (err.name !== 'AbortError') {
+        console.warn('[ROUTING] Dispatch real-road calculation failed:', err.message);
+      }
+    });
 
     return () => {
       cancelled = true;
       controller.abort();
     };
-  }, [selectedIncident, selectedResponder, gpsCoords, bindGpsToUnit, blockages, simulationActive]);
+  }, [selectedIncident, selectedResponder, gpsCoords, bindGpsToUnit, blockages, simulationActive, tomtomApiKey, isOnline]);
 
   // 13. Public Transit Route Matching Algorithm
   const getTransitOptionsForPath = (pathNodes, totalDistance) => {
@@ -5049,14 +5084,37 @@ export default function App() {
                         </strong>
                       </div>
                       <div style={{ marginTop: '0.45rem', padding: '0.45rem', borderRadius: '6px', background: rerouteNotice ? 'rgba(245, 158, 11, 0.12)' : 'rgba(56, 189, 248, 0.08)', border: `1px solid ${rerouteNotice ? 'rgba(245, 158, 11, 0.4)' : 'rgba(56, 189, 248, 0.25)'}`, fontSize: '0.7rem' }}>
-                        <strong style={{ color: rerouteNotice ? '#fbbf24' : '#7dd3fc' }}>
-                          {rerouteNotice ? 'ALTERNATE ROUTE' : 'ACTIVE ROUTE'}
-                        </strong>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong style={{ color: rerouteNotice ? '#fbbf24' : '#7dd3fc' }}>
+                            {rerouteNotice ? 'ALTERNATE ROUTE' : 'ACTIVE ROUTE'}
+                          </strong>
+                          {customRoute.sourceLabel && (
+                            <span style={{ fontSize: '0.62rem', color: '#38bdf8', fontWeight: 600 }}>
+                              {customRoute.sourceLabel}
+                            </span>
+                          )}
+                        </div>
                         <div style={{ color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                          {mapData.nodes[customRoute.nodes[0]]?.name} → {mapData.nodes[customRoute.nodes[customRoute.nodes.length - 1]]?.name}
-                          {' · '}{customRoute.nodes.length - 2} intermediate stops
+                          {startPlaceObj?.name || (customRoute.nodes && mapData.nodes[customRoute.nodes[0]]?.name) || 'Departure'} → {endPlaceObj?.name || (customRoute.nodes && mapData.nodes[customRoute.nodes[customRoute.nodes.length - 1]]?.name) || 'Destination'}
                         </div>
                       </div>
+
+                      {/* Turn-by-Turn Guidance Preview */}
+                      {customRoute.steps && customRoute.steps.length > 0 && (
+                        <details style={{ marginTop: '0.45rem', fontSize: '0.7rem' }}>
+                          <summary style={{ cursor: 'pointer', color: '#93c5fd', fontWeight: 600, padding: '2px 0' }}>
+                            🧭 Turn-by-Turn Guidance ({customRoute.steps.length} steps)
+                          </summary>
+                          <div style={{ maxHeight: '130px', overflowY: 'auto', marginTop: '0.35rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', padding: '0.35rem', background: 'rgba(0,0,0,0.3)', borderRadius: '4px' }}>
+                            {customRoute.steps.map((st, sIdx) => (
+                              <div key={sIdx} style={{ display: 'flex', justifyContent: 'space-between', color: '#e2e8f0', fontSize: '0.66rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '2px' }}>
+                                <span>{sIdx + 1}. {st.instruction}</span>
+                                {st.distanceKm > 0 && <span style={{ color: '#94a3b8', marginLeft: '6px', whiteSpace: 'nowrap' }}>{st.distanceKm} km</span>}
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
                       
                       {meansOfTransport === 'bus' && (
                         <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>

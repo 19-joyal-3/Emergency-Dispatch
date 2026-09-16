@@ -1,4 +1,4 @@
-const VALHALLA_URL = (import.meta.env.VITE_VALHALLA_URL || '').replace(/\/$/, '');
+const VALHALLA_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_VALHALLA_URL || '').replace(/\/$/, '');
 
 const decodePolyline6 = (encoded) => {
   const coordinates = [];
