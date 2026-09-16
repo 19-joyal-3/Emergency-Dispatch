@@ -3595,6 +3595,52 @@ export default function App() {
     return (brng + 360) % 360;
   };
 
+  const startSearchAbortRef = useRef(null);
+  const endSearchAbortRef = useRef(null);
+
+  const performPlaceSearch = async (query, isDeparture = true) => {
+    const localMatches = searchKeralaPlacesAI(query, 8);
+    if (isDeparture) {
+      setStartSuggestions(localMatches);
+      setShowStartSuggestions(true);
+    } else {
+      setEndSuggestions(localMatches);
+      setShowEndSuggestions(true);
+    }
+
+    if (isOnline && query && query.trim().length >= 3) {
+      const abortController = new AbortController();
+      if (isDeparture) {
+        if (startSearchAbortRef.current) startSearchAbortRef.current.abort();
+        startSearchAbortRef.current = abortController;
+      } else {
+        if (endSearchAbortRef.current) endSearchAbortRef.current.abort();
+        endSearchAbortRef.current = abortController;
+      }
+
+      try {
+        const liveOsm = await searchLiveKeralaNominatim(query, abortController.signal);
+        if (liveOsm && liveOsm.length > 0) {
+          const combined = [...localMatches];
+          liveOsm.forEach(osmPlace => {
+            if (!combined.some(c => c.name.toLowerCase() === osmPlace.name.toLowerCase())) {
+              combined.push(osmPlace);
+            }
+          });
+          if (isDeparture) {
+            setStartSuggestions(combined);
+          } else {
+            setEndSuggestions(combined);
+          }
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          // ignore network hiccups
+        }
+      }
+    }
+  };
+
   // Helper handlers for AI Minute Place selection
   const handleSelectDeparturePlace = (place) => {
     setStartQuery(place.name);
@@ -4671,14 +4717,10 @@ export default function App() {
                         onChange={(e) => {
                           const val = e.target.value;
                           setStartQuery(val);
-                          const suggestions = searchKeralaPlacesAI(val, 8);
-                          setStartSuggestions(suggestions);
-                          setShowStartSuggestions(true);
+                          performPlaceSearch(val, true);
                         }}
                         onFocus={() => {
-                          const suggestions = searchKeralaPlacesAI(startQuery, 8);
-                          setStartSuggestions(suggestions);
-                          setShowStartSuggestions(true);
+                          performPlaceSearch(startQuery, true);
                         }}
                         placeholder="Search minute hamlet, town, or disaster zone..."
                         disabled={simulationActive}
@@ -4780,14 +4822,10 @@ export default function App() {
                         onChange={(e) => {
                           const val = e.target.value;
                           setEndQuery(val);
-                          const suggestions = searchKeralaPlacesAI(val, 8);
-                          setEndSuggestions(suggestions);
-                          setShowEndSuggestions(true);
+                          performPlaceSearch(val, false);
                         }}
                         onFocus={() => {
-                          const suggestions = searchKeralaPlacesAI(endQuery, 8);
-                          setEndSuggestions(suggestions);
-                          setShowEndSuggestions(true);
+                          performPlaceSearch(endQuery, false);
                         }}
                         placeholder="Search destination hamlet, hospital, town..."
                         disabled={simulationActive}
