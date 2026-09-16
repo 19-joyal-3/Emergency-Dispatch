@@ -724,11 +724,17 @@ export default function App() {
 
       if (parsed.type === 'route') {
         if (mapData.nodes[parsed.startNode] && mapData.nodes[parsed.endNode]) {
+          const sNode = mapData.nodes[parsed.startNode];
+          const eNode = mapData.nodes[parsed.endNode];
           setSelectedStartNode(parsed.startNode);
           setSelectedEndNode(parsed.endNode);
+          setStartQuery(sNode.name);
+          setStartPlaceObj({ id: parsed.startNode, name: sNode.name, district: sNode.district || 'Kerala', lat: sNode.lat, lng: sNode.lng, type: 'town' });
+          setEndQuery(eNode.name);
+          setEndPlaceObj({ id: parsed.endNode, name: eNode.name, district: eNode.district || 'Kerala', lat: eNode.lat, lng: eNode.lng, type: 'town' });
           setMeansOfTransport(parsed.transport || 'car');
           setActiveTab('planner');
-          logMessage(`[QR IMPORT] Loaded tactical route: ${mapData.nodes[parsed.startNode].name} ➔ ${mapData.nodes[parsed.endNode].name}`, 'success');
+          logMessage(`[QR IMPORT] Loaded tactical route: ${sNode.name} ➔ ${eNode.name}`, 'success');
         }
       } else if (parsed.type === 'incident') {
         setMapClickCoords({ lat: parsed.lat, lng: parsed.lng });
@@ -1376,8 +1382,8 @@ export default function App() {
   };
 
   const routeToNearestHospital = () => {
-    let startLat = 10.61;
-    let startLng = 76.50;
+    let startLat = startPlaceObj?.lat || 10.61;
+    let startLng = startPlaceObj?.lng || 76.50;
     if (gpsActive && gpsCoords) {
       startLat = gpsCoords.lat;
       startLng = gpsCoords.lng;
@@ -1397,9 +1403,15 @@ export default function App() {
     });
 
     if (nearest) {
-      const { id: startNodeId } = findClosestNode(startLat, startLng, mapData.nodes);
-      setSelectedStartNode(startNodeId);
-      setSelectedEndNode(nearest.node);
+      setDestinationNodeOrPlace({
+        id: nearest.id || 'hosp_' + nearest.node,
+        name: nearest.name,
+        district: nearest.district || 'Kerala',
+        lat: nearest.lat,
+        lng: nearest.lng,
+        type: 'hospital_hub',
+        desc: nearest.specialty || nearest.name
+      });
       setMeansOfTransport('car');
       confetti({ particleCount: 35, spread: 55 });
       logMessage(`[TRAUMA DISPATCH] Fastest emergency route to ${nearest.name} calculated (${minDist.toFixed(1)} km).`, 'warning');
@@ -1967,7 +1979,7 @@ export default function App() {
           const btnStart = document.getElementById(`set-start-${nodeId}`);
           if (btnStart) {
             btnStart.onclick = () => {
-              setSelectedStartNode(nodeId);
+              setDepartureNodeOrPlace(nodeId);
               setActiveTab('planner');
               logMessage(`Departure point set to ${node.name}`, 'info');
               mapRef.current?.closePopup();
@@ -1976,7 +1988,7 @@ export default function App() {
           const btnEnd = document.getElementById(`set-end-${nodeId}`);
           if (btnEnd) {
             btnEnd.onclick = () => {
-              setSelectedEndNode(nodeId);
+              setDestinationNodeOrPlace(nodeId);
               setActiveTab('planner');
               logMessage(`Destination point set to ${node.name}`, 'info');
               mapRef.current?.closePopup();
@@ -2344,12 +2356,20 @@ export default function App() {
           const btn = document.getElementById(`route-shelter-btn-${sh.id}`);
           if (btn) {
             btn.onclick = () => {
-              const { id: shelterNodeId } = findClosestNode(sh.lat, sh.lng, mapData.nodes);
               if (gpsCoords && gpsActive) {
                 const { id: startId } = findClosestNode(gpsCoords.lat, gpsCoords.lng, mapData.nodes);
-                setSelectedStartNode(startId);
+                setDepartureNodeOrPlace(startId);
               }
-              setSelectedEndNode(shelterNodeId);
+              setDestinationNodeOrPlace({
+                id: sh.id,
+                name: sh.name,
+                district: sh.district || 'Kerala',
+                lat: sh.lat,
+                lng: sh.lng,
+                type: 'shelter',
+                desc: sh.name
+              });
+              setActiveTab('planner');
               logMessage(`Evacuation routing active to ${sh.name}`, 'success');
               mapRef.current?.closePopup();
             };
@@ -2419,10 +2439,19 @@ export default function App() {
             btn.onclick = () => {
               if (gpsCoords && gpsActive) {
                 const { id: startId } = findClosestNode(gpsCoords.lat, gpsCoords.lng, mapData.nodes);
-                setSelectedStartNode(startId);
+                setDepartureNodeOrPlace(startId);
               }
-              setSelectedEndNode(hosp.node);
+              setDestinationNodeOrPlace({
+                id: hosp.id || 'hosp_' + hosp.node,
+                name: hosp.name,
+                district: hosp.district || 'Kerala',
+                lat: hosp.lat,
+                lng: hosp.lng,
+                type: 'hospital_hub',
+                desc: hosp.specialty || hosp.name
+              });
               setMeansOfTransport('car');
+              setActiveTab('planner');
               logMessage(`Emergency route plotted to ${hosp.name}`, 'warning');
               mapRef.current?.closePopup();
             };
@@ -3569,23 +3598,42 @@ export default function App() {
 
   const triggerRerouteDemo = async () => {
     const activeRoute = activeSimulationRouteRef.current;
-    if (!simulationActive || !activeRoute?.edges?.length) {
+    if (!simulationActive || !activeRoute?.geometry?.length) {
       logMessage('[NAV-TACTICAL] Start a route simulation before running the reroute demo.', 'warning');
       return;
     }
 
-    const demoEdge = activeRoute.edges.find(edge => !blockages.some(blockage =>
-      (blockage.fromNode === edge.from && blockage.toNode === edge.to) ||
-      (blockage.fromNode === edge.to && blockage.toNode === edge.from)
-    ));
+    if (activeRoute.edges && activeRoute.edges.length > 0) {
+      const demoEdge = activeRoute.edges.find(edge => !blockages.some(blockage =>
+        (blockage.fromNode === edge.from && blockage.toNode === edge.to) ||
+        (blockage.fromNode === edge.to && blockage.toNode === edge.from)
+      ));
 
-    if (!demoEdge) {
-      logMessage('[NAV-TACTICAL] Every edge on this route is already blocked.', 'warning');
-      return;
+      if (demoEdge) {
+        await toggleRoadBlockage(demoEdge);
+        logMessage(`[NAV-TACTICAL] Demo closure placed on ${demoEdge.name}.`, 'warning');
+        return;
+      }
     }
 
-    await toggleRoadBlockage(demoEdge);
-    logMessage(`[NAV-TACTICAL] Demo closure placed on ${demoEdge.name}.`, 'warning');
+    // Real-road OSRM route: place barrier directly along polyline geometry
+    const midIdx = Math.floor(activeRoute.geometry.length / 2);
+    const midCoords = activeRoute.geometry[midIdx] || activeRoute.geometry[0];
+    const newBlock = {
+      id: `block_${Date.now()}`,
+      lat: midCoords[0],
+      lng: midCoords[1],
+      name: 'Simulated Hazard Debris Closure',
+      active: 1
+    };
+
+    try {
+      await addBlockageLocal(newBlock, isOnline);
+      logMessage('[NAV-TACTICAL] Demo hazard barrier placed on active corridor.', 'warning');
+      await reloadLocalData();
+    } catch (err) {
+      logMessage(`Failed to place demo hazard: ${err.message}`, 'error');
+    }
   };
 
   const removeBlockage = async (id) => {
@@ -3679,6 +3727,67 @@ export default function App() {
     }
   };
 
+  const setDepartureNodeOrPlace = (nodeOrPlace) => {
+    if (!nodeOrPlace) return;
+    if (typeof nodeOrPlace === 'string') {
+      const node = mapData.nodes[nodeOrPlace];
+      if (node) {
+        handleSelectDeparturePlace({
+          id: nodeOrPlace,
+          name: node.name,
+          district: node.district || 'Kerala',
+          lat: node.lat,
+          lng: node.lng,
+          type: 'town',
+          desc: node.name
+        });
+      }
+    } else {
+      handleSelectDeparturePlace(nodeOrPlace);
+    }
+  };
+
+  const setDestinationNodeOrPlace = (nodeOrPlace) => {
+    if (!nodeOrPlace) return;
+    if (typeof nodeOrPlace === 'string') {
+      const node = mapData.nodes[nodeOrPlace];
+      if (node) {
+        handleSelectDestinationPlace({
+          id: nodeOrPlace,
+          name: node.name,
+          district: node.district || 'Kerala',
+          lat: node.lat,
+          lng: node.lng,
+          type: 'town',
+          desc: node.name
+        });
+      }
+    } else {
+      handleSelectDestinationPlace(nodeOrPlace);
+    }
+  };
+
+  const handleSwapDepartureAndDestination = () => {
+    const prevStartPlace = startPlaceObj;
+    const prevStartQuery = startQuery;
+    const prevEndPlace = endPlaceObj;
+    const prevEndQuery = endQuery;
+
+    if (prevEndPlace) {
+      setStartPlaceObj(prevEndPlace);
+      setStartQuery(prevEndQuery);
+      const closest = findClosestGraphNode(prevEndPlace.lat, prevEndPlace.lng, mapData.nodes);
+      if (closest) setSelectedStartNode(closest.id);
+    }
+    if (prevStartPlace) {
+      setEndPlaceObj(prevStartPlace);
+      setEndQuery(prevStartQuery);
+      const closest = findClosestGraphNode(prevStartPlace.lat, prevStartPlace.lng, mapData.nodes);
+      if (closest) setSelectedEndNode(closest.id);
+    }
+    logMessage('[ROUTE] Swapped departure and destination points.', 'info');
+  };
+
   const handleUseCurrentGpsAsStart = () => {
     if (!gpsCoords) {
       logMessage('[GPS] Real-time GPS location not available. Enable GPS in the header first.', 'warning');
@@ -3723,7 +3832,7 @@ export default function App() {
       opacity: 0.3
     });
 
-    const isDetour = !!rerouteNotice || blockages.some(b => b.active);
+    const isDetour = !!rerouteNotice || customRoute?.isDetour || customRoute?.isBlocked;
     const coreLine = L.polyline(fullGeom, {
       color: isDetour ? '#f59e0b' : '#10b981',
       weight: 4,
@@ -3870,15 +3979,7 @@ export default function App() {
     const activeRoute = activeSimulationRouteRef.current;
     if (!simulationActive || !activeRoute || !customRoute) return;
 
-    const routeBlocked = activeRoute.source === 'valhalla'
-      ? blockages.some(blockage => blockage.active)
-      : blockages.some(blockage =>
-        activeRoute.edges.some(edge =>
-          (blockage.fromNode === edge.from && blockage.toNode === edge.to) ||
-          (blockage.fromNode === edge.to && blockage.toNode === edge.from)
-        )
-      );
-
+    const routeBlocked = isGeometryBlocked(activeRoute.geometry, blockages, mapData.nodes);
     if (!routeBlocked) return;
 
     const currentPosition = getPositionAtDistance(activeRoute.geometry, simulationProgress);
@@ -3899,22 +4000,33 @@ export default function App() {
     };
     setSimulationActive(false);
     setSelectedStartNode(rerouteStartNode);
-    setRerouteNotice('Blockage detected. Finding an alternate route...');
-    logMessage('[NAV-TACTICAL] Hazard detected on the active route. Recalculating from the current position...', 'warning');
+    const nodeName = mapData.nodes[rerouteStartNode]?.name || 'Current Position';
+    setStartPlaceObj({
+      id: rerouteStartNode,
+      name: nodeName,
+      district: mapData.nodes[rerouteStartNode]?.district || 'Kerala',
+      lat: currentPosition.lat,
+      lng: currentPosition.lng,
+      type: 'gps_device'
+    });
+    setStartQuery(nodeName);
+    setRerouteNotice('Blockage detected on path. Calculating bypass corridor...');
+    logMessage('[NAV-TACTICAL] Hazard detected on the active route. Recalculating from current position...', 'warning');
   }, [blockages, customRoute, simulationActive, simulationProgress, simTransport, selectedEndNode]);
 
-  // Wait for Dijkstra to produce the route from the vehicle's current node, then resume it.
+  // Wait for router to produce the bypass route from the vehicle's current node, then resume it.
   useEffect(() => {
     const pendingReroute = pendingCustomRerouteRef.current;
     if (!pendingReroute || simulationActive || !customRoute) return;
     if (
-      customRoute.nodes[0] !== pendingReroute.startNode ||
-      customRoute.nodes[customRoute.nodes.length - 1] !== pendingReroute.endNode
+      customRoute.nodes &&
+      (customRoute.nodes[0] !== pendingReroute.startNode ||
+       customRoute.nodes[customRoute.nodes.length - 1] !== pendingReroute.endNode)
     ) return;
 
     pendingCustomRerouteRef.current = null;
-    setRerouteNotice(`Fastest alternate route found: ${customRoute.travelTimeMinutes} min, ${customRoute.distance.toFixed(1)} km. Resuming navigation.`);
-    logMessage('[NAV-TACTICAL] Alternate route acquired. Resuming navigation.', 'success');
+    setRerouteNotice(`Fastest alternate route found: ${customRoute.travelTimeMinutes} min, ${customRoute.distance} km. Resuming navigation.`);
+    logMessage('[NAV-TACTICAL] Alternate bypass route acquired. Resuming navigation.', 'success');
     startCustomSimulation(pendingReroute.mode, customRoute, pendingReroute.startNode, pendingReroute.endNode);
   }, [customRoute, simulationActive]);
 
@@ -4138,13 +4250,14 @@ export default function App() {
     endNodeOverride = selectedEndNode
   ) => {
     const route = routeOverride;
-    const startNode = mapData.nodes[startNodeOverride];
-    const endNode = mapData.nodes[endNodeOverride];
     const startCoord = route?.geometry?.[0];
-    if (!route || !startNode || !endNode || !startCoord || route.nodes?.length < 2) {
+    if (!route || !route.geometry || route.geometry.length < 2 || !startCoord) {
       logMessage('[NAV-TACTICAL] Unable to start simulation: route geometry is unavailable.', 'error');
       return;
     }
+
+    const startName = startPlaceObj?.name || mapData.nodes[startNodeOverride]?.name || 'Origin';
+    const endName = endPlaceObj?.name || mapData.nodes[endNodeOverride]?.name || 'Destination';
 
     activeSimulationRouteRef.current = route;
     setSimulationActive(true);
@@ -4164,7 +4277,7 @@ export default function App() {
       speed = 60; // km/h
     }
 
-    logMessage(`[SIMULATION] Starting journey from ${startNode.name} to ${endNode.name} via ${mode.toUpperCase()}...`, 'system');
+    logMessage(`[SIMULATION] Starting journey from ${startName} to ${endName} via ${mode.toUpperCase()}...`, 'system');
 
     // Create a temporary simulation marker
     const simIcon = L.divIcon({
@@ -4183,7 +4296,7 @@ export default function App() {
     const distancePerTick = speedKms * (tickRateMs / 1000) * simSpeedMultiplier;
 
     let currentProgress = 0;
-    let intermediateStops = route.nodes.slice(1, -1); // junctions along route
+    let intermediateStops = Array.isArray(route.nodes) ? route.nodes.slice(1, -1) : [];
 
     simTimerRef.current = setInterval(() => {
       currentProgress += distancePerTick;
@@ -4201,7 +4314,7 @@ export default function App() {
         }
 
         activeSimulationRouteRef.current = null;
-        logMessage(`[SIMULATION] Journey complete. Arrived at ${mapData.nodes[endNodeOverride].name}!`, 'success');
+        logMessage(`[SIMULATION] Journey complete. Arrived at ${endName}!`, 'success');
         confetti({
           particleCount: 70,
           spread: 50,
@@ -4231,6 +4344,7 @@ export default function App() {
             // Find closest intermediate node
             intermediateStops.forEach((stopId, idx) => {
               const stopNode = mapData.nodes[stopId];
+              if (!stopNode) return;
               const distToStop = haversineDistance(pos.lat, pos.lng, stopNode.lat, stopNode.lng);
 
               // If closer than 400m, show stopping banner!
@@ -4760,30 +4874,76 @@ export default function App() {
                     </div>
 
                     <div style={{ position: 'relative' }}>
-                      <input
-                        type="text"
-                        value={startQuery}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setStartQuery(val);
-                          performPlaceSearch(val, true);
-                        }}
-                        onFocus={() => {
-                          performPlaceSearch(startQuery, true);
-                        }}
-                        placeholder="Search minute hamlet, town, or disaster zone..."
-                        disabled={simulationActive}
-                        style={{
-                          width: '100%',
-                          padding: '0.45rem 0.6rem',
-                          fontSize: '0.78rem',
-                          background: 'rgba(15, 23, 42, 0.7)',
-                          border: '1px solid rgba(56, 189, 248, 0.3)',
-                          borderRadius: '6px',
-                          color: '#f8fafc',
-                          outline: 'none'
-                        }}
-                      />
+                      <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={startQuery}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setStartQuery(val);
+                            performPlaceSearch(val, true);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (startSuggestions.length > 0) {
+                                handleSelectDeparturePlace(startSuggestions[0]);
+                              } else if (startQuery.trim()) {
+                                const matches = searchKeralaPlacesAI(startQuery, 1);
+                                if (matches.length > 0) handleSelectDeparturePlace(matches[0]);
+                              }
+                            }
+                          }}
+                          onFocus={() => {
+                            performPlaceSearch(startQuery, true);
+                          }}
+                          onBlur={() => {
+                            setTimeout(() => {
+                              setShowStartSuggestions(false);
+                              if (startQuery.trim() && startPlaceObj?.name?.toLowerCase() !== startQuery.trim().toLowerCase()) {
+                                const matches = searchKeralaPlacesAI(startQuery, 1);
+                                if (matches.length > 0 && matches[0].confidencePct >= 70) {
+                                  handleSelectDeparturePlace(matches[0]);
+                                }
+                              }
+                            }, 250);
+                          }}
+                          placeholder="Search minute hamlet, town, or disaster zone..."
+                          disabled={simulationActive}
+                          style={{
+                            width: '100%',
+                            padding: '0.45rem 2rem 0.45rem 0.6rem',
+                            fontSize: '0.78rem',
+                            background: 'rgba(15, 23, 42, 0.7)',
+                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                            borderRadius: '6px',
+                            color: '#f8fafc',
+                            outline: 'none'
+                          }}
+                        />
+                        {startQuery && !simulationActive && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStartQuery('');
+                              performPlaceSearch('', true);
+                            }}
+                            title="Clear departure input"
+                            style={{
+                              position: 'absolute',
+                              right: '0.5rem',
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#94a3b8',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              padding: '0.1rem 0.3rem'
+                            }}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                       {startPlaceObj && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.25rem', fontSize: '0.65rem', color: '#94a3b8' }}>
                           <span style={{ color: '#10b981', fontWeight: 600 }}>● Active:</span>
@@ -4820,7 +4980,10 @@ export default function App() {
                           {startSuggestions.map((place) => (
                             <div
                               key={place.id}
-                              onClick={() => handleSelectDeparturePlace(place)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSelectDeparturePlace(place);
+                              }}
                               style={{
                                 padding: '0.45rem 0.6rem',
                                 borderBottom: '1px solid rgba(255,255,255,0.05)',
@@ -4857,6 +5020,34 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* SWAP DEPARTURE & DESTINATION BUTTON */}
+                  <div style={{ display: 'flex', justifyContent: 'center', margin: '-0.3rem 0 0.3rem 0' }}>
+                    <button
+                      type="button"
+                      onClick={handleSwapDepartureAndDestination}
+                      disabled={simulationActive}
+                      title="Swap Departure and Destination points"
+                      style={{
+                        background: 'rgba(56, 189, 248, 0.12)',
+                        border: '1px solid rgba(56, 189, 248, 0.35)',
+                        color: '#38bdf8',
+                        borderRadius: '20px',
+                        padding: '0.2rem 0.75rem',
+                        fontSize: '0.66rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.22)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.12)'}
+                    >
+                      ⇄ Swap Direction
+                    </button>
+                  </div>
+
                   {/* DESTINATION SEARCH WITH AUTOCOMPLETE */}
                   <div className="form-group" style={{ marginBottom: '0.6rem', position: 'relative' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem', fontSize: '0.74rem' }}>
@@ -4865,30 +5056,76 @@ export default function App() {
                     </label>
 
                     <div style={{ position: 'relative' }}>
-                      <input
-                        type="text"
-                        value={endQuery}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setEndQuery(val);
-                          performPlaceSearch(val, false);
-                        }}
-                        onFocus={() => {
-                          performPlaceSearch(endQuery, false);
-                        }}
-                        placeholder="Search destination hamlet, hospital, town..."
-                        disabled={simulationActive}
-                        style={{
-                          width: '100%',
-                          padding: '0.45rem 0.6rem',
-                          fontSize: '0.78rem',
-                          background: 'rgba(15, 23, 42, 0.7)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: '6px',
-                          color: '#f8fafc',
-                          outline: 'none'
-                        }}
-                      />
+                      <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={endQuery}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEndQuery(val);
+                            performPlaceSearch(val, false);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (endSuggestions.length > 0) {
+                                handleSelectDestinationPlace(endSuggestions[0]);
+                              } else if (endQuery.trim()) {
+                                const matches = searchKeralaPlacesAI(endQuery, 1);
+                                if (matches.length > 0) handleSelectDestinationPlace(matches[0]);
+                              }
+                            }
+                          }}
+                          onFocus={() => {
+                            performPlaceSearch(endQuery, false);
+                          }}
+                          onBlur={() => {
+                            setTimeout(() => {
+                              setShowEndSuggestions(false);
+                              if (endQuery.trim() && endPlaceObj?.name?.toLowerCase() !== endQuery.trim().toLowerCase()) {
+                                const matches = searchKeralaPlacesAI(endQuery, 1);
+                                if (matches.length > 0 && matches[0].confidencePct >= 70) {
+                                  handleSelectDestinationPlace(matches[0]);
+                                }
+                              }
+                            }, 250);
+                          }}
+                          placeholder="Search destination hamlet, hospital, town..."
+                          disabled={simulationActive}
+                          style={{
+                            width: '100%',
+                            padding: '0.45rem 2rem 0.45rem 0.6rem',
+                            fontSize: '0.78rem',
+                            background: 'rgba(15, 23, 42, 0.7)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '6px',
+                            color: '#f8fafc',
+                            outline: 'none'
+                          }}
+                        />
+                        {endQuery && !simulationActive && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEndQuery('');
+                              performPlaceSearch('', false);
+                            }}
+                            title="Clear destination input"
+                            style={{
+                              position: 'absolute',
+                              right: '0.5rem',
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#94a3b8',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              padding: '0.1rem 0.3rem'
+                            }}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                       {endPlaceObj && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.25rem', fontSize: '0.65rem', color: '#94a3b8' }}>
                           <span style={{ color: '#ef4444', fontWeight: 600 }}>● Active:</span>
@@ -4925,7 +5162,10 @@ export default function App() {
                           {endSuggestions.map((place) => (
                             <div
                               key={place.id}
-                              onClick={() => handleSelectDestinationPlace(place)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSelectDestinationPlace(place);
+                              }}
                               style={{
                                 padding: '0.45rem 0.6rem',
                                 borderBottom: '1px solid rgba(255,255,255,0.05)',
@@ -5220,8 +5460,8 @@ export default function App() {
                           <button 
                             type="button" 
                             onClick={() => {
-                              const startName = mapData.nodes[customRoute.nodes[0]]?.name || 'Origin';
-                              const endName = mapData.nodes[customRoute.nodes[customRoute.nodes.length - 1]]?.name || 'Destination';
+                              const startName = startPlaceObj?.name || (customRoute.nodes && mapData.nodes[customRoute.nodes[0]]?.name) || 'Origin';
+                              const endName = endPlaceObj?.name || (customRoute.nodes && mapData.nodes[customRoute.nodes[customRoute.nodes.length - 1]]?.name) || 'Destination';
                               const msg = formatWhatsAppRoute(customRoute, startName, endName, meansOfTransport);
                               openWhatsAppShare(msg);
                             }} 
@@ -5255,8 +5495,8 @@ export default function App() {
                                   selectedEndNode,
                                   meansOfTransport
                                 );
-                                const startName = mapData.nodes[selectedStartNode]?.name || selectedStartNode;
-                                const endName = mapData.nodes[selectedEndNode]?.name || selectedEndNode;
+                                const startName = startPlaceObj?.name || mapData.nodes[selectedStartNode]?.name || selectedStartNode;
+                                const endName = endPlaceObj?.name || mapData.nodes[selectedEndNode]?.name || selectedEndNode;
                                 setQrModalData({
                                   title: 'TACTICAL ROUTE QR TRANSFER',
                                   subtitle: `${startName} ➔ ${endName} (${customRoute.distance} km)`,
@@ -5291,8 +5531,8 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => {
-                                const startName = mapData.nodes[selectedStartNode]?.name || selectedStartNode;
-                                const endName = mapData.nodes[selectedEndNode]?.name || selectedEndNode;
+                                const startName = startPlaceObj?.name || mapData.nodes[selectedStartNode]?.name || selectedStartNode;
+                                const endName = endPlaceObj?.name || mapData.nodes[selectedEndNode]?.name || selectedEndNode;
                                 setPrintableMission({
                                   type: 'Tactical Route Clearance & Navigation Manifest',
                                   referenceId: `RTE-${Date.now().toString(36).toUpperCase()}`,
@@ -5328,11 +5568,11 @@ export default function App() {
                         <div style={{ marginTop: '0.5rem' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', color: '#10b981', marginBottom: '0.25rem' }}>
                             <span>Simulating Route...</span>
-                            <span>{Math.round((simulationProgress / customRoute.distance) * 100)}%</span>
+                            <span>{customRoute?.distance > 0 ? Math.min(100, Math.round((simulationProgress / customRoute.distance) * 100)) : 0}%</span>
                           </div>
                           <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
                             <div style={{ 
-                              width: `${(simulationProgress / customRoute.distance) * 100}%`, 
+                              width: `${customRoute?.distance > 0 ? Math.min(100, (simulationProgress / customRoute.distance) * 100) : 0}%`, 
                               height: '100%', 
                               background: '#10b981'
                             }}></div>
@@ -6601,12 +6841,20 @@ export default function App() {
                           <button 
                             type="button" 
                             onClick={() => {
-                              const { id: shelterNodeId } = findClosestNode(sh.lat, sh.lng, mapData.nodes);
                               if (gpsCoords && gpsActive) {
                                 const { id: startId } = findClosestNode(gpsCoords.lat, gpsCoords.lng, mapData.nodes);
-                                setSelectedStartNode(startId);
+                                setDepartureNodeOrPlace(startId);
                               }
-                              setSelectedEndNode(shelterNodeId);
+                              setDestinationNodeOrPlace({
+                                id: sh.id,
+                                name: sh.name,
+                                district: sh.district || 'Kerala',
+                                lat: sh.lat,
+                                lng: sh.lng,
+                                type: 'shelter',
+                                desc: sh.name
+                              });
+                              setActiveTab('planner');
                               if (mapRef.current) {
                                 mapRef.current.setView([sh.lat, sh.lng], 13);
                               }

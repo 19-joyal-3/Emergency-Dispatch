@@ -4,15 +4,20 @@ import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi.js';
 /**
  * Checks if a route geometry intersects any active road blockages (within 450m).
  */
-export function isGeometryBlocked(geometry = [], blockages = []) {
-  const activeBlocks = blockages.filter(b => b.active);
+export function isGeometryBlocked(geometry = [], blockages = [], mapNodes = {}) {
+  const activeBlocks = (blockages || []).filter(b => b.active);
   if (activeBlocks.length === 0 || !geometry || geometry.length === 0) return false;
 
-  for (const pt of geometry) {
-    for (const b of activeBlocks) {
-      if (b.lat && b.lng) {
-        const d = haversineDistance(pt[0], pt[1], b.lat, b.lng);
-        if (d < 0.45) return true;
+  for (const b of activeBlocks) {
+    let bLat = b.lat;
+    let bLng = b.lng;
+    if ((!bLat || !bLng) && b.fromNode && b.toNode && mapNodes?.[b.fromNode] && mapNodes?.[b.toNode]) {
+      bLat = (mapNodes[b.fromNode].lat + mapNodes[b.toNode].lat) / 2;
+      bLng = (mapNodes[b.fromNode].lng + mapNodes[b.toNode].lng) / 2;
+    }
+    if (typeof bLat === 'number' && typeof bLng === 'number') {
+      for (const pt of geometry) {
+        if (haversineDistance(pt[0], pt[1], bLat, bLng) < 0.45) return true;
       }
     }
   }
@@ -23,7 +28,11 @@ export function isGeometryBlocked(geometry = [], blockages = []) {
  * High-fidelity Real-Road Routing via Open Source Routing Machine (OSRM)
  * Follows actual street curves, highways, and mountain passes across Kerala.
  */
-export async function routeWithOSRM(start, end, transport = 'car', blockages = [], signal) {
+export async function routeWithOSRM(start, end, transport = 'car', blockages = [], signal, mapData = null) {
+  if (!start || !end || !Number.isFinite(start.lat) || !Number.isFinite(start.lng) || !Number.isFinite(end.lat) || !Number.isFinite(end.lng)) {
+    return null;
+  }
+
   const profile = transport === 'walk' ? 'walking' : 'driving';
   const url = `https://router.project-osrm.org/route/v1/${profile}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&steps=true&alternatives=true`;
 
@@ -33,6 +42,10 @@ export async function routeWithOSRM(start, end, transport = 'car', blockages = [
   if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
     throw new Error(`OSRM routing unavailable: ${data.code}`);
   }
+
+  const startClosest = mapData?.nodes ? findClosestNode(start.lat, start.lng, mapData.nodes) : null;
+  const endClosest = mapData?.nodes ? findClosestNode(end.lat, end.lng, mapData.nodes) : null;
+  const routeNodes = [startClosest?.id || 'origin', endClosest?.id || 'destination'];
 
   const parsedRoutes = data.routes.map((r, idx) => {
     const geometry = r.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
@@ -58,7 +71,7 @@ export async function routeWithOSRM(start, end, transport = 'car', blockages = [
       };
     }).filter(s => s.distanceKm > 0 || s.name);
 
-    const blocked = isGeometryBlocked(geometry, blockages);
+    const blocked = isGeometryBlocked(geometry, blockages, mapData?.nodes);
 
     return {
       source: 'osrm',
@@ -66,6 +79,8 @@ export async function routeWithOSRM(start, end, transport = 'car', blockages = [
       geometry,
       distance: distanceKm,
       travelTimeMinutes: durationMins,
+      nodes: routeNodes,
+      edges: [],
       steps,
       isBlocked: blocked,
       isDetour: idx > 0 || blocked
@@ -81,8 +96,12 @@ export async function routeWithOSRM(start, end, transport = 'car', blockages = [
 /**
  * Real-Time Traffic-Aware Routing via TomTom Orbis Routing API
  */
-export async function routeWithTomTom(start, end, apiKey, transport = 'car', blockages = [], signal) {
+export async function routeWithTomTom(start, end, apiKey, transport = 'car', blockages = [], signal, mapData = null) {
   if (!apiKey || !apiKey.trim()) return null;
+  if (!start || !end || !Number.isFinite(start.lat) || !Number.isFinite(start.lng) || !Number.isFinite(end.lat) || !Number.isFinite(end.lng)) {
+    return null;
+  }
+
   const travelMode = transport === 'walk' ? 'pedestrian' : (transport === 'bus' ? 'bus' : 'car');
   const cleanKey = encodeURIComponent(apiKey.trim());
   const url = `https://api.tomtom.com/routing/1/calculateRoute/${start.lat},${start.lng}:${end.lat},${end.lng}/json?key=${cleanKey}&traffic=true&travelMode=${travelMode}`;
@@ -111,7 +130,11 @@ export async function routeWithTomTom(start, end, apiKey, transport = 'car', blo
     durationMin: +(inst.travelTimeInSeconds / 60).toFixed(1)
   }));
 
-  const blocked = isGeometryBlocked(geometry, blockages);
+  const startClosest = mapData?.nodes ? findClosestNode(start.lat, start.lng, mapData.nodes) : null;
+  const endClosest = mapData?.nodes ? findClosestNode(end.lat, end.lng, mapData.nodes) : null;
+  const routeNodes = [startClosest?.id || 'origin', endClosest?.id || 'destination'];
+
+  const blocked = isGeometryBlocked(geometry, blockages, mapData?.nodes);
 
   return {
     source: 'tomtom_orbis',
@@ -120,6 +143,8 @@ export async function routeWithTomTom(start, end, apiKey, transport = 'car', blo
     travelTimeMinutes: timeMins,
     trafficDelayMinutes: delayMins,
     geometry,
+    nodes: routeNodes,
+    edges: [],
     steps,
     isBlocked: blocked,
     isDetour: blocked
@@ -159,7 +184,7 @@ export function routeWithOfflineGraph({ start, end, mapData, blockages = [], tra
     return {
       source: 'tactical_offline',
       sourceLabel: '⚡ Tactical Offline Graph',
-      nodes: [startClosest.id],
+      nodes: [startClosest.id, endClosest.id],
       edges: [],
       distance: roadDist,
       travelTimeMinutes: timeMins,
@@ -222,13 +247,15 @@ export async function calculateBestRoute({
     return null;
   }
 
+  let candidateOsrm = null;
+
   // 1. Try Online Routing if internet connectivity is detected
   const isOnline = typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean' ? navigator.onLine : true;
   if (isOnline) {
     // 1A. Attempt TomTom Orbis with Live Traffic if API key is configured
     if (tomtomApiKey && tomtomApiKey.trim()) {
       try {
-        const ttRoute = await routeWithTomTom(start, end, tomtomApiKey, transport, blockages, signal);
+        const ttRoute = await routeWithTomTom(start, end, tomtomApiKey, transport, blockages, signal, mapData);
         if (ttRoute && !ttRoute.isBlocked) {
           return ttRoute;
         }
@@ -239,12 +266,12 @@ export async function calculateBestRoute({
 
     // 1B. Primary Real-Road Engine: OSRM (OpenStreetMap Kerala Road Network)
     try {
-      const osrmRoute = await routeWithOSRM(start, end, transport, blockages, signal);
-      if (osrmRoute && !osrmRoute.isBlocked) {
-        return osrmRoute;
+      candidateOsrm = await routeWithOSRM(start, end, transport, blockages, signal, mapData);
+      if (candidateOsrm && !candidateOsrm.isBlocked) {
+        return candidateOsrm;
       }
-      if (osrmRoute && osrmRoute.isBlocked) {
-        console.warn('[ROUTING] All OSRM routes intersect active blockages; using local avoidance Dijkstra');
+      if (candidateOsrm && candidateOsrm.isBlocked) {
+        console.warn('[ROUTING] Primary OSRM route intersects active blockage; attempting offline avoidance');
       }
     } catch (err) {
       console.warn('[ROUTING] OSRM route unavailable, falling back to local graph:', err.message);
@@ -274,5 +301,14 @@ export async function calculateBestRoute({
   }
 
   // 2. Offline Fallback: Local Graph & Dijkstra Engine
-  return routeWithOfflineGraph({ start, end, mapData, blockages, transport });
+  const offlineRoute = routeWithOfflineGraph({ start, end, mapData, blockages, transport });
+  if (offlineRoute && !offlineRoute.isBlocked) {
+    return offlineRoute;
+  }
+
+  // 3. Resilient fallback: return candidate route with blockage metadata rather than failing
+  if (candidateOsrm) {
+    return candidateOsrm;
+  }
+  return offlineRoute;
 }
