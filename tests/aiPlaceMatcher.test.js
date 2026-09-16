@@ -1,4 +1,4 @@
-﻿import { searchKeralaPlacesAI, findClosestGraphNode } from '../src/aiPlaceMatcher.js';
+import { searchKeralaPlacesAI, findClosestGraphNode } from '../src/aiPlaceMatcher.js';
 import mapData from '../src/mapData.json' with { type: 'json' };
 import { solveDijkstra } from '../src/routing.js';
 
@@ -24,7 +24,12 @@ const typos = [
   { query: 'mundakai', expected: 'Mundakkai' },
   { query: 'mepadi', expected: 'Meppadi' },
   { query: 'kutanad', expected: 'Kuttanad' },
-  { query: 'vytila', expected: 'Vytilla' }
+  { query: 'vytila', expected: 'Vytilla' },
+  { query: 'anakulam', expected: 'Anakulam' },
+  { query: 'munro island', expected: 'Munroe Island' },
+  { query: 'kutiran', expected: 'Kuthiran' },
+  { query: 'silant valey', expected: 'Silent Valley' },
+  { query: 'chembra', expected: 'Chembra' }
 ];
 
 for (const { query, expected } of typos) {

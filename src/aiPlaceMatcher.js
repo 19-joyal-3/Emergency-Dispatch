@@ -27,7 +27,8 @@ export function normalizePlaceName(str) {
     .replace(/zh/g, 'l')  // Kozhikode -> Kolikode transliteration variance
     .replace(/dh/g, 'd')
     .replace(/w/g, 'v')
-    .replace(/[\s\-_,.]+/g, ' ');
+    .replace(/[^\w\s]/g, ' ') // Strip brackets, quotes, hyphens, slashes
+    .replace(/\s+/g, ' ');
 }
 
 // Phonetic compression: collapse doubled consonants & normalize vowels
@@ -118,16 +119,56 @@ export function searchKeralaPlacesAI(query, maxResults = 8) {
 
     let bestScore = 0;
 
-    // 1. Full string exact match or phonetic exact match
+    // 1. Full string exact match, phonetic match, or substring match
     if (normName === normQ) {
       bestScore = 1.0;
     } else if (phonName === phonQ) {
       bestScore = 0.98;
     } else if (normName.startsWith(normQ)) {
       bestScore = 0.90 + (normQ.length / normName.length) * 0.10;
+    } else if (normName.includes(normQ)) {
+      bestScore = Math.max(bestScore, 0.92);
+    } else if (phonName.includes(phonQ)) {
+      bestScore = Math.max(bestScore, 0.90);
     }
 
-    // 2. Token-level matching (matches primary word in compound place name)
+    // 2. Multi-word query matching (e.g. "silant valey" matches "Mukkali (Silent Valley)")
+    const qTokens = normQ.split(' ').filter(t => t.length > 0);
+    if (qTokens.length > 1) {
+      let matchedQueryTokens = 0;
+      let totalTokenSim = 0;
+      for (const qTok of qTokens) {
+        const phonQTok = phoneticCompress(qTok);
+        let maxTokSim = 0;
+        for (const nameTok of nameTokens) {
+          if (nameTok === qTok) {
+            maxTokSim = 1.0;
+            break;
+          }
+          const phonNameTok = phoneticCompress(nameTok);
+          if (phonNameTok === phonQTok) {
+            maxTokSim = Math.max(maxTokSim, 0.98);
+          } else if (nameTok.startsWith(qTok)) {
+            maxTokSim = Math.max(maxTokSim, 0.92);
+          } else {
+            const tokNGram = nGramSimilarity(qTok, nameTok);
+            const tokEdit = editSimilarity(qTok, nameTok);
+            const phonEdit = editSimilarity(phonQTok, phonNameTok);
+            const sim = Math.max(tokNGram * 0.5 + tokEdit * 0.5, phonEdit * 0.95);
+            maxTokSim = Math.max(maxTokSim, sim);
+          }
+        }
+        if (maxTokSim >= 0.70) matchedQueryTokens++;
+        totalTokenSim += maxTokSim;
+      }
+      const avgSim = totalTokenSim / qTokens.length;
+      if (matchedQueryTokens === qTokens.length) {
+        // All query words matched distinct parts of the place name!
+        bestScore = Math.max(bestScore, 0.88 + avgSim * 0.10);
+      }
+    }
+
+    // 3. Token-level matching (matches primary word in compound place name)
     for (const token of nameTokens) {
       const phonTok = phoneticCompress(token);
 
@@ -147,7 +188,7 @@ export function searchKeralaPlacesAI(query, maxResults = 8) {
       }
     }
 
-    // 3. Fallback to whole-name N-gram and edit distance
+    // 4. Fallback to whole-name N-gram and edit distance
     const fullNGram = nGramSimilarity(normQ, normName);
     const fullEdit = editSimilarity(normQ, normName);
     bestScore = Math.max(bestScore, fullNGram * 0.55 + fullEdit * 0.45);
