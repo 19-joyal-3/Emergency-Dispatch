@@ -10,7 +10,7 @@ import { searchKeralaPlacesAI, findClosestGraphNode, searchLiveKeralaNominatim }
 import { fetchWeather, fetchDistrictLiveAlerts, fetch7DayClimatePrediction, KERALA_DISTRICTS } from './weatherApi';
 import { isSupabaseConfigured, supabase } from './supabase';
 import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
-import { calculateBestRoute, routeWithOfflineGraph } from './routingEngine';
+import { calculateBestRoute, routeWithOfflineGraph, isGeometryBlocked } from './routingEngine';
 import confetti from 'canvas-confetti';
 import { playTacticalChime, playEvacuationSiren } from './audio';
 import { searchDeoc } from './deoc';
@@ -3253,9 +3253,9 @@ export default function App() {
         `Received offline via ${sos.protocol}. Proximity distance: ${sos.distanceMeters || 'Local'}m.`
       );
 
-      const closest = findClosestNode(targetLat, targetLng, mapData);
-      if (closest) {
-        setSelectedEndNode(closest);
+      const closest = findClosestNode(targetLat, targetLng, mapData.nodes);
+      if (closest && closest.id) {
+        setSelectedEndNode(closest.id);
       }
       logMessage(`[P2P] Plotted emergency distress coordinates for ${sos.senderCallsign} on tactical map.`, 'warning');
     } catch (err) {
@@ -3419,9 +3419,10 @@ export default function App() {
   const handleAutoDetourHazard = (hazard) => {
     try {
       if (hazard?.coordinates) {
-        const avoidNode = findClosestNode(hazard.coordinates[0], hazard.coordinates[1], mapData);
-        if (avoidNode) {
-          logMessage(`[DETOUR] Re-routing traffic around hazard zone near ${avoidNode}.`, 'warning');
+        const avoidNode = findClosestNode(hazard.coordinates[0], hazard.coordinates[1], mapData.nodes);
+        if (avoidNode && avoidNode.id) {
+          const avoidName = mapData.nodes[avoidNode.id]?.name || avoidNode.id;
+          logMessage(`[DETOUR] Re-routing traffic around hazard zone near ${avoidName}.`, 'warning');
         }
       }
       if (hazard?.hazardId) {
@@ -3768,22 +3769,48 @@ export default function App() {
   };
 
   const handleSwapDepartureAndDestination = () => {
-    const prevStartPlace = startPlaceObj;
-    const prevStartQuery = startQuery;
-    const prevEndPlace = endPlaceObj;
-    const prevEndQuery = endQuery;
+    const prevStartPlace = startPlaceObj || (selectedStartNode && mapData.nodes[selectedStartNode] ? {
+      id: selectedStartNode,
+      name: mapData.nodes[selectedStartNode].name,
+      district: mapData.nodes[selectedStartNode].district || 'Kerala',
+      lat: mapData.nodes[selectedStartNode].lat,
+      lng: mapData.nodes[selectedStartNode].lng,
+      type: 'town',
+      desc: mapData.nodes[selectedStartNode].name
+    } : null);
+    const prevStartQuery = startQuery || prevStartPlace?.name || '';
+
+    const prevEndPlace = endPlaceObj || (selectedEndNode && mapData.nodes[selectedEndNode] ? {
+      id: selectedEndNode,
+      name: mapData.nodes[selectedEndNode].name,
+      district: mapData.nodes[selectedEndNode].district || 'Kerala',
+      lat: mapData.nodes[selectedEndNode].lat,
+      lng: mapData.nodes[selectedEndNode].lng,
+      type: 'town',
+      desc: mapData.nodes[selectedEndNode].name
+    } : null);
+    const prevEndQuery = endQuery || prevEndPlace?.name || '';
 
     if (prevEndPlace) {
       setStartPlaceObj(prevEndPlace);
       setStartQuery(prevEndQuery);
       const closest = findClosestGraphNode(prevEndPlace.lat, prevEndPlace.lng, mapData.nodes);
       if (closest) setSelectedStartNode(closest.id);
+    } else {
+      setStartPlaceObj(null);
+      setStartQuery('');
+      setSelectedStartNode('');
     }
+
     if (prevStartPlace) {
       setEndPlaceObj(prevStartPlace);
       setEndQuery(prevStartQuery);
       const closest = findClosestGraphNode(prevStartPlace.lat, prevStartPlace.lng, mapData.nodes);
       if (closest) setSelectedEndNode(closest.id);
+    } else {
+      setEndPlaceObj(null);
+      setEndQuery('');
+      setSelectedEndNode('');
     }
     logMessage('[ROUTE] Swapped departure and destination points.', 'info');
   };
@@ -4926,6 +4953,8 @@ export default function App() {
                             type="button"
                             onClick={() => {
                               setStartQuery('');
+                              setStartPlaceObj(null);
+                              setSelectedStartNode('');
                               performPlaceSearch('', true);
                             }}
                             title="Clear departure input"
@@ -4977,9 +5006,9 @@ export default function App() {
                             boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
                           }}
                         >
-                          {startSuggestions.map((place) => (
+                          {startSuggestions.map((place, idx) => (
                             <div
-                              key={place.id}
+                              key={`${place.id || place.name || 'start'}_${idx}`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 handleSelectDeparturePlace(place);
@@ -5108,6 +5137,8 @@ export default function App() {
                             type="button"
                             onClick={() => {
                               setEndQuery('');
+                              setEndPlaceObj(null);
+                              setSelectedEndNode('');
                               performPlaceSearch('', false);
                             }}
                             title="Clear destination input"
@@ -5159,9 +5190,9 @@ export default function App() {
                             boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
                           }}
                         >
-                          {endSuggestions.map((place) => (
+                          {endSuggestions.map((place, idx) => (
                             <div
-                              key={place.id}
+                              key={`${place.id || place.name || 'end'}_${idx}`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 handleSelectDestinationPlace(place);

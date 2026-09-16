@@ -11,9 +11,11 @@ export function isGeometryBlocked(geometry = [], blockages = [], mapNodes = {}) 
   for (const b of activeBlocks) {
     let bLat = b.lat;
     let bLng = b.lng;
-    if ((!bLat || !bLng) && b.fromNode && b.toNode && mapNodes?.[b.fromNode] && mapNodes?.[b.toNode]) {
-      bLat = (mapNodes[b.fromNode].lat + mapNodes[b.toNode].lat) / 2;
-      bLng = (mapNodes[b.fromNode].lng + mapNodes[b.toNode].lng) / 2;
+    const from = b.fromNode || b.from;
+    const to = b.toNode || b.to;
+    if ((!bLat || !bLng) && from && to && mapNodes?.[from] && mapNodes?.[to]) {
+      bLat = (mapNodes[from].lat + mapNodes[to].lat) / 2;
+      bLng = (mapNodes[from].lng + mapNodes[to].lng) / 2;
     }
     if (typeof bLat === 'number' && typeof bLng === 'number') {
       for (const pt of geometry) {
@@ -29,6 +31,7 @@ export function isGeometryBlocked(geometry = [], blockages = [], mapNodes = {}) 
  * Follows actual street curves, highways, and mountain passes across Kerala.
  */
 export async function routeWithOSRM(start, end, transport = 'car', blockages = [], signal, mapData = null) {
+  if (signal?.aborted) return null;
   if (!start || !end || !Number.isFinite(start.lat) || !Number.isFinite(start.lng) || !Number.isFinite(end.lat) || !Number.isFinite(end.lng)) {
     return null;
   }
@@ -97,6 +100,7 @@ export async function routeWithOSRM(start, end, transport = 'car', blockages = [
  * Real-Time Traffic-Aware Routing via TomTom Orbis Routing API
  */
 export async function routeWithTomTom(start, end, apiKey, transport = 'car', blockages = [], signal, mapData = null) {
+  if (signal?.aborted) return null;
   if (!apiKey || !apiKey.trim()) return null;
   if (!start || !end || !Number.isFinite(start.lat) || !Number.isFinite(start.lng) || !Number.isFinite(end.lat) || !Number.isFinite(end.lng)) {
     return null;
@@ -243,6 +247,7 @@ export async function calculateBestRoute({
   tomtomApiKey = '',
   signal
 }) {
+  if (signal?.aborted) return null;
   if (!start || !end || typeof start.lat !== 'number' || typeof end.lat !== 'number') {
     return null;
   }
@@ -256,17 +261,22 @@ export async function calculateBestRoute({
     if (tomtomApiKey && tomtomApiKey.trim()) {
       try {
         const ttRoute = await routeWithTomTom(start, end, tomtomApiKey, transport, blockages, signal, mapData);
+        if (signal?.aborted) return null;
         if (ttRoute && !ttRoute.isBlocked) {
           return ttRoute;
         }
       } catch (err) {
+        if (signal?.aborted || err.name === 'AbortError') return null;
         console.warn('[ROUTING] TomTom route unavailable, falling back to OSRM:', err.message);
       }
     }
 
+    if (signal?.aborted) return null;
+
     // 1B. Primary Real-Road Engine: OSRM (OpenStreetMap Kerala Road Network)
     try {
       candidateOsrm = await routeWithOSRM(start, end, transport, blockages, signal, mapData);
+      if (signal?.aborted) return null;
       if (candidateOsrm && !candidateOsrm.isBlocked) {
         return candidateOsrm;
       }
@@ -274,8 +284,11 @@ export async function calculateBestRoute({
         console.warn('[ROUTING] Primary OSRM route intersects active blockage; attempting offline avoidance');
       }
     } catch (err) {
+      if (signal?.aborted || err.name === 'AbortError') return null;
       console.warn('[ROUTING] OSRM route unavailable, falling back to local graph:', err.message);
     }
+
+    if (signal?.aborted) return null;
 
     // 1C. Valhalla (if custom self-hosted server is configured)
     if (isValhallaConfigured) {
@@ -288,6 +301,7 @@ export async function calculateBestRoute({
           avoidLocations,
           signal
         });
+        if (signal?.aborted) return null;
         if (valhallaRes) {
           return {
             ...valhallaRes,
@@ -295,10 +309,13 @@ export async function calculateBestRoute({
           };
         }
       } catch (err) {
+        if (signal?.aborted || err.name === 'AbortError') return null;
         console.warn('[ROUTING] Valhalla route unavailable:', err.message);
       }
     }
   }
+
+  if (signal?.aborted) return null;
 
   // 2. Offline Fallback: Local Graph & Dijkstra Engine
   const offlineRoute = routeWithOfflineGraph({ start, end, mapData, blockages, transport });
