@@ -17,6 +17,7 @@ const testFiles = [
   { name: 'Live Zero-Connectivity P2P Radar & Mesh Engine', file: path.join(__dirname, 'p2p.test.js') },
   { name: 'Spatial Proximity Location Intercept & Photo Alert', file: path.join(__dirname, 'hazard-photo-intercept.test.js') },
   { name: 'Dynamic Geofence Polygon & Proximity Warning', file: path.join(__dirname, 'geofence.test.js') },
+  { name: 'Kerala AI Place Matcher & Road Network Routing', file: path.join(__dirname, 'aiPlaceMatcher.test.js') },
   { name: 'Google Play Store Mobile Package & Policy Audit', file: path.join(root, 'test-playstore-readiness.js') }
 ];
 

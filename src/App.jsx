@@ -6,6 +6,7 @@ import { db, addIncidentLocal, updateIncidentStatusLocal, addBlockageLocal, remo
 import { formatSosMessage, getSosContacts, openSosCall, openSosSms, saveSosContacts, openWhatsAppShare, formatWhatsAppIncident, formatWhatsAppRoute } from './sos';
 import mapData from './mapData.json';
 import { solveDijkstra, findClosestNode, getPositionAtDistance, haversineDistance } from './routing';
+import { searchKeralaPlacesAI, findClosestGraphNode, searchLiveKeralaNominatim } from './aiPlaceMatcher';
 import { fetchWeather, fetchDistrictLiveAlerts, fetch7DayClimatePrediction, KERALA_DISTRICTS } from './weatherApi';
 import { isSupabaseConfigured, supabase } from './supabase';
 import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
@@ -413,6 +414,14 @@ export default function App() {
   // Tactical Route Planner States (Custom routing)
   const [selectedStartNode, setSelectedStartNode] = useState('vadakkencherry'); // Default Start
   const [selectedEndNode, setSelectedEndNode] = useState('valliyode'); // Default End
+  const [startQuery, setStartQuery] = useState('Vadakkencherry');
+  const [endQuery, setEndQuery] = useState('Valliyode');
+  const [startPlaceObj, setStartPlaceObj] = useState({ id: 'vadakkencherry', name: 'Vadakkencherry', district: 'Palakkad', lat: 10.596, lng: 76.497, type: 'town' });
+  const [endPlaceObj, setEndPlaceObj] = useState({ id: 'valliyode', name: 'Valliyode', district: 'Palakkad', lat: 10.552, lng: 76.536, type: 'village' });
+  const [startSuggestions, setStartSuggestions] = useState([]);
+  const [endSuggestions, setEndSuggestions] = useState([]);
+  const [showStartSuggestions, setShowStartSuggestions] = useState(false);
+  const [showEndSuggestions, setShowEndSuggestions] = useState(false);
   const [customRoute, setCustomRoute] = useState(null);
   const [meansOfTransport, setMeansOfTransport] = useState('car'); // car, bus, walk
   const [matchingBusLines, setMatchingBusLines] = useState([]);
@@ -1731,7 +1740,7 @@ export default function App() {
     }
   }, [blockages, showTraffic]);
 
-  // Live Real-Time Traffic Tile Layer (TomTom / Leaflet)
+  // Live Real-Time Traffic Tile Layer (TomTom Orbis V2 & V4 / Leaflet)
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -1739,8 +1748,30 @@ export default function App() {
       const cleanKey = tomtomApiKey.trim();
       if (!liveTrafficLayerRef.current) {
         try {
-          // TomTom Real-Time Traffic Flow Raster Tile Layer
-          liveTrafficLayerRef.current = L.tileLayer(
+          // TomTom Orbis V2 Traffic Flow Raster Tile Layer (per OpenAPI 3.1 spec)
+          const orbisFlowLayer = L.tileLayer(
+            `https://api.tomtom.com/maps/orbis/traffic/flow/raster/tile/{z}/{x}/{y}?apiVersion=2&key=${encodeURIComponent(cleanKey)}`,
+            {
+              maxZoom: 22,
+              opacity: 0.85,
+              zIndex: 650,
+              attribution: 'Live Traffic Flow &copy; TomTom Orbis'
+            }
+          );
+
+          // TomTom Orbis V2 Traffic Incidents Raster Tile Layer
+          const orbisIncidentsLayer = L.tileLayer(
+            `https://api.tomtom.com/maps/orbis/traffic/incidents/raster/tile/{z}/{x}/{y}?apiVersion=2&key=${encodeURIComponent(cleanKey)}`,
+            {
+              maxZoom: 22,
+              opacity: 0.90,
+              zIndex: 651,
+              attribution: 'Live Incidents &copy; TomTom Orbis'
+            }
+          );
+
+          // Classic TomTom v4 fallback layer
+          const classicFlowLayer = L.tileLayer(
             `https://{s}.api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${encodeURIComponent(cleanKey)}`,
             {
               subdomains: ['a', 'b', 'c', 'd'],
@@ -1749,8 +1780,23 @@ export default function App() {
               zIndex: 650,
               attribution: 'Live Traffic &copy; TomTom'
             }
-          ).addTo(mapRef.current);
-          logMessage('[TRAFFIC] Real-time TomTom satellite traffic flow layer connected.', 'success');
+          );
+
+          let hasFallenBack = false;
+          orbisFlowLayer.on('tileerror', () => {
+            if (!hasFallenBack && mapRef.current && liveTrafficLayerRef.current) {
+              hasFallenBack = true;
+              console.info('[TRAFFIC] Orbis V2 tile fallback; switching to TomTom v4 flow layer.');
+              try {
+                mapRef.current.removeLayer(liveTrafficLayerRef.current);
+                liveTrafficLayerRef.current = classicFlowLayer.addTo(mapRef.current);
+              } catch {}
+            }
+          });
+
+          const trafficGroup = L.layerGroup([orbisFlowLayer, orbisIncidentsLayer]);
+          liveTrafficLayerRef.current = trafficGroup.addTo(mapRef.current);
+          logMessage('[TRAFFIC] Real-time TomTom Orbis V2 Traffic Flow & Incidents layer connected.', 'success');
         } catch (err) {
           console.warn('[TRAFFIC] Failed to attach live traffic layer:', err);
         }
@@ -3549,19 +3595,70 @@ export default function App() {
     return (brng + 360) % 360;
   };
 
+  // Helper handlers for AI Minute Place selection
+  const handleSelectDeparturePlace = (place) => {
+    setStartQuery(place.name);
+    setStartPlaceObj(place);
+    setShowStartSuggestions(false);
+    const closest = findClosestGraphNode(place.lat, place.lng, mapData.nodes);
+    if (closest) {
+      setSelectedStartNode(closest.id);
+      logMessage(`[ROUTE] Departure set: ${place.name} (${place.district}). Snapped to [${closest.name}] (${closest.distanceKm} km)`, 'info');
+    }
+  };
+
+  const handleSelectDestinationPlace = (place) => {
+    setEndQuery(place.name);
+    setEndPlaceObj(place);
+    setShowEndSuggestions(false);
+    const closest = findClosestGraphNode(place.lat, place.lng, mapData.nodes);
+    if (closest) {
+      setSelectedEndNode(closest.id);
+      logMessage(`[ROUTE] Destination set: ${place.name} (${place.district}). Snapped to [${closest.name}] (${closest.distanceKm} km)`, 'info');
+    }
+  };
+
+  const handleUseCurrentGpsAsStart = () => {
+    if (!gpsCoords) {
+      logMessage('[GPS] Real-time GPS location not available. Enable GPS in the header first.', 'warning');
+      return;
+    }
+    const gpsPlace = {
+      id: 'live_gps_loc',
+      name: 'My GPS Location',
+      district: 'Kerala',
+      lat: gpsCoords.lat,
+      lng: gpsCoords.lng,
+      type: 'gps_device',
+      desc: `Coordinates: ${gpsCoords.lat.toFixed(4)}°N, ${gpsCoords.lng.toFixed(4)}°E`
+    };
+    handleSelectDeparturePlace(gpsPlace);
+  };
+
   // 12. Solve Routing (Custom/Tactical Planner vs Responder Dispatch)
-  const drawRoutePolyline = (geometry) => {
+  const drawRoutePolyline = (geometry, startPt = null, endPt = null) => {
     if (!mapRef.current || !routeLayerRef.current) return;
     routeLayerRef.current.clearLayers();
 
-    const glowLine = L.polyline(geometry, {
+    let fullGeom = Array.isArray(geometry) ? [...geometry] : [];
+    if (startPt && typeof startPt.lat === 'number' && typeof startPt.lng === 'number') {
+      fullGeom.unshift([startPt.lat, startPt.lng]);
+    }
+    if (endPt && typeof endPt.lat === 'number' && typeof endPt.lng === 'number') {
+      fullGeom.push([endPt.lat, endPt.lng]);
+    }
+
+    if (fullGeom.length === 0) return;
+
+    const glowLine = L.polyline(fullGeom, {
       color: '#38bdf8',
       weight: 8,
       opacity: 0.3
     });
 
-    const coreLine = L.polyline(geometry, {
-      color: rerouteNotice ? '#f59e0b' : '#10b981',
+    const isDetour = !!rerouteNotice || blockages.some(b => b.active);
+    const coreLine = L.polyline(fullGeom, {
+      color: isDetour ? '#f59e0b' : '#10b981',
       weight: 4,
       opacity: 0.95,
       className: 'flowing-route-line'
@@ -3569,6 +3666,32 @@ export default function App() {
 
     routeLayerRef.current.addLayer(glowLine);
     routeLayerRef.current.addLayer(coreLine);
+
+    // Departure Pin (Green pulsating circle)
+    const depCoord = fullGeom[0];
+    const depName = startPt?.name || mapData.nodes[selectedStartNode]?.name || 'Departure';
+    const depDistrict = startPt?.district ? ` [${startPt.district}]` : '';
+    const depMarker = L.circleMarker(depCoord, {
+      radius: 8,
+      color: '#10b981',
+      fillColor: '#34d399',
+      fillOpacity: 0.95,
+      weight: 2
+    }).bindPopup(`<div style="font-size: 0.75rem;"><strong>📍 Departure:</strong><br/>${escapeHtml(depName + depDistrict)}</div>`);
+    routeLayerRef.current.addLayer(depMarker);
+
+    // Destination Pin (Red circle)
+    const destCoord = fullGeom[fullGeom.length - 1];
+    const destName = endPt?.name || mapData.nodes[selectedEndNode]?.name || 'Destination';
+    const destDistrict = endPt?.district ? ` [${endPt.district}]` : '';
+    const destMarker = L.circleMarker(destCoord, {
+      radius: 8,
+      color: '#ef4444',
+      fillColor: '#f87171',
+      fillOpacity: 0.95,
+      weight: 2
+    }).bindPopup(`<div style="font-size: 0.75rem;"><strong>🏁 Destination:</strong><br/>${escapeHtml(destName + destDistrict)}</div>`);
+    routeLayerRef.current.addLayer(destMarker);
   };
 
   // Dynamic Routing Logic for Tactical Router
@@ -3600,12 +3723,16 @@ export default function App() {
       
       // If dispatch simulator is not active, render the tactical path
       if (!simulationActive) {
-        drawRoutePolyline(result.geometry);
+        drawRoutePolyline(result.geometry, startPlaceObj, endPlaceObj);
         
-        // Auto-center and zoom map to fit the bounds of the newly solved route
-        if (mapRef.current && result.geometry && result.geometry.length > 0) {
+        // Auto-center and zoom map to fit the bounds of the newly solved route (including minute hamlet pins)
+        let boundsGeom = [...(result.geometry || [])];
+        if (startPlaceObj?.lat && startPlaceObj?.lng) boundsGeom.unshift([startPlaceObj.lat, startPlaceObj.lng]);
+        if (endPlaceObj?.lat && endPlaceObj?.lng) boundsGeom.push([endPlaceObj.lat, endPlaceObj.lng]);
+
+        if (mapRef.current && boundsGeom.length > 0) {
           try {
-            const bounds = L.polyline(result.geometry).getBounds();
+            const bounds = L.polyline(boundsGeom).getBounds();
             mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
           } catch (e) {
             console.error("Error fitting map bounds to path:", e);
@@ -3651,7 +3778,7 @@ export default function App() {
       cancelled = true;
       controller.abort();
     };
-  }, [selectedStartNode, selectedEndNode, blockages, simulationActive, meansOfTransport]);
+  }, [selectedStartNode, selectedEndNode, startPlaceObj, endPlaceObj, blockages, simulationActive, meansOfTransport, rerouteNotice]);
 
   // Re-route an active tactical simulation when a newly reported blockage closes its path.
   useEffect(() => {
@@ -4507,36 +4634,284 @@ export default function App() {
                   <Navigation size={14} style={{ color: 'hsl(var(--color-secondary))' }} />
                 </h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-                    <label>Departure Point</label>
-                    <select 
-                      value={selectedStartNode} 
-                      onChange={(e) => setSelectedStartNode(e.target.value)}
-                      disabled={simulationActive}
-                    >
-                      {Object.keys(mapData.nodes)
-                        .filter(id => mapData.nodes[id].type === 'city')
-                        .map(id => (
-                          <option key={id} value={id}>{mapData.nodes[id].name}</option>
-                        ))
-                      }
-                    </select>
+                  {/* DEPARTURE SEARCH WITH AUTOCOMPLETE & GPS */}
+                  <div className="form-group" style={{ marginBottom: '0.6rem', position: 'relative' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', margin: 0, fontSize: '0.74rem' }}>
+                        <MapPin size={13} style={{ color: '#10b981' }} />
+                        <span>Departure Point (All Minute Hamlets & Wards)</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleUseCurrentGpsAsStart}
+                        disabled={simulationActive}
+                        title="Use device real-time GPS location"
+                        style={{
+                          background: 'rgba(16, 185, 129, 0.15)',
+                          border: '1px solid rgba(16, 185, 129, 0.4)',
+                          color: '#6ee7b7',
+                          fontSize: '0.62rem',
+                          fontWeight: 700,
+                          padding: '0.15rem 0.45rem',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                      >
+                        <Locate size={10} /> 📍 Use GPS
+                      </button>
+                    </div>
+
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        value={startQuery}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setStartQuery(val);
+                          const suggestions = searchKeralaPlacesAI(val, 8);
+                          setStartSuggestions(suggestions);
+                          setShowStartSuggestions(true);
+                        }}
+                        onFocus={() => {
+                          const suggestions = searchKeralaPlacesAI(startQuery, 8);
+                          setStartSuggestions(suggestions);
+                          setShowStartSuggestions(true);
+                        }}
+                        placeholder="Search minute hamlet, town, or disaster zone..."
+                        disabled={simulationActive}
+                        style={{
+                          width: '100%',
+                          padding: '0.45rem 0.6rem',
+                          fontSize: '0.78rem',
+                          background: 'rgba(15, 23, 42, 0.7)',
+                          border: '1px solid rgba(56, 189, 248, 0.3)',
+                          borderRadius: '6px',
+                          color: '#f8fafc',
+                          outline: 'none'
+                        }}
+                      />
+                      {startPlaceObj && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.25rem', fontSize: '0.65rem', color: '#94a3b8' }}>
+                          <span style={{ color: '#10b981', fontWeight: 600 }}>● Active:</span>
+                          <span style={{ color: '#f1f5f9', fontWeight: 700 }}>{startPlaceObj.name}</span>
+                          <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '0.05rem 0.3rem', borderRadius: '3px' }}>
+                            {startPlaceObj.district}
+                          </span>
+                          {startPlaceObj.isDisasterZone && (
+                            <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', padding: '0.05rem 0.3rem', borderRadius: '3px', fontWeight: 700 }}>
+                              🚨 Disaster Hotspot
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Dropdown Suggestions */}
+                      {showStartSuggestions && startSuggestions.length > 0 && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            zIndex: 1100,
+                            marginTop: '0.25rem',
+                            background: '#0b132b',
+                            border: '1px solid rgba(56, 189, 248, 0.4)',
+                            borderRadius: '6px',
+                            maxHeight: '210px',
+                            overflowY: 'auto',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
+                          }}
+                        >
+                          {startSuggestions.map((place) => (
+                            <div
+                              key={place.id}
+                              onClick={() => handleSelectDeparturePlace(place)}
+                              style={{
+                                padding: '0.45rem 0.6rem',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                cursor: 'pointer',
+                                transition: 'background 0.15s ease',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.15rem'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.15)'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <strong style={{ fontSize: '0.76rem', color: '#f8fafc' }}>{place.name}</strong>
+                                <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '0.58rem', background: 'rgba(56, 189, 248, 0.18)', color: '#7dd3fc', padding: '0.1rem 0.3rem', borderRadius: '3px', fontWeight: 600 }}>
+                                    {place.district}
+                                  </span>
+                                  <span style={{ fontSize: '0.56rem', color: '#4ade80', fontWeight: 700 }}>
+                                    {place.confidencePct}% match
+                                  </span>
+                                </div>
+                              </div>
+                              <div style={{ fontSize: '0.62rem', color: '#94a3b8', display: 'flex', justifyContent: 'space-between' }}>
+                                <span>{place.desc}</span>
+                                {place.isDisasterZone && (
+                                  <span style={{ color: '#f87171', fontWeight: 700 }}>🚨 Risk Corridor</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-                    <label>Destination Point</label>
-                    <select 
-                      value={selectedEndNode} 
-                      onChange={(e) => setSelectedEndNode(e.target.value)}
-                      disabled={simulationActive}
-                    >
-                      {Object.keys(mapData.nodes)
-                        .filter(id => mapData.nodes[id].type === 'city')
-                        .map(id => (
-                          <option key={id} value={id}>{mapData.nodes[id].name}</option>
-                        ))
-                      }
-                    </select>
+                  {/* DESTINATION SEARCH WITH AUTOCOMPLETE */}
+                  <div className="form-group" style={{ marginBottom: '0.6rem', position: 'relative' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem', fontSize: '0.74rem' }}>
+                      <Navigation size={13} style={{ color: '#ef4444' }} />
+                      <span>Destination Point (All Minute Hamlets & Wards)</span>
+                    </label>
+
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        value={endQuery}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEndQuery(val);
+                          const suggestions = searchKeralaPlacesAI(val, 8);
+                          setEndSuggestions(suggestions);
+                          setShowEndSuggestions(true);
+                        }}
+                        onFocus={() => {
+                          const suggestions = searchKeralaPlacesAI(endQuery, 8);
+                          setEndSuggestions(suggestions);
+                          setShowEndSuggestions(true);
+                        }}
+                        placeholder="Search destination hamlet, hospital, town..."
+                        disabled={simulationActive}
+                        style={{
+                          width: '100%',
+                          padding: '0.45rem 0.6rem',
+                          fontSize: '0.78rem',
+                          background: 'rgba(15, 23, 42, 0.7)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '6px',
+                          color: '#f8fafc',
+                          outline: 'none'
+                        }}
+                      />
+                      {endPlaceObj && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.25rem', fontSize: '0.65rem', color: '#94a3b8' }}>
+                          <span style={{ color: '#ef4444', fontWeight: 600 }}>● Active:</span>
+                          <span style={{ color: '#f1f5f9', fontWeight: 700 }}>{endPlaceObj.name}</span>
+                          <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', padding: '0.05rem 0.3rem', borderRadius: '3px' }}>
+                            {endPlaceObj.district}
+                          </span>
+                          {endPlaceObj.isDisasterZone && (
+                            <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', padding: '0.05rem 0.3rem', borderRadius: '3px', fontWeight: 700 }}>
+                              🚨 Disaster Hotspot
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Dropdown Suggestions */}
+                      {showEndSuggestions && endSuggestions.length > 0 && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            zIndex: 1100,
+                            marginTop: '0.25rem',
+                            background: '#0b132b',
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            borderRadius: '6px',
+                            maxHeight: '210px',
+                            overflowY: 'auto',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
+                          }}
+                        >
+                          {endSuggestions.map((place) => (
+                            <div
+                              key={place.id}
+                              onClick={() => handleSelectDestinationPlace(place)}
+                              style={{
+                                padding: '0.45rem 0.6rem',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                cursor: 'pointer',
+                                transition: 'background 0.15s ease',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.15rem'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <strong style={{ fontSize: '0.76rem', color: '#f8fafc' }}>{place.name}</strong>
+                                <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '0.58rem', background: 'rgba(239, 68, 68, 0.18)', color: '#fca5a5', padding: '0.1rem 0.3rem', borderRadius: '3px', fontWeight: 600 }}>
+                                    {place.district}
+                                  </span>
+                                  <span style={{ fontSize: '0.56rem', color: '#4ade80', fontWeight: 700 }}>
+                                    {place.confidencePct}% match
+                                  </span>
+                                </div>
+                              </div>
+                              <div style={{ fontSize: '0.62rem', color: '#94a3b8', display: 'flex', justifyContent: 'space-between' }}>
+                                <span>{place.desc}</span>
+                                {place.isDisasterZone && (
+                                  <span style={{ color: '#f87171', fontWeight: 700 }}>🚨 Risk Corridor</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* QUICK DISASTER CORRIDOR PRESETS */}
+                  <div style={{ marginBottom: '0.6rem' }}>
+                    <label style={{ fontSize: '0.62rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '0.3rem' }}>
+                      ⚡ Quick Disaster Zones & Hamlets:
+                    </label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                      {[
+                        { name: 'Chooralmala', district: 'Wayanad', lat: 11.5369, lng: 76.1772, isDisasterZone: true, desc: 'Chooralmala Riverine Corridor' },
+                        { name: 'Mundakkai', district: 'Wayanad', lat: 11.5471, lng: 76.1956, isDisasterZone: true, desc: 'Mundakkai High Range Hill Slopes' },
+                        { name: 'Meppadi', district: 'Wayanad', lat: 11.5541, lng: 76.1269, isDisasterZone: false, desc: 'Meppadi Main Junction' },
+                        { name: 'Kuttanad', district: 'Alappuzha', lat: 9.4981, lng: 76.4385, isDisasterZone: true, desc: 'Kuttanad Below Sea Level Waterway' },
+                        { name: 'Vytilla', district: 'Ernakulam', lat: 9.9676, lng: 76.3197, isDisasterZone: false, desc: 'Vytilla Mobility Hub' },
+                        { name: 'Nedumbassery', district: 'Ernakulam', lat: 10.1557, lng: 76.3917, isDisasterZone: false, desc: 'Cochin Int Airport' }
+                      ].map((item) => (
+                        <button
+                          key={item.name}
+                          type="button"
+                          onClick={() => handleSelectDestinationPlace(item)}
+                          disabled={simulationActive}
+                          style={{
+                            fontSize: '0.62rem',
+                            padding: '0.18rem 0.45rem',
+                            borderRadius: '4px',
+                            background: item.isDisasterZone ? 'rgba(239, 68, 68, 0.12)' : 'rgba(56, 189, 248, 0.1)',
+                            border: `1px solid ${item.isDisasterZone ? 'rgba(239, 68, 68, 0.35)' : 'rgba(56, 189, 248, 0.25)'}`,
+                            color: item.isDisasterZone ? '#fca5a5' : '#7dd3fc',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.2rem'
+                          }}
+                        >
+                          <span>{item.isDisasterZone ? '⛰️' : '📍'}</span>
+                          <span>{item.name}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="form-group" style={{ marginBottom: '0.5rem' }}>
