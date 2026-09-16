@@ -31,7 +31,8 @@ const typos = [
   { query: 'silant valey', expected: 'Silent Valley' },
   { query: 'chembra', expected: 'Chembra' },
   { query: 'vilangad', expected: 'Vilangad' },
-  { query: 'pulurampara', expected: 'Pullurampara' }
+  { query: 'pulurampara', expected: 'Pullurampara' },
+  { query: 'mudapallur', expected: 'Mudappallur' }
 ];
 
 for (const { query, expected } of typos) {

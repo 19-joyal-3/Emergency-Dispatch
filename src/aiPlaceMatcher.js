@@ -27,6 +27,8 @@ export function normalizePlaceName(str) {
     .replace(/zh/g, 'l')  // Kozhikode -> Kolikode transliteration variance
     .replace(/dh/g, 'd')
     .replace(/w/g, 'v')
+    .replace(/c(?=[aou]|\b)/g, 'k') // Calicut -> Kalikut, Melarcode -> Melarkode
+    .replace(/y\b/g, 'i')           // Vandazhy -> Vandazhi, Meppady -> Meppadi
     .replace(/[^\w\s]/g, ' ') // Strip brackets, quotes, hyphens, slashes
     .replace(/\s+/g, ' ');
 }
