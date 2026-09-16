@@ -1,5 +1,14 @@
 [
   {
+    "id": "alp_ala",
+    "name": "Ala (Chengannur)",
+    "district": "Alappuzha",
+    "lat": 9.318,
+    "lng": 76.608,
+    "type": "village",
+    "desc": "Ala Grama Panchayat & Achankovil Riverbank"
+  },
+  {
     "id": "alp_alappuzha",
     "name": "Alappuzha",
     "district": "Alappuzha",
@@ -63,6 +72,15 @@
     "desc": "Arthunkal St. Andrew's Basilica & Coastal Hamlet"
   },
   {
+    "id": "alp_aryad",
+    "name": "Aryad",
+    "district": "Alappuzha",
+    "lat": 9.528,
+    "lng": 76.342,
+    "type": "village",
+    "desc": "Aryad Block Panchayat, Coir Spinners Village"
+  },
+  {
     "id": "alp_chakkulathukavu",
     "name": "Chakkulathukavu Devi Temple",
     "district": "Alappuzha",
@@ -90,6 +108,15 @@
     "desc": "Charummoodu Commercial Center, KP Road"
   },
   {
+    "id": "alp_chembumpuram",
+    "name": "Chembumpuram",
+    "district": "Alappuzha",
+    "lat": 9.468,
+    "lng": 76.402,
+    "type": "village",
+    "desc": "River Crossing & Canoe Ferry Stop, Kuttanad"
+  },
+  {
     "id": "alp_chennamkary",
     "name": "Chennamkary",
     "district": "Alappuzha",
@@ -97,6 +124,15 @@
     "lng": 76.418,
     "type": "village",
     "desc": "Chennamkary Kuttanad Riverine Hamlet & Wooden Bridges"
+  },
+  {
+    "id": "alp_chennithala",
+    "name": "Chennithala",
+    "district": "Alappuzha",
+    "lat": 9.278,
+    "lng": 76.568,
+    "type": "village",
+    "desc": "Chennithala Thriprayar Temple & Vallamkali"
   },
   {
     "id": "alappuzha_cheppad",
@@ -108,6 +144,15 @@
     "desc": "Cheppad St. George Orthodox Syrian Church & Rail Stop"
   },
   {
+    "id": "alp_cheriyanad",
+    "name": "Cheriyanad",
+    "district": "Alappuzha",
+    "lat": 9.298,
+    "lng": 76.582,
+    "type": "transit_hub",
+    "desc": "Cheriyanad Railway Station & Padanilam Route"
+  },
+  {
     "id": "alp_cherthala",
     "name": "Cherthala",
     "district": "Alappuzha",
@@ -117,6 +162,15 @@
     "desc": "Cherthala KSRTC Stand & Industrial Hub"
   },
   {
+    "id": "alp_cheruthana",
+    "name": "Cheruthana",
+    "district": "Alappuzha",
+    "lat": 9.338,
+    "lng": 76.468,
+    "type": "village",
+    "desc": "Cheruthana Ananthapuram Temple & Paddy Fields"
+  },
+  {
     "id": "alp_chettikulangara",
     "name": "Chettikulangara",
     "district": "Alappuzha",
@@ -124,6 +178,15 @@
     "lng": 76.538,
     "type": "landmark",
     "desc": "Chettikulangara Bhagavathy Temple & Kettukazhcha"
+  },
+  {
+    "id": "alp_devikulangara",
+    "name": "Devikulangara",
+    "district": "Alappuzha",
+    "lat": 9.168,
+    "lng": 76.498,
+    "type": "village",
+    "desc": "Devikulangara Eruva Temple & Village"
   },
   {
     "id": "alp_edathua",
@@ -216,6 +279,15 @@
     "desc": "Kavalam River Backwaters Corridor"
   },
   {
+    "id": "alp_kavalam_mangalam",
+    "name": "Kavalam Mangalam",
+    "district": "Alappuzha",
+    "lat": 9.488,
+    "lng": 76.468,
+    "type": "village",
+    "desc": "Kavalam Lake Hamlet & Poet Kavalam's Heritage"
+  },
+  {
     "id": "alp_kayamkulam",
     "name": "Kayamkulam",
     "district": "Alappuzha",
@@ -225,6 +297,15 @@
     "desc": "Kayamkulam Krishnapuram Palace & Railway Junction"
   },
   {
+    "id": "alp_komalapuram",
+    "name": "Komalapuram",
+    "district": "Alappuzha",
+    "lat": 9.538,
+    "lng": 76.338,
+    "type": "village",
+    "desc": "Komalapuram Coir Industrial Hub"
+  },
+  {
     "id": "alp_krishnapuram",
     "name": "Krishnapuram Palace",
     "district": "Alappuzha",
@@ -232,6 +313,33 @@
     "lng": 76.512,
     "type": "landmark",
     "desc": "Gajendra Moksham Mural & Archeological Palace, Kayamkulam"
+  },
+  {
+    "id": "alp_kumarapuram_haripad",
+    "name": "Kumarapuram (Haripad)",
+    "district": "Alappuzha",
+    "lat": 9.282,
+    "lng": 76.442,
+    "type": "village",
+    "desc": "Kumarapuram Ananthapuram Temple"
+  },
+  {
+    "id": "alp_kunnammal",
+    "name": "Kunnammal (Thakazhi)",
+    "district": "Alappuzha",
+    "lat": 9.388,
+    "lng": 76.428,
+    "type": "village",
+    "desc": "Kunnammal Padasekharam, Thakazhi"
+  },
+  {
+    "id": "alp_kuttamangalam",
+    "name": "Kuttamangalam (Kainakary)",
+    "district": "Alappuzha",
+    "lat": 9.478,
+    "lng": 76.398,
+    "type": "village",
+    "desc": "Kuttamangalam Deep Paddy Polders"
   },
   {
     "id": "alp_kuttanad",
@@ -279,6 +387,15 @@
     "desc": "Mavelikara Achankovil River Basin Town"
   },
   {
+    "id": "alp_mitrakary",
+    "name": "Mitrakary",
+    "district": "Alappuzha",
+    "lat": 9.398,
+    "lng": 76.488,
+    "type": "village",
+    "desc": "Mitrakary Waterlocked Village, Muttar"
+  },
+  {
     "id": "alp_moncompu",
     "name": "Moncompu",
     "district": "Alappuzha",
@@ -295,6 +412,15 @@
     "lng": 76.368,
     "type": "village",
     "desc": "Pathiramanal Island Boat Jetty"
+  },
+  {
+    "id": "alp_mulakuzha",
+    "name": "Mulakuzha",
+    "district": "Alappuzha",
+    "lat": 9.298,
+    "lng": 76.638,
+    "type": "village",
+    "desc": "Mulakuzha Higher Secondary School & Hill"
   },
   {
     "id": "alp_mullakkal",
@@ -342,6 +468,24 @@
     "desc": "Neelamperoor Pooram Padayani & Backwaters"
   },
   {
+    "id": "alp_neelamperoor_padayani",
+    "name": "Neelamperoor Padayani",
+    "district": "Alappuzha",
+    "lat": 9.518,
+    "lng": 76.522,
+    "type": "landmark",
+    "desc": "Historic Padayani & Giant Swan Effigies Temple"
+  },
+  {
+    "id": "alp_neerattupuram",
+    "name": "Neerattupuram",
+    "district": "Alappuzha",
+    "lat": 9.358,
+    "lng": 76.498,
+    "type": "transit_hub",
+    "desc": "Neerattupuram Boat Race & River Confluence"
+  },
+  {
     "id": "alp_nooranad",
     "name": "Nooranad (Padanilam)",
     "district": "Alappuzha",
@@ -349,6 +493,15 @@
     "lng": 76.628,
     "type": "village",
     "desc": "Padanilam Parabrahma Temple & Sanatorium Hub"
+  },
+  {
+    "id": "alp_pallippad",
+    "name": "Pallippad",
+    "district": "Alappuzha",
+    "lat": 9.308,
+    "lng": 76.488,
+    "type": "landmark",
+    "desc": "Pallippad Snake Boat Heritage & River Basin"
   },
   {
     "id": "alp_pallippuram",
@@ -369,6 +522,15 @@
     "desc": "Panavally Northern Vembanad Lake Tip"
   },
   {
+    "id": "alp_pandankary",
+    "name": "Pandankary",
+    "district": "Alappuzha",
+    "lat": 9.368,
+    "lng": 76.468,
+    "type": "village",
+    "desc": "Pandankary Riverfront Village, Edathua"
+  },
+  {
     "id": "alp_pathiramanal",
     "name": "Pathiramanal Island",
     "district": "Alappuzha",
@@ -376,6 +538,15 @@
     "lng": 76.388,
     "type": "landmark",
     "desc": "Pathiramanal Migratory Bird Island, Vembanad Lake"
+  },
+  {
+    "id": "alp_pathiyankara",
+    "name": "Pathiyankara",
+    "district": "Alappuzha",
+    "lat": 9.268,
+    "lng": 76.428,
+    "type": "coastal_hamlet",
+    "desc": "Pathiyankara Coastal Mosque & Beach, Thrikkunnapuzha"
   },
   {
     "id": "alp_pattanakkad",
@@ -423,6 +594,15 @@
     "desc": "Pulinkunnoo Island Panchayat & Engineering College"
   },
   {
+    "id": "alp_puliyoor",
+    "name": "Puliyoor",
+    "district": "Alappuzha",
+    "lat": 9.328,
+    "lng": 76.578,
+    "type": "landmark",
+    "desc": "Puliyoor Mahavishnu Temple (Pancha Pandava Shrine)"
+  },
+  {
     "id": "alp_punnamada",
     "name": "Punnamada Finishing Point",
     "district": "Alappuzha",
@@ -448,6 +628,15 @@
     "lng": 76.371,
     "type": "disaster_hotspot",
     "desc": "Purakkad Sea Erosion & Fishing Reach"
+  },
+  {
+    "id": "alp_puthiyakavu",
+    "name": "Puthiyakavu (Kandalloor)",
+    "district": "Alappuzha",
+    "lat": 9.188,
+    "lng": 76.478,
+    "type": "town",
+    "desc": "Puthiyakavu Commercial Junction"
   },
   {
     "id": "alp_ramankary",
@@ -504,6 +693,15 @@
     "desc": "Thuravoor Mahakshethram, NH-66 Corridor"
   },
   {
+    "id": "alp_valiazheekal",
+    "name": "Valiazheekal",
+    "district": "Alappuzha",
+    "lat": 9.148,
+    "lng": 76.468,
+    "type": "landmark",
+    "desc": "Valiazheekal Bowstring Bridge & Arabian Sea Mouth"
+  },
+  {
     "id": "alappuzha_vandanam",
     "name": "Vandanam",
     "district": "Alappuzha",
@@ -538,6 +736,33 @@
     "lng": 76.521,
     "type": "disaster_hotspot",
     "desc": "Veliyanad Kuttanad Waterlocked Panchayat"
+  },
+  {
+    "id": "alp_venmony",
+    "name": "Venmony",
+    "district": "Alappuzha",
+    "lat": 9.278,
+    "lng": 76.618,
+    "type": "landmark",
+    "desc": "Venmony Sharngakkavu Temple & Achankovil Bank"
+  },
+  {
+    "id": "ekm_aikkaranad",
+    "name": "Aikkaranad",
+    "district": "Ernakulam",
+    "lat": 9.948,
+    "lng": 76.498,
+    "type": "village",
+    "desc": "Aikkaranad Panchayat, Kolenchery Route"
+  },
+  {
+    "id": "ekm_akaparambu",
+    "name": "Akaparambu",
+    "district": "Ernakulam",
+    "lat": 10.158,
+    "lng": 76.388,
+    "type": "landmark",
+    "desc": "Akaparambu Ancient Mor Sabor & Mor Aphroth Church"
   },
   {
     "id": "ekm_aluva",
@@ -585,6 +810,15 @@
     "desc": "Arakkunnam Educational & Rural Hamlet"
   },
   {
+    "id": "ekm_asamannoor",
+    "name": "Asamannoor",
+    "district": "Ernakulam",
+    "lat": 10.148,
+    "lng": 76.548,
+    "type": "village",
+    "desc": "Asamannoor Timber Mills & Panchayat"
+  },
+  {
     "id": "ernakulam_bolgatty",
     "name": "Bolgatty",
     "district": "Ernakulam",
@@ -601,6 +835,15 @@
     "lng": 76.666,
     "type": "disaster_hotspot",
     "desc": "Boothathankettu Dam & Forest Eco-Tourism"
+  },
+  {
+    "id": "ekm_changampuzha_park",
+    "name": "Changampuzha Park",
+    "district": "Ernakulam",
+    "lat": 10.024,
+    "lng": 76.312,
+    "type": "landmark",
+    "desc": "Changampuzha Smarakam & Cultural Park, Edappally"
   },
   {
     "id": "ekm_chellanam",
@@ -628,6 +871,15 @@
     "lng": 76.179,
     "type": "landmark",
     "desc": "Cherai Beach & Backwaters Confluence"
+  },
+  {
+    "id": "ekm_choornikkara",
+    "name": "Choornikkara",
+    "district": "Ernakulam",
+    "lat": 10.088,
+    "lng": 76.348,
+    "type": "transit_hub",
+    "desc": "Choornikkara Metro Station & Wetland Model"
   },
   {
     "id": "ernakulam_chottanikkara",
@@ -675,6 +927,15 @@
     "desc": "High Court of Kerala & Marine Drive"
   },
   {
+    "id": "ekm_hmt",
+    "name": "HMT Junction (Kalamassery)",
+    "district": "Ernakulam",
+    "lat": 10.048,
+    "lng": 76.338,
+    "type": "transit_hub",
+    "desc": "HMT Industrial Zone & GMC Ernakulam Access"
+  },
+  {
     "id": "ernakulam_infopark",
     "name": "Infopark Kochi",
     "district": "Ernakulam",
@@ -682,6 +943,15 @@
     "lng": 76.363,
     "type": "transit_hub",
     "desc": "Infopark Technology Campus, Kakkanad"
+  },
+  {
+    "id": "ekm_iringole_kavu",
+    "name": "Iringole Kavu",
+    "district": "Ernakulam",
+    "lat": 10.098,
+    "lng": 76.538,
+    "type": "landmark",
+    "desc": "Iringole Kavu Sacred Ancient Forest Biodiversity Grove"
   },
   {
     "id": "ernakulam_kadamakkudy",
@@ -700,6 +970,15 @@
     "lng": 76.301,
     "type": "town",
     "desc": "Kadavanthra Urban Junction & Metro"
+  },
+  {
+    "id": "ekm_kadayiruppu",
+    "name": "Kadayiruppu",
+    "district": "Ernakulam",
+    "lat": 9.988,
+    "lng": 76.472,
+    "type": "transit_hub",
+    "desc": "Kadayiruppu Industrial Hub & Kolenchery Route"
   },
   {
     "id": "ekm_kakkanad",
@@ -774,6 +1053,15 @@
     "desc": "Kannamaly Severe Coastal Sea Erosion & Tidal Flood Zone"
   },
   {
+    "id": "ekm_karanakkodam",
+    "name": "Karanakkodam",
+    "district": "Ernakulam",
+    "lat": 9.982,
+    "lng": 76.318,
+    "type": "landmark",
+    "desc": "Karanakkodam St. Jude Shrine & Thammanam Link"
+  },
+  {
     "id": "ekm_karingachira",
     "name": "Karingachira",
     "district": "Ernakulam",
@@ -792,6 +1080,24 @@
     "desc": "Karukutty Ernakulam-Thrissur Interstate Highway Border"
   },
   {
+    "id": "ekm_karumalloor",
+    "name": "Karumalloor",
+    "district": "Ernakulam",
+    "lat": 10.138,
+    "lng": 76.278,
+    "type": "village",
+    "desc": "Karumalloor Manjaly River Basin"
+  },
+  {
+    "id": "ekm_kathrikadavu",
+    "name": "Kathrikadavu",
+    "district": "Ernakulam",
+    "lat": 9.988,
+    "lng": 76.298,
+    "type": "transit_hub",
+    "desc": "Kathrikadavu Railway Overbridge, Kaloor Link"
+  },
+  {
     "id": "ernakulam_keerampara",
     "name": "Keerampara",
     "district": "Ernakulam",
@@ -799,6 +1105,15 @@
     "lng": 76.634,
     "type": "village",
     "desc": "Keerampara Hill Panchayat & Gateway to Thattekad"
+  },
+  {
+    "id": "ekm_kizhakambalam",
+    "name": "Kizhakambalam",
+    "district": "Ernakulam",
+    "lat": 10.048,
+    "lng": 76.408,
+    "type": "town",
+    "desc": "Kizhakambalam Twenty20 Model Corporate Panchayat & Kitex"
   },
   {
     "id": "ekm_kochi",
@@ -844,6 +1159,15 @@
     "lng": 76.6264,
     "type": "town",
     "desc": "High Range Gateway & Kothamangalam Town"
+  },
+  {
+    "id": "ekm_kottayil_kovilakam",
+    "name": "Kottayil Kovilakam",
+    "district": "Ernakulam",
+    "lat": 10.168,
+    "lng": 76.208,
+    "type": "landmark",
+    "desc": "Synagogue, Temple, Mosque & Church Coexistence Hill"
   },
   {
     "id": "ernakulam_kumbalam",
@@ -918,6 +1242,15 @@
     "desc": "Manjummel Periyar River Bank & Hospital Hub"
   },
   {
+    "id": "ekm_mannamthuruth",
+    "name": "Mannamthuruth (Varapuzha)",
+    "district": "Ernakulam",
+    "lat": 10.082,
+    "lng": 76.268,
+    "type": "village",
+    "desc": "Mannamthuruth Church & Fishing Village"
+  },
+  {
     "id": "ekm_maradu",
     "name": "Maradu",
     "district": "Ernakulam",
@@ -925,6 +1258,15 @@
     "lng": 76.331,
     "type": "town",
     "desc": "Maradu Bypass Junction & Lake Canal Ward"
+  },
+  {
+    "id": "ekm_marampally",
+    "name": "Marampally",
+    "district": "Ernakulam",
+    "lat": 10.122,
+    "lng": 76.458,
+    "type": "village",
+    "desc": "Marampally MES College & Periyar Sandbanks"
   },
   {
     "id": "ekm_marine_drive",
@@ -1062,6 +1404,15 @@
     "desc": "Palarivattom Flyover & Pipeline Junction"
   },
   {
+    "id": "ekm_pipeline",
+    "name": "Palarivattom Pipeline",
+    "district": "Ernakulam",
+    "lat": 10.008,
+    "lng": 76.312,
+    "type": "transit_hub",
+    "desc": "Pipeline Road & Civil Line Corridor"
+  },
+  {
     "id": "ekm_palluruthy",
     "name": "Palluruthy",
     "district": "Ernakulam",
@@ -1087,6 +1438,15 @@
     "lng": 76.319,
     "type": "coastal_hamlet",
     "desc": "Panangad Fisheries University & Lake Basin"
+  },
+  {
+    "id": "ekm_pathalam",
+    "name": "Pathalam",
+    "district": "Ernakulam",
+    "lat": 10.078,
+    "lng": 76.328,
+    "type": "hospital_hub",
+    "desc": "Pathalam ESI Hospital & Periyar Bund Road"
   },
   {
     "id": "ernakulam_pattimattom",
@@ -1215,6 +1575,15 @@
     "desc": "Thevara Waterfront, Sacred Heart College"
   },
   {
+    "id": "ekm_thevara_ferry",
+    "name": "Thevara Ferry",
+    "district": "Ernakulam",
+    "lat": 9.932,
+    "lng": 76.292,
+    "type": "transit_hub",
+    "desc": "Thevara Ferry & Kumbalam Waterway Landing"
+  },
+  {
     "id": "ernakulam_thiruvankulam",
     "name": "Thiruvankulam",
     "district": "Ernakulam",
@@ -1231,6 +1600,15 @@
     "lng": 76.261,
     "type": "transit_hub",
     "desc": "Thoppumpady Bridge & Harbor Gateway"
+  },
+  {
+    "id": "ekm_thottakkattukara",
+    "name": "Thottakkattukara",
+    "district": "Ernakulam",
+    "lat": 10.118,
+    "lng": 76.342,
+    "type": "transit_hub",
+    "desc": "NH-544 Periyar Bridge Landing, Aluva"
   },
   {
     "id": "ekm_thrikkakara",
@@ -1269,6 +1647,24 @@
     "desc": "Udayamperoor Historical Synod & Town"
   },
   {
+    "id": "ekm_vadavucode",
+    "name": "Vadavucode",
+    "district": "Ernakulam",
+    "lat": 9.988,
+    "lng": 76.428,
+    "type": "village",
+    "desc": "Vadavucode Block Panchayat Headquarters"
+  },
+  {
+    "id": "ekm_valanjambalam",
+    "name": "Valanjambalam",
+    "district": "Ernakulam",
+    "lat": 9.968,
+    "lng": 76.288,
+    "type": "landmark",
+    "desc": "Valanjambalam Temple & South Railway Overbridge"
+  },
+  {
     "id": "ekm_valayanchirangara",
     "name": "Valayanchirangara",
     "district": "Ernakulam",
@@ -1305,6 +1701,24 @@
     "desc": "Vazhakulam Pineapple Market of India"
   },
   {
+    "id": "ekm_vedimara",
+    "name": "Vedimara (Paravur)",
+    "district": "Ernakulam",
+    "lat": 10.158,
+    "lng": 76.238,
+    "type": "transit_hub",
+    "desc": "Vedimara Highway Junction, North Paravur"
+  },
+  {
+    "id": "ekm_janatha",
+    "name": "Vennala Janatha",
+    "district": "Ernakulam",
+    "lat": 9.998,
+    "lng": 76.322,
+    "type": "town",
+    "desc": "Janatha Junction & Vennala High School"
+  },
+  {
     "id": "ekm_vypin",
     "name": "Vypin",
     "district": "Ernakulam",
@@ -1339,6 +1753,15 @@
     "lng": 76.268,
     "type": "transit_hub",
     "desc": "Cochin Port Trust & Naval Base"
+  },
+  {
+    "id": "idk_200_acre",
+    "name": "200 Acre (Adimali)",
+    "district": "Idukki",
+    "lat": 10.028,
+    "lng": 76.948,
+    "type": "village",
+    "desc": "200 Acre Agricultural Settlement & Riverbank"
   },
   {
     "id": "idukki_adimali",
@@ -1413,6 +1836,24 @@
     "desc": "Bodimettu Tamil Nadu Border Ghat Pass"
   },
   {
+    "id": "idk_bonami",
+    "name": "Bonami (Elappara)",
+    "district": "Idukki",
+    "lat": 9.642,
+    "lng": 76.988,
+    "type": "village",
+    "desc": "Bonami Tea Plantations & Estate Factory"
+  },
+  {
+    "id": "idk_chakkupallam",
+    "name": "Chakkupallam",
+    "district": "Idukki",
+    "lat": 9.688,
+    "lng": 77.148,
+    "type": "village",
+    "desc": "Chakkupallam Anakkara Border Panchayat"
+  },
+  {
     "id": "idk_cheeyappara",
     "name": "Cheeyappara Waterfalls",
     "district": "Idukki",
@@ -1431,6 +1872,15 @@
     "desc": "Chellarcovil Eco-Tourism Viewpoint & Falls"
   },
   {
+    "id": "idk_chembalam",
+    "name": "Chembalam",
+    "district": "Idukki",
+    "lat": 9.852,
+    "lng": 77.158,
+    "type": "village",
+    "desc": "Chembalam Spices Market, Nedumkandam"
+  },
+  {
     "id": "idukki_cheruthoni",
     "name": "Cheruthoni",
     "district": "Idukki",
@@ -1447,6 +1897,15 @@
     "lng": 77.1472,
     "type": "village",
     "desc": "Chinnakanal Anayirankal Dam Spillway"
+  },
+  {
+    "id": "idk_chinnar_checkpost",
+    "name": "Chinnar Checkpost",
+    "district": "Idukki",
+    "lat": 10.328,
+    "lng": 77.188,
+    "type": "transit_hub",
+    "desc": "Chinnar Wildlife Sanctuary Interstate Border Checkpost"
   },
   {
     "id": "idukki_cumbummettu",
@@ -1494,6 +1953,15 @@
     "desc": "Kochi-Dhanushkodi NH Gap Road Landslide Cliff Pass"
   },
   {
+    "id": "idk_granby",
+    "name": "Granby",
+    "district": "Idukki",
+    "lat": 9.598,
+    "lng": 77.018,
+    "type": "village",
+    "desc": "Granby High Altitude Tea Estate"
+  },
+  {
     "id": "idk_idukki_arch_dam",
     "name": "Idukki Arch Dam",
     "district": "Idukki",
@@ -1503,6 +1971,15 @@
     "desc": "Asia's Highest Double Curvature Arch Dam & Kuravan Mala"
   },
   {
+    "id": "idk_kakkathode",
+    "name": "Kakkathode (Upputhara)",
+    "district": "Idukki",
+    "lat": 9.708,
+    "lng": 77.008,
+    "type": "disaster_hotspot",
+    "desc": "Kakkathode Flood Prone Periyar Riverbed"
+  },
+  {
     "id": "idukki_kallarkutty",
     "name": "Kallarkutty",
     "district": "Idukki",
@@ -1510,6 +1987,24 @@
     "lng": 76.977,
     "type": "disaster_hotspot",
     "desc": "Kallarkutty Dam & Powerhouse"
+  },
+  {
+    "id": "idk_kalthotti",
+    "name": "Kalthotti",
+    "district": "Idukki",
+    "lat": 9.782,
+    "lng": 77.048,
+    "type": "village",
+    "desc": "Kalthotti High Range Hamlet"
+  },
+  {
+    "id": "idk_kanchiyar",
+    "name": "Kanchiyar",
+    "district": "Idukki",
+    "lat": 9.758,
+    "lng": 77.078,
+    "type": "village",
+    "desc": "Kanchiyar Spices Village, Kattappana Route"
   },
   {
     "id": "idukki_kanjar",
@@ -1546,6 +2041,42 @@
     "lng": 77.1219,
     "type": "town",
     "desc": "Kattappana High Range Commercial Capital"
+  },
+  {
+    "id": "idk_keezhanthoor",
+    "name": "Keezhanthoor",
+    "district": "Idukki",
+    "lat": 10.238,
+    "lng": 77.218,
+    "type": "village",
+    "desc": "Keezhanthoor Cold-Season Fruit Orchards, Kanthalloor"
+  },
+  {
+    "id": "idk_kombayar",
+    "name": "Kombayar",
+    "district": "Idukki",
+    "lat": 9.868,
+    "lng": 77.142,
+    "type": "village",
+    "desc": "Kombayar High Range Church & Hills"
+  },
+  {
+    "id": "idk_kovilkadavu",
+    "name": "Kovilkadavu (Marayoor)",
+    "district": "Idukki",
+    "lat": 10.268,
+    "lng": 77.168,
+    "type": "village",
+    "desc": "Kovilkadavu Pambar Riverbank Jaggery Producing Market"
+  },
+  {
+    "id": "idk_kozhimala",
+    "name": "Kovilmala (Mannan King)",
+    "district": "Idukki",
+    "lat": 9.738,
+    "lng": 77.088,
+    "type": "landmark",
+    "desc": "Royal Seat of the King of the Mannan Tribe"
   },
   {
     "id": "idukki_koviloor",
@@ -1611,6 +2142,24 @@
     "desc": "Kuttikkanam Mist Valley Ghat Pass"
   },
   {
+    "id": "idk_lock_heart",
+    "name": "Lock Heart Gap",
+    "district": "Idukki",
+    "lat": 10.038,
+    "lng": 77.128,
+    "type": "disaster_hotspot",
+    "desc": "Lock Heart Gap Mountain Pass on Kochi-Dhanushkodi NH"
+  },
+  {
+    "id": "idk_machiplavu",
+    "name": "Machiplavu (Adimali)",
+    "district": "Idukki",
+    "lat": 10.048,
+    "lng": 76.928,
+    "type": "village",
+    "desc": "Machiplavu High Range Village & Spices Farms"
+  },
+  {
     "id": "idk_mangattukavala",
     "name": "Mangattukavala",
     "district": "Idukki",
@@ -1618,6 +2167,15 @@
     "lng": 76.718,
     "type": "transit_hub",
     "desc": "Thodupuzha Private Bus Stand & Commercial Node"
+  },
+  {
+    "id": "idk_manjumala",
+    "name": "Manjumala",
+    "district": "Idukki",
+    "lat": 9.588,
+    "lng": 77.042,
+    "type": "village",
+    "desc": "Manjumala Tea Factory & Estate Settlements"
   },
   {
     "id": "idukki_mankulam",
@@ -1647,6 +2205,15 @@
     "desc": "Mattupetty Dam Reservoir & Echo Point"
   },
   {
+    "id": "idk_mavady",
+    "name": "Mavady (Nedumkandam)",
+    "district": "Idukki",
+    "lat": 9.838,
+    "lng": 77.142,
+    "type": "village",
+    "desc": "Mavady High Range Cardamom Plantation Valley"
+  },
+  {
     "id": "idukki_moolamattom",
     "name": "Moolamattom",
     "district": "Idukki",
@@ -1674,6 +2241,15 @@
     "desc": "Murickassery Hill Market & Junction"
   },
   {
+    "id": "idk_muthalakodam",
+    "name": "Muthalakodam",
+    "district": "Idukki",
+    "lat": 9.908,
+    "lng": 76.728,
+    "type": "landmark",
+    "desc": "Muthalakodam St. George Forane Historic Church"
+  },
+  {
     "id": "idukki_muttom",
     "name": "Muttom",
     "district": "Idukki",
@@ -1681,6 +2257,15 @@
     "lng": 76.745,
     "type": "village",
     "desc": "Muttom Rural Hub & District Court Complex"
+  },
+  {
+    "id": "idk_muttom_court",
+    "name": "Muttom Court Complex",
+    "district": "Idukki",
+    "lat": 9.858,
+    "lng": 76.748,
+    "type": "transit_hub",
+    "desc": "Muttom District Judiciary Complex & Rifles Club"
   },
   {
     "id": "idukki_nedumkandam",
@@ -1717,6 +2302,15 @@
     "lng": 76.962,
     "type": "disaster_hotspot",
     "desc": "Paloorkavu Landslide & Flash Flood Prone Valley"
+  },
+  {
+    "id": "idk_pambadumpara",
+    "name": "Pambadumpara",
+    "district": "Idukki",
+    "lat": 9.798,
+    "lng": 77.162,
+    "type": "landmark",
+    "desc": "Cardamom Research Station, Kerala Agricultural University"
   },
   {
     "id": "idk_panchalimedu",
@@ -1764,6 +2358,15 @@
     "desc": "Poopara Gap Road & NH-85 Highway Junction"
   },
   {
+    "id": "idk_pothamedu",
+    "name": "Pothamedu Viewpoint",
+    "district": "Idukki",
+    "lat": 10.058,
+    "lng": 77.058,
+    "type": "hill_station",
+    "desc": "Pothamedu Panoramic Tea & Cardamom Valley View"
+  },
+  {
     "id": "idukki_puliyanmala",
     "name": "Puliyanmala",
     "district": "Idukki",
@@ -1791,6 +2394,15 @@
     "desc": "Rajakumari Agricultural Hill Town"
   },
   {
+    "id": "idk_rosapookandam",
+    "name": "Rosapookandam (Kumily)",
+    "district": "Idukki",
+    "lat": 9.608,
+    "lng": 77.172,
+    "type": "transit_hub",
+    "desc": "Rosapookandam Central Private Bus Terminal"
+  },
+  {
     "id": "idukki_santhanpara",
     "name": "Santhanpara",
     "district": "Idukki",
@@ -1807,6 +2419,15 @@
     "lng": 77.118,
     "type": "village",
     "desc": "Senapathy Grama Panchayat"
+  },
+  {
+    "id": "idk_suryanelli",
+    "name": "Suryanelli",
+    "district": "Idukki",
+    "lat": 10.028,
+    "lng": 77.148,
+    "type": "hill_station",
+    "desc": "Suryanelli Kolukkumalai World's Highest Tea Estate Base"
   },
   {
     "id": "idukki_thekkady",
@@ -1852,6 +2473,15 @@
     "lng": 77.245,
     "type": "hill_station",
     "desc": "Top Station Kerala-TN Mountain Ridge Crest"
+  },
+  {
+    "id": "idk_udumbannoor",
+    "name": "Udumbannoor",
+    "district": "Idukki",
+    "lat": 9.948,
+    "lng": 76.812,
+    "type": "village",
+    "desc": "Udumbannoor Model Organic Farming Panchayat"
   },
   {
     "id": "idukki_upputhara",
@@ -1917,6 +2547,15 @@
     "desc": "Vannappuram Hill Market & Kaliyar Foothills"
   },
   {
+    "id": "idk_vathikudy",
+    "name": "Vathikudy",
+    "district": "Idukki",
+    "lat": 9.918,
+    "lng": 76.988,
+    "type": "village",
+    "desc": "Vathikudy Grama Panchayat, Murickassery"
+  },
+  {
     "id": "idukki_vattavada",
     "name": "Vattavada",
     "district": "Idukki",
@@ -1933,6 +2572,33 @@
     "lng": 76.968,
     "type": "village",
     "desc": "Vazhathope High Range Village, Idukki Arch Dam"
+  },
+  {
+    "id": "idk_vengalloor",
+    "name": "Vengalloor",
+    "district": "Idukki",
+    "lat": 10.008,
+    "lng": 76.718,
+    "type": "town",
+    "desc": "Vengalloor Four-Way Bypass Junction, Thodupuzha"
+  },
+  {
+    "id": "idk_wallardie",
+    "name": "Wallardie (Vandiperiyar)",
+    "district": "Idukki",
+    "lat": 9.572,
+    "lng": 77.068,
+    "type": "village",
+    "desc": "Wallardie Tea Estate & Periyar River Bridge"
+  },
+  {
+    "id": "idk_yellapatty",
+    "name": "Yellapatty",
+    "district": "Idukki",
+    "lat": 10.138,
+    "lng": 77.228,
+    "type": "village",
+    "desc": "Yellapatty High Altitude Tea Village, Top Station Road"
   },
   {
     "id": "knr_alakode",
@@ -1953,6 +2619,15 @@
     "desc": "Ambayathode Ghat Edge Village, Kottiyoor"
   },
   {
+    "id": "knr_anjarakkandy",
+    "name": "Anjarakkandy Cinnamon Estate",
+    "district": "Kannur",
+    "lat": 11.868,
+    "lng": 75.508,
+    "type": "landmark",
+    "desc": "Historic 1767 Cinnamon Plantation & Medical College"
+  },
+  {
     "id": "kannur_annur",
     "name": "Annur",
     "district": "Kannur",
@@ -1971,6 +2646,15 @@
     "desc": "Azhikode Meenkunnu Beach & Handloom Cluster"
   },
   {
+    "id": "knr_bakkalam",
+    "name": "Bakkalam",
+    "district": "Kannur",
+    "lat": 11.978,
+    "lng": 75.362,
+    "type": "village",
+    "desc": "Bakkalam Vismaya Infotainment Park, Taliparamba"
+  },
+  {
     "id": "knr_caltex",
     "name": "Caltex Junction (Kannur)",
     "district": "Kannur",
@@ -1978,6 +2662,15 @@
     "lng": 75.368,
     "type": "transit_hub",
     "desc": "District Collectorate & Central Highway Flyover"
+  },
+  {
+    "id": "knr_chal_beach",
+    "name": "Chal Beach (Azhikode)",
+    "district": "Kannur",
+    "lat": 11.928,
+    "lng": 75.312,
+    "type": "coastal_hamlet",
+    "desc": "Chal Beach Eco-Walkway & Handloom Cluster"
   },
   {
     "id": "knr_champad",
@@ -2007,6 +2700,15 @@
     "desc": "Cherukunnu Annapoorneswari Temple & Rail Hub"
   },
   {
+    "id": "knr_chirakkal",
+    "name": "Chirakkal Chira",
+    "district": "Kannur",
+    "lat": 11.908,
+    "lng": 75.368,
+    "type": "landmark",
+    "desc": "Chirakkal Kovilakam & Asia's Largest Man-Made Pond"
+  },
+  {
     "id": "knr_chockli",
     "name": "Chockli",
     "district": "Kannur",
@@ -2032,6 +2734,24 @@
     "lng": 75.368,
     "type": "town",
     "desc": "Dharmasala Government Engineering College & NIFT"
+  },
+  {
+    "id": "knr_edakkad",
+    "name": "Edakkad",
+    "district": "Kannur",
+    "lat": 11.828,
+    "lng": 75.448,
+    "type": "transit_hub",
+    "desc": "Edakkad Railway Station & Oorpazhachi Kavu Temple"
+  },
+  {
+    "id": "knr_elayavoor",
+    "name": "Elayavoor",
+    "district": "Kannur",
+    "lat": 11.878,
+    "lng": 75.402,
+    "type": "village",
+    "desc": "Elayavoor Mahadeva Temple & Suburb"
   },
   {
     "id": "kannur_ezhimala",
@@ -2068,6 +2788,15 @@
     "lng": 75.6667,
     "type": "town",
     "desc": "Iritty High Range Ghats Gateway to Coorg"
+  },
+  {
+    "id": "knr_kadalayi",
+    "name": "Kadalayi",
+    "district": "Kannur",
+    "lat": 11.848,
+    "lng": 75.408,
+    "type": "landmark",
+    "desc": "Kadalayi Sree Krishna Temple"
   },
   {
     "id": "kannur_kadirur",
@@ -2133,6 +2862,24 @@
     "desc": "Karthikapuram High Range Crossroads, Alakode"
   },
   {
+    "id": "knr_kayyath_road",
+    "name": "Kayyath Road (Thalassery)",
+    "district": "Kannur",
+    "lat": 11.752,
+    "lng": 75.492,
+    "type": "town",
+    "desc": "Kayyath Road Historic Commercial Street, Thalassery"
+  },
+  {
+    "id": "knr_keezhallur",
+    "name": "Keezhallur",
+    "district": "Kannur",
+    "lat": 11.908,
+    "lng": 75.568,
+    "type": "village",
+    "desc": "Keezhallur Grama Panchayat & Airport Runway Buffer"
+  },
+  {
     "id": "knr_keezhur",
     "name": "Keezhur",
     "district": "Kannur",
@@ -2151,6 +2898,15 @@
     "desc": "Kelakam Hill Township & Wayanad Border Road"
   },
   {
+    "id": "knr_keloth",
+    "name": "Keloth (Payyanur)",
+    "district": "Kannur",
+    "lat": 12.092,
+    "lng": 75.202,
+    "type": "town",
+    "desc": "Keloth Commercial Suburb, Payyanur"
+  },
+  {
     "id": "knr_kilianthara",
     "name": "Kilianthara",
     "district": "Kannur",
@@ -2160,6 +2916,15 @@
     "desc": "Kilianthara Border Village on Virajpet Highway"
   },
   {
+    "id": "knr_kolari",
+    "name": "Kolari",
+    "district": "Kannur",
+    "lat": 11.918,
+    "lng": 75.608,
+    "type": "village",
+    "desc": "Kolari Panchayat, Mattannur Airport Border"
+  },
+  {
     "id": "kannur_kolayad",
     "name": "Kolayad",
     "district": "Kannur",
@@ -2167,6 +2932,15 @@
     "lng": 75.689,
     "type": "village",
     "desc": "Kolayad Rubber & Hill Slopes Panchayat"
+  },
+  {
+    "id": "knr_koodali",
+    "name": "Koodali",
+    "district": "Kannur",
+    "lat": 11.938,
+    "lng": 75.518,
+    "type": "village",
+    "desc": "Koodali Higher Secondary School & Thazhathveedu"
   },
   {
     "id": "knr_koothuparamba",
@@ -2187,6 +2961,15 @@
     "desc": "Kerala-Karnataka Border Bridge & Checkpost"
   },
   {
+    "id": "knr_kottayam_malabar",
+    "name": "Kottayam-Malabar",
+    "district": "Kannur",
+    "lat": 11.818,
+    "lng": 75.558,
+    "type": "landmark",
+    "desc": "Kottayam Raja's Historical Palace & Temple"
+  },
+  {
     "id": "knr_kottiyoor",
     "name": "Kottiyoor",
     "district": "Kannur",
@@ -2205,6 +2988,15 @@
     "desc": "Madayipara Laterite Hill Plateau & Kavu"
   },
   {
+    "id": "knr_malur",
+    "name": "Malur",
+    "district": "Kannur",
+    "lat": 11.868,
+    "lng": 75.628,
+    "type": "village",
+    "desc": "Malur Grama Panchayat & Hill Valley"
+  },
+  {
     "id": "knr_manikkadavu",
     "name": "Manikkadavu",
     "district": "Kannur",
@@ -2212,6 +3004,24 @@
     "lng": 75.718,
     "type": "village",
     "desc": "Manikkadavu High Range Christian Settlement & Hill Slopes"
+  },
+  {
+    "id": "knr_maruthayi",
+    "name": "Maruthayi",
+    "district": "Kannur",
+    "lat": 11.928,
+    "lng": 75.582,
+    "type": "village",
+    "desc": "Maruthayi Agricultural Village, Mattannur"
+  },
+  {
+    "id": "knr_marygiri",
+    "name": "Marygiri (Alakode)",
+    "district": "Kannur",
+    "lat": 12.148,
+    "lng": 75.458,
+    "type": "village",
+    "desc": "Marygiri High Altitude Hilltop Parish & Orchards"
   },
   {
     "id": "knr_mattannur",
@@ -2232,6 +3042,15 @@
     "desc": "Mattool Valapattanam River Mouth & Estuary"
   },
   {
+    "id": "knr_mavilayi",
+    "name": "Mavilayi",
+    "district": "Kannur",
+    "lat": 11.878,
+    "lng": 75.488,
+    "type": "village",
+    "desc": "Mavilayi Sree Vayanattu Kulavan Kavu"
+  },
+  {
     "id": "kannur_mayyil",
     "name": "Mayyil",
     "district": "Kannur",
@@ -2241,6 +3060,24 @@
     "desc": "Mayyil Agriculture & Weaving Village"
   },
   {
+    "id": "knr_mele_chovva",
+    "name": "Mele Chovva",
+    "district": "Kannur",
+    "lat": 11.868,
+    "lng": 75.402,
+    "type": "transit_hub",
+    "desc": "Mele Chovva Major Railway & NH-66 Flyover Junction"
+  },
+  {
+    "id": "knr_mokeri",
+    "name": "Mokeri (Koothuparamba)",
+    "district": "Kannur",
+    "lat": 11.778,
+    "lng": 75.598,
+    "type": "town",
+    "desc": "Mokeri Government College & Commercial Panchayat"
+  },
+  {
     "id": "knr_morazha",
     "name": "Morazha",
     "district": "Kannur",
@@ -2248,6 +3085,15 @@
     "lng": 75.342,
     "type": "landmark",
     "desc": "Morazha Historical Peasant Revolt Village"
+  },
+  {
+    "id": "knr_munderi",
+    "name": "Munderi (Kannur)",
+    "district": "Kannur",
+    "lat": 11.908,
+    "lng": 75.468,
+    "type": "village",
+    "desc": "Munderi Grama Panchayat & Farm"
   },
   {
     "id": "knr_muzhappilangad",
@@ -2277,6 +3123,15 @@
     "desc": "Neduvil Rubber & Arecanut Valley, Taliparamba Taluk"
   },
   {
+    "id": "knr_pallikkunnu",
+    "name": "Pallikkunnu",
+    "district": "Kannur",
+    "lat": 11.888,
+    "lng": 75.362,
+    "type": "town",
+    "desc": "Pallikkunnu Sree Krishna Temple & Central Prison"
+  },
+  {
     "id": "knr_panoor",
     "name": "Panoor",
     "district": "Kannur",
@@ -2304,6 +3159,15 @@
     "desc": "Government Medical College Kannur, Pariyaram"
   },
   {
+    "id": "knr_pattiam",
+    "name": "Pattiam",
+    "district": "Kannur",
+    "lat": 11.808,
+    "lng": 75.588,
+    "type": "village",
+    "desc": "Pattiam Grama Panchayat, Koothuparamba"
+  },
+  {
     "id": "knr_payyanur",
     "name": "Payyanur",
     "district": "Kannur",
@@ -2329,6 +3193,15 @@
     "lng": 75.275,
     "type": "town",
     "desc": "Pazhayangadi Kuppam River Rail Crossing"
+  },
+  {
+    "id": "knr_peralassery",
+    "name": "Peralassery Temple Pond",
+    "district": "Kannur",
+    "lat": 11.848,
+    "lng": 75.478,
+    "type": "landmark",
+    "desc": "Peralassery Subramanya Temple (Famous Stepped Pond)"
   },
   {
     "id": "knr_peravoor",
@@ -2365,6 +3238,33 @@
     "lng": 75.502,
     "type": "village",
     "desc": "Pinarayi Village, Dharmadam"
+  },
+  {
+    "id": "knr_ponniam",
+    "name": "Ponniam (Kadirur)",
+    "district": "Kannur",
+    "lat": 11.768,
+    "lng": 75.528,
+    "type": "landmark",
+    "desc": "Ponniam Historical Kalari Battleground"
+  },
+  {
+    "id": "knr_punnad",
+    "name": "Punnad",
+    "district": "Kannur",
+    "lat": 11.958,
+    "lng": 75.648,
+    "type": "village",
+    "desc": "Punnad Bridge & Spices Market"
+  },
+  {
+    "id": "knr_puzhathi",
+    "name": "Puzhathi",
+    "district": "Kannur",
+    "lat": 11.892,
+    "lng": 75.378,
+    "type": "village",
+    "desc": "Puzhathi Grama Panchayat, Kannur Suburb"
   },
   {
     "id": "kannur_ramanthali",
@@ -2412,6 +3312,24 @@
     "desc": "Thalassery Fort, Circus & Cricket Historic Hub"
   },
   {
+    "id": "knr_thazhe_chovva",
+    "name": "Thazhe Chovva",
+    "district": "Kannur",
+    "lat": 11.858,
+    "lng": 75.412,
+    "type": "transit_hub",
+    "desc": "Thazhe Chovva Commercial Crossroads & Overbridge"
+  },
+  {
+    "id": "knr_thokkilangadi",
+    "name": "Thokkilangadi",
+    "district": "Kannur",
+    "lat": 11.828,
+    "lng": 75.578,
+    "type": "transit_hub",
+    "desc": "Thokkilangadi Commercial Hub, Koothuparamba"
+  },
+  {
     "id": "kannur_ulikkal",
     "name": "Ulikkal",
     "district": "Kannur",
@@ -2419,6 +3337,15 @@
     "lng": 75.642,
     "type": "town",
     "desc": "Ulikkal High Range Agricultural Junction"
+  },
+  {
+    "id": "knr_uliyil",
+    "name": "Uliyil",
+    "district": "Kannur",
+    "lat": 11.938,
+    "lng": 75.598,
+    "type": "transit_hub",
+    "desc": "Uliyil Commercial Junction, Iritty Road"
   },
   {
     "id": "kannur_valapattanam",
@@ -2448,6 +3375,15 @@
     "desc": "Adhur Forest Border Checkpost & Police Station"
   },
   {
+    "id": "ksd_ajanur",
+    "name": "Ajanur",
+    "district": "Kasaragod",
+    "lat": 12.348,
+    "lng": 75.068,
+    "type": "landmark",
+    "desc": "Ajanur Madiyan Koolom Temple & Coastal Panchayat"
+  },
+  {
     "id": "ksd_anandashram",
     "name": "Anandashram Kanhangad",
     "district": "Kasaragod",
@@ -2455,6 +3391,15 @@
     "lng": 75.108,
     "type": "landmark",
     "desc": "Swami Ramdas Anandashram Spiritual Center"
+  },
+  {
+    "id": "ksd_arikady",
+    "name": "Arikady Fort (Kumbla)",
+    "district": "Kasaragod",
+    "lat": 12.598,
+    "lng": 74.952,
+    "type": "landmark",
+    "desc": "Historic Kumbla Fort & Shiriya River Mouth"
   },
   {
     "id": "kasaragod_badiyadka",
@@ -2466,6 +3411,15 @@
     "desc": "Badiyadka (Perdla) Commercial Center"
   },
   {
+    "id": "ksd_balal",
+    "name": "Balal",
+    "district": "Kasaragod",
+    "lat": 12.358,
+    "lng": 75.308,
+    "type": "village",
+    "desc": "Balal Grama Panchayat, Vellarikundu"
+  },
+  {
     "id": "ksd_bandadka",
     "name": "Bandadka",
     "district": "Kasaragod",
@@ -2473,6 +3427,15 @@
     "lng": 75.289,
     "type": "village",
     "desc": "Kottancheri Hills Foothills"
+  },
+  {
+    "id": "ksd_bare",
+    "name": "Bare (Uduma)",
+    "district": "Kasaragod",
+    "lat": 12.438,
+    "lng": 75.048,
+    "type": "village",
+    "desc": "Bare Village, Uduma Taluk"
   },
   {
     "id": "ksd_bayar",
@@ -2547,6 +3510,15 @@
     "desc": "Chembirika Scenic Beach & Railway Tunnels"
   },
   {
+    "id": "ksd_chemnad",
+    "name": "Chemnad",
+    "district": "Kasaragod",
+    "lat": 12.478,
+    "lng": 75.008,
+    "type": "village",
+    "desc": "Chemnad Jama Masjid & Chandragiri Basin"
+  },
+  {
     "id": "ksd_cherkala",
     "name": "Cherkala",
     "district": "Kasaragod",
@@ -2574,6 +3546,15 @@
     "desc": "Tejaswini River Catchment, Landslide Slope"
   },
   {
+    "id": "ksd_east_eleri",
+    "name": "East Eleri",
+    "district": "Kasaragod",
+    "lat": 12.308,
+    "lng": 75.358,
+    "type": "town",
+    "desc": "East Eleri High Range Spices Center, Chittarikkal"
+  },
+  {
     "id": "ksd_enmakaje",
     "name": "Enmakaje",
     "district": "Kasaragod",
@@ -2583,6 +3564,15 @@
     "desc": "Enmakaje Grama Panchayat"
   },
   {
+    "id": "ksd_hosabettu",
+    "name": "Hosabettu",
+    "district": "Kasaragod",
+    "lat": 12.758,
+    "lng": 74.888,
+    "type": "coastal_hamlet",
+    "desc": "Hosabettu Northern Coastal Interstate Border, Manjeshwar"
+  },
+  {
     "id": "kasaragod_hosangadi",
     "name": "Hosangadi",
     "district": "Kasaragod",
@@ -2590,6 +3580,24 @@
     "lng": 74.898,
     "type": "transit_hub",
     "desc": "Hosangadi Commercial Crossroads, Manjeshwar"
+  },
+  {
+    "id": "ksd_kalanad",
+    "name": "Kalanad",
+    "district": "Kasaragod",
+    "lat": 12.448,
+    "lng": 75.012,
+    "type": "coastal_hamlet",
+    "desc": "Kalanad River Bridge & Coastal Railway Tunnel"
+  },
+  {
+    "id": "ksd_kallad",
+    "name": "Kallad",
+    "district": "Kasaragod",
+    "lat": 12.318,
+    "lng": 75.378,
+    "type": "village",
+    "desc": "Kallad Border Hamlet near Karnataka"
   },
   {
     "id": "ksd_kamballur",
@@ -2619,6 +3627,15 @@
     "desc": "Karadka Hills & Rubber Estates"
   },
   {
+    "id": "ksd_karanthakkad",
+    "name": "Karanthakkad",
+    "district": "Kasaragod",
+    "lat": 12.512,
+    "lng": 74.992,
+    "type": "town",
+    "desc": "Karanthakkad Commercial Junction, Kasaragod Town"
+  },
+  {
     "id": "ksd_kasaragod",
     "name": "Kasaragod",
     "district": "Kasaragod",
@@ -2637,6 +3654,24 @@
     "desc": "Historic Kayyur Peasant Martyrs Memorial, Tejaswini River"
   },
   {
+    "id": "ksd_karinthalam",
+    "name": "Kinanoor Karinthalam",
+    "district": "Kasaragod",
+    "lat": 12.288,
+    "lng": 75.248,
+    "type": "village",
+    "desc": "Karinthalam Government Arts College & Valley"
+  },
+  {
+    "id": "ksd_kizhur",
+    "name": "Kizhur Beach",
+    "district": "Kasaragod",
+    "lat": 12.442,
+    "lng": 74.998,
+    "type": "coastal_hamlet",
+    "desc": "Kizhur Sastha Temple & Fishing Harbour"
+  },
+  {
     "id": "ksd_kolichal",
     "name": "Kolichal",
     "district": "Kasaragod",
@@ -2646,6 +3681,15 @@
     "desc": "Kolichal High Range Junction on Ooty-Ranipuram Route"
   },
   {
+    "id": "ksd_konnakkad",
+    "name": "Konnakkad",
+    "district": "Kasaragod",
+    "lat": 12.368,
+    "lng": 75.378,
+    "type": "hill_station",
+    "desc": "Konnakkad Kottancheri Hills Trekking Base"
+  },
+  {
     "id": "kasaragod_kotikulam",
     "name": "Kotikulam",
     "district": "Kasaragod",
@@ -2653,6 +3697,24 @@
     "lng": 75.018,
     "type": "coastal_hamlet",
     "desc": "Kotikulam Railway Station & Coastal Village"
+  },
+  {
+    "id": "ksd_kottancheri",
+    "name": "Kottancheri Hills",
+    "district": "Kasaragod",
+    "lat": 12.378,
+    "lng": 75.398,
+    "type": "hill_station",
+    "desc": "Kottancheri Rain Forest (Kerala's Ooty) High Altitude Peak"
+  },
+  {
+    "id": "ksd_kottappuram_nileshwar",
+    "name": "Kottappuram (Nileshwar)",
+    "district": "Kasaragod",
+    "lat": 12.252,
+    "lng": 75.132,
+    "type": "landmark",
+    "desc": "Nileshwar Backwaters & Houseboat Tourism Cruise Point"
   },
   {
     "id": "kasaragod_kumbdaje",
@@ -2682,6 +3744,33 @@
     "desc": "Kunjathur Border Village, Manjeshwar Taluk"
   },
   {
+    "id": "ksd_kuttikol",
+    "name": "Kuttikol",
+    "district": "Kasaragod",
+    "lat": 12.518,
+    "lng": 75.208,
+    "type": "landmark",
+    "desc": "Kuttikol Thamburatti Theyyam Grounds"
+  },
+  {
+    "id": "ksd_madhur",
+    "name": "Madhur Temple",
+    "district": "Kasaragod",
+    "lat": 12.528,
+    "lng": 75.008,
+    "type": "landmark",
+    "desc": "Madhur Sree Madanantheshwara Siddhivinayaka Ancient Temple"
+  },
+  {
+    "id": "ksd_madikai",
+    "name": "Madikai",
+    "district": "Kasaragod",
+    "lat": 12.308,
+    "lng": 75.158,
+    "type": "village",
+    "desc": "Madikai Grama Panchayat & Higher Secondary School"
+  },
+  {
     "id": "ksd_kasaragod_mosque",
     "name": "Malik Deenar Mosque",
     "district": "Kasaragod",
@@ -2698,6 +3787,15 @@
     "lng": 75.342,
     "type": "hill_station",
     "desc": "Malom 'Coorg of Kerala' High Range Hamlet"
+  },
+  {
+    "id": "ksd_mangalpady",
+    "name": "Mangalpady",
+    "district": "Kasaragod",
+    "lat": 12.678,
+    "lng": 74.928,
+    "type": "hospital_hub",
+    "desc": "Mangalpady Taluk Hospital, Uppala"
   },
   {
     "id": "ksd_manjeshwar",
@@ -2727,6 +3825,15 @@
     "desc": "Mogral Unani Medical & Coastal Village"
   },
   {
+    "id": "ksd_muliyar",
+    "name": "Muliyar",
+    "district": "Kasaragod",
+    "lat": 12.528,
+    "lng": 75.098,
+    "type": "village",
+    "desc": "Muliyar Bovikanam Panchayat & Rubber Hills"
+  },
+  {
     "id": "kasaragod_mulleria",
     "name": "Mulleria",
     "district": "Kasaragod",
@@ -2736,6 +3843,15 @@
     "desc": "Mulleria Junction on Kasaragod-Jalsoor Road"
   },
   {
+    "id": "ksd_munnad",
+    "name": "Munnad (Bedadka)",
+    "district": "Kasaragod",
+    "lat": 12.492,
+    "lng": 75.168,
+    "type": "town",
+    "desc": "Munnad People's Cooperative Arts College"
+  },
+  {
     "id": "ksd_nileshwar",
     "name": "Nileshwar",
     "district": "Kasaragod",
@@ -2743,6 +3859,15 @@
     "lng": 75.1333,
     "type": "town",
     "desc": "Nileshwar Cultural Capital & Backwaters"
+  },
+  {
+    "id": "ksd_olavara",
+    "name": "Olavara (Trikaripur)",
+    "district": "Kasaragod",
+    "lat": 12.168,
+    "lng": 75.168,
+    "type": "village",
+    "desc": "Olavara Ferry & Kavvayi Backwaters Landing"
   },
   {
     "id": "kasaragod_padne",
@@ -2761,6 +3886,15 @@
     "lng": 75.018,
     "type": "village",
     "desc": "Paivalike Border Panchayat & Agricultural Valley"
+  },
+  {
+    "id": "ksd_palakkunnu",
+    "name": "Palakkunnu (Uduma)",
+    "district": "Kasaragod",
+    "lat": 12.428,
+    "lng": 75.028,
+    "type": "landmark",
+    "desc": "Palakkunnu Sri Bhagavathi Temple & Bharani"
   },
   {
     "id": "ksd_palavayal",
@@ -2808,6 +3942,15 @@
     "desc": "Parappa High Range Trading Centre"
   },
   {
+    "id": "ksd_cuk_periya",
+    "name": "Periya (Central University)",
+    "district": "Kasaragod",
+    "lat": 12.388,
+    "lng": 75.098,
+    "type": "landmark",
+    "desc": "Central University of Kerala (CUK) Tejaswini Hills Campus"
+  },
+  {
     "id": "ksd_ranipuram",
     "name": "Ranipuram",
     "district": "Kasaragod",
@@ -2824,6 +3967,15 @@
     "lng": 74.998,
     "type": "transit_hub",
     "desc": "Seethangoli KINFRA Industrial Park"
+  },
+  {
+    "id": "ksd_shiribagilu",
+    "name": "Shiribagilu",
+    "district": "Kasaragod",
+    "lat": 12.518,
+    "lng": 74.978,
+    "type": "coastal_hamlet",
+    "desc": "Shiribagilu Coastal Village, Kasaragod"
   },
   {
     "id": "kasaragod_talapady",
@@ -2851,6 +4003,15 @@
     "lng": 75.021,
     "type": "town",
     "desc": "Uduma Coastal Assembly Constituency & Town"
+  },
+  {
+    "id": "ksd_ukkinadka",
+    "name": "Ukkinadka",
+    "district": "Kasaragod",
+    "lat": 12.568,
+    "lng": 75.128,
+    "type": "village",
+    "desc": "Ukkinadka Rural Valley, Badiyadka Route"
   },
   {
     "id": "kasaragod_uppala",
@@ -2896,6 +4057,15 @@
     "lng": 74.948,
     "type": "village",
     "desc": "Vorkady Northernmost Kerala Border Grama Panchayat"
+  },
+  {
+    "id": "ksd_west_eleri",
+    "name": "West Eleri",
+    "district": "Kasaragod",
+    "lat": 12.298,
+    "lng": 75.328,
+    "type": "village",
+    "desc": "West Eleri Grama Panchayat, Moucode"
   },
   {
     "id": "kollam_achankovil",
@@ -2997,6 +4167,15 @@
     "desc": "Chavara Mineral Sands Belt & Coastal Channel"
   },
   {
+    "id": "klm_cheppara",
+    "name": "Cheppara (Ezhukone)",
+    "district": "Kollam",
+    "lat": 8.982,
+    "lng": 76.728,
+    "type": "landmark",
+    "desc": "Cheppara Rock Formations & Echo Point"
+  },
+  {
     "id": "kollam_chinnakkada",
     "name": "Chinnakkada Clock Tower",
     "district": "Kollam",
@@ -3042,6 +4221,15 @@
     "desc": "East Kallada Riverine Hamlet & Clay Mines"
   },
   {
+    "id": "klm_edamon",
+    "name": "Edamon",
+    "district": "Kollam",
+    "lat": 9.012,
+    "lng": 77.018,
+    "type": "transit_hub",
+    "desc": "Edamon Railway Station & 13-Arch Kannara Bridge"
+  },
+  {
     "id": "kollam_ezhukone",
     "name": "Ezhukone",
     "district": "Kollam",
@@ -3067,6 +4255,33 @@
     "lng": 76.602,
     "type": "transit_hub",
     "desc": "Kadavoor Ashtamudi Lake Bypass Bridge"
+  },
+  {
+    "id": "klm_kallumthazham",
+    "name": "Kallumthazham",
+    "district": "Kollam",
+    "lat": 8.902,
+    "lng": 76.628,
+    "type": "transit_hub",
+    "desc": "Kallumthazham Kollam Bypass Flyover"
+  },
+  {
+    "id": "klm_karavaloor",
+    "name": "Karavaloor",
+    "district": "Kollam",
+    "lat": 9.068,
+    "lng": 76.948,
+    "type": "village",
+    "desc": "Karavaloor Village, Pathanapuram Valley"
+  },
+  {
+    "id": "klm_kareepra",
+    "name": "Kareepra",
+    "district": "Kollam",
+    "lat": 8.968,
+    "lng": 76.748,
+    "type": "village",
+    "desc": "Kareepra Grama Panchayat & Clay Mines"
   },
   {
     "id": "klm_karunagappally",
@@ -3150,6 +4365,24 @@
     "desc": "Kunnathur Taluk Agricultural Center"
   },
   {
+    "id": "klm_kuzhimathikkad",
+    "name": "Kuzhimathikkad",
+    "district": "Kollam",
+    "lat": 8.978,
+    "lng": 76.702,
+    "type": "village",
+    "desc": "Kuzhimathikkad Rural Junction, Kundara Taluk"
+  },
+  {
+    "id": "klm_maruthamonpally",
+    "name": "Maruthamonpally",
+    "district": "Kollam",
+    "lat": 8.958,
+    "lng": 76.772,
+    "type": "village",
+    "desc": "Maruthamonpally Village, Pooyappally"
+  },
+  {
     "id": "kollam_mayyanad",
     "name": "Mayyanad",
     "district": "Kollam",
@@ -3159,6 +4392,24 @@
     "desc": "Mayyanad Paravur Lake Coast & Railway Station"
   },
   {
+    "id": "klm_melila",
+    "name": "Melila",
+    "district": "Kollam",
+    "lat": 9.008,
+    "lng": 76.858,
+    "type": "village",
+    "desc": "Melila Rubber & Agricultural Panchayat"
+  },
+  {
+    "id": "klm_mukhathala",
+    "name": "Mukhathala",
+    "district": "Kollam",
+    "lat": 8.888,
+    "lng": 76.658,
+    "type": "village",
+    "desc": "Mukhathala Murari Sri Krishna Temple"
+  },
+  {
     "id": "kollam_munroe_island",
     "name": "Munroe Island",
     "district": "Kollam",
@@ -3166,6 +4417,24 @@
     "lng": 76.612,
     "type": "disaster_hotspot",
     "desc": "Munroe Island (Mundrothuruth) Backwater Delta"
+  },
+  {
+    "id": "klm_muttara",
+    "name": "Muttara Marunnukotta",
+    "district": "Kollam",
+    "lat": 8.982,
+    "lng": 76.798,
+    "type": "landmark",
+    "desc": "Muttara Marunnukotta Ancient Rock Cave"
+  },
+  {
+    "id": "klm_mylom",
+    "name": "Mylom",
+    "district": "Kollam",
+    "lat": 9.028,
+    "lng": 76.778,
+    "type": "village",
+    "desc": "Mylom Rural Panchayat, Kottarakkara"
   },
   {
     "id": "kollam_neduvathur",
@@ -3186,6 +4455,15 @@
     "desc": "Neendakara Fishing Harbor & Coastal Bar"
   },
   {
+    "id": "klm_neendakara_port",
+    "name": "Neendakara Port",
+    "district": "Kollam",
+    "lat": 8.938,
+    "lng": 76.538,
+    "type": "transit_hub",
+    "desc": "Neendakara Fishing Harbour & Coastal Sea Mouth"
+  },
+  {
     "id": "klm_oachira",
     "name": "Oachira",
     "district": "Kollam",
@@ -3202,6 +4480,33 @@
     "lng": 76.832,
     "type": "village",
     "desc": "Odanavattam Rubber & Cashew Processing Center"
+  },
+  {
+    "id": "klm_ottakkal",
+    "name": "Ottakkal Lookout",
+    "district": "Kollam",
+    "lat": 8.998,
+    "lng": 77.058,
+    "type": "landmark",
+    "desc": "Ottakkal Lookout & Thenmala Dam Spillway"
+  },
+  {
+    "id": "klm_palaruvi",
+    "name": "Palaruvi Waterfalls",
+    "district": "Kollam",
+    "lat": 8.982,
+    "lng": 77.158,
+    "type": "landmark",
+    "desc": "Palaruvi 300ft Falls on Aryankavu Ghat Road"
+  },
+  {
+    "id": "klm_panmana",
+    "name": "Panmana",
+    "district": "Kollam",
+    "lat": 9.028,
+    "lng": 76.538,
+    "type": "landmark",
+    "desc": "Panmana Ashramam Chattampi Swamikal Samadhi"
   },
   {
     "id": "kollam_parippally",
@@ -3222,6 +4527,33 @@
     "desc": "Pathanapuram Taluk Hub & Kallada River Valley"
   },
   {
+    "id": "klm_pattazhy",
+    "name": "Pattazhy",
+    "district": "Kollam",
+    "lat": 9.078,
+    "lng": 76.788,
+    "type": "landmark",
+    "desc": "Pattazhy Devi Temple & Historic Mudippura"
+  },
+  {
+    "id": "klm_pattomthuruth",
+    "name": "Pattomthuruth (Munroe)",
+    "district": "Kollam",
+    "lat": 8.998,
+    "lng": 76.628,
+    "type": "village",
+    "desc": "Interior Island Settlement, Munroe Island"
+  },
+  {
+    "id": "klm_pavithreswaram",
+    "name": "Pavithreswaram",
+    "district": "Kollam",
+    "lat": 9.018,
+    "lng": 76.702,
+    "type": "village",
+    "desc": "Pavithreswaram Grama Panchayat"
+  },
+  {
     "id": "kollam_perinad",
     "name": "Perinad",
     "district": "Kollam",
@@ -3229,6 +4561,24 @@
     "lng": 76.621,
     "type": "village",
     "desc": "Perinad Railway Station & Lake Catchment"
+  },
+  {
+    "id": "klm_peruman",
+    "name": "Peruman",
+    "district": "Kollam",
+    "lat": 8.968,
+    "lng": 76.602,
+    "type": "landmark",
+    "desc": "Peruman Train Tragedy Memorial & Ashtamudi Lake"
+  },
+  {
+    "id": "klm_perumpuzha",
+    "name": "Perumpuzha",
+    "district": "Kollam",
+    "lat": 8.938,
+    "lng": 76.678,
+    "type": "village",
+    "desc": "Perumpuzha Cashew & Handloom Village"
   },
   {
     "id": "kollam_piravanthur",
@@ -3258,6 +4608,15 @@
     "desc": "Poruvazhy Peruviruthy Duryodhana Temple & Kettukazhcha"
   },
   {
+    "id": "klm_pulamon",
+    "name": "Pulamon (Kottarakkara)",
+    "district": "Kollam",
+    "lat": 8.992,
+    "lng": 76.778,
+    "type": "transit_hub",
+    "desc": "Pulamon Bridge & Central Commercial Junction"
+  },
+  {
     "id": "klm_punalur",
     "name": "Punalur",
     "district": "Kollam",
@@ -3265,6 +4624,15 @@
     "lng": 76.925,
     "type": "town",
     "desc": "Punalur Historic Suspension Bridge & Kallada River"
+  },
+  {
+    "id": "klm_puthoor",
+    "name": "Puthoor (Kollam)",
+    "district": "Kollam",
+    "lat": 9.048,
+    "lng": 76.718,
+    "type": "town",
+    "desc": "Puthoor Commercial Crossroads & Kallada River"
   },
   {
     "id": "kollam_rosemala",
@@ -3292,6 +4660,15 @@
     "lng": 76.6319,
     "type": "landmark",
     "desc": "Largest Freshwater Lake in Kerala"
+  },
+  {
+    "id": "klm_shankaramangalam",
+    "name": "Shankaramangalam (Chavara)",
+    "district": "Kollam",
+    "lat": 8.998,
+    "lng": 76.532,
+    "type": "transit_hub",
+    "desc": "KMML Titanium Dioxide Industrial Corridor"
   },
   {
     "id": "kollam_shendurney",
@@ -3328,6 +4705,24 @@
     "lng": 76.568,
     "type": "landmark",
     "desc": "Tangasseri Lighthouse & Historic Breakwater"
+  },
+  {
+    "id": "klm_thalavoor",
+    "name": "Thalavoor",
+    "district": "Kollam",
+    "lat": 9.058,
+    "lng": 76.828,
+    "type": "village",
+    "desc": "Thalavoor Ayurveda College & Pattazhy Link"
+  },
+  {
+    "id": "klm_thekkumbhagam",
+    "name": "Thekkumbhagam",
+    "district": "Kollam",
+    "lat": 8.988,
+    "lng": 76.568,
+    "type": "coastal_hamlet",
+    "desc": "Thekkumbhagam Chavara South Coastal Hamlet"
   },
   {
     "id": "klm_thenmala",
@@ -3382,6 +4777,24 @@
     "lng": 76.808,
     "type": "village",
     "desc": "Veliyam Grama Panchayat & Rural Agriculture"
+  },
+  {
+    "id": "klm_vettikkavala",
+    "name": "Vettikkavala",
+    "district": "Kollam",
+    "lat": 9.018,
+    "lng": 76.828,
+    "type": "landmark",
+    "desc": "Vettikkavala Mahadevar Temple & Palace"
+  },
+  {
+    "id": "klm_vilakkudy",
+    "name": "Vilakkudy",
+    "district": "Kollam",
+    "lat": 9.048,
+    "lng": 76.898,
+    "type": "village",
+    "desc": "Vilakkudy Grama Panchayat, Punalur"
   },
   {
     "id": "kollam_west_kallada",
@@ -3474,6 +4887,15 @@
     "desc": "Erumely Sabarimala Pilgrim Gateway"
   },
   {
+    "id": "ktm_erumely_petta",
+    "name": "Erumely Petta",
+    "district": "Kottayam",
+    "lat": 9.488,
+    "lng": 76.848,
+    "type": "landmark",
+    "desc": "Vavar Mosque & Petta Thullal Pilgrimage Grounds"
+  },
+  {
     "id": "ktm_ettumanoor",
     "name": "Ettumanoor",
     "district": "Kottayam",
@@ -3481,6 +4903,15 @@
     "lng": 76.5667,
     "type": "town",
     "desc": "Ettumanoor Temple Town & MC Road Junction"
+  },
+  {
+    "id": "ktm_ettumanoor_temple",
+    "name": "Ettumanoor Mahadevar Temple",
+    "district": "Kottayam",
+    "lat": 9.672,
+    "lng": 76.562,
+    "type": "landmark",
+    "desc": "Historic Mahadevar Temple & Ezharaponnaana Heritage"
   },
   {
     "id": "ktm_gandhinagar",
@@ -3492,6 +4923,15 @@
     "desc": "Kottayam Govt Medical College Campus"
   },
   {
+    "id": "ktm_kadanad",
+    "name": "Kadanad",
+    "district": "Kottayam",
+    "lat": 9.768,
+    "lng": 76.712,
+    "type": "village",
+    "desc": "Kadanad Mountain Valley Panchayat"
+  },
+  {
     "id": "ktm_kaduthuruthy",
     "name": "Kaduthuruthy",
     "district": "Kottayam",
@@ -3499,6 +4939,15 @@
     "lng": 76.518,
     "type": "town",
     "desc": "Kaduthuruthy Valiya Palli & Central Travancore Hub"
+  },
+  {
+    "id": "ktm_kaipuzha",
+    "name": "Kaipuzha",
+    "district": "Kottayam",
+    "lat": 9.668,
+    "lng": 76.518,
+    "type": "village",
+    "desc": "Kaipuzha Knanaya Cultural Village & Church"
   },
   {
     "id": "ktm_kallara",
@@ -3537,6 +4986,15 @@
     "desc": "Kanjirappally Queen of Spices Town"
   },
   {
+    "id": "ktm_karoor",
+    "name": "Karoor",
+    "district": "Kottayam",
+    "lat": 9.738,
+    "lng": 76.698,
+    "type": "village",
+    "desc": "Karoor Grama Panchayat, Pala"
+  },
+  {
     "id": "ktm_karukachal",
     "name": "Karukachal",
     "district": "Kottayam",
@@ -3544,6 +5002,15 @@
     "lng": 76.648,
     "type": "transit_hub",
     "desc": "Karukachal Major Commercial Crossroads"
+  },
+  {
+    "id": "ktm_kavanattinkara",
+    "name": "Kavanattinkara (Kumarakom)",
+    "district": "Kottayam",
+    "lat": 9.618,
+    "lng": 76.438,
+    "type": "transit_hub",
+    "desc": "Kavanattinkara Houseboat Terminal & KTDC Tourist Village"
   },
   {
     "id": "ktm_kavumpady",
@@ -3591,6 +5058,15 @@
     "desc": "Kottayam Central Town & District Collectorate"
   },
   {
+    "id": "ktm_kozhuvanal",
+    "name": "Kozhuvanal",
+    "district": "Kottayam",
+    "lat": 9.678,
+    "lng": 76.668,
+    "type": "village",
+    "desc": "Kozhuvanal St. John's Church & Panchayat"
+  },
+  {
     "id": "kottayam_kudamaloor",
     "name": "Kudamaloor",
     "district": "Kottayam",
@@ -3598,6 +5074,15 @@
     "lng": 76.505,
     "type": "village",
     "desc": "Kudamaloor St. Alphonsa Birthplace, Meenachil River"
+  },
+  {
+    "id": "ktm_kudayampady",
+    "name": "Kudayampady",
+    "district": "Kottayam",
+    "lat": 9.608,
+    "lng": 76.498,
+    "type": "village",
+    "desc": "Kudayampady Meenachil River Basin, Aimanam Route"
   },
   {
     "id": "ktm_kumarakom",
@@ -3636,6 +5121,24 @@
     "desc": "Kurichy Sachivothamapuram & Paddy Plains"
   },
   {
+    "id": "ktm_kurumannu",
+    "name": "Kurumannu",
+    "district": "Kottayam",
+    "lat": 9.748,
+    "lng": 76.748,
+    "type": "village",
+    "desc": "Kurumannu Rubber Plantations & Chapel"
+  },
+  {
+    "id": "ktm_lalam",
+    "name": "Lalam (Pala)",
+    "district": "Kottayam",
+    "lat": 9.718,
+    "lng": 76.688,
+    "type": "town",
+    "desc": "Lalam Bridge & St. Thomas Cathedral"
+  },
+  {
     "id": "ktm_madappally",
     "name": "Madappally",
     "district": "Kottayam",
@@ -3654,6 +5157,24 @@
     "desc": "Manarcad St. Mary's Cathedral & 8-Day Lent Hub"
   },
   {
+    "id": "ktm_manimala",
+    "name": "Manimala",
+    "district": "Kottayam",
+    "lat": 9.498,
+    "lng": 76.758,
+    "type": "town",
+    "desc": "Manimala River Bridge & Karikkattoor Market"
+  },
+  {
+    "id": "ktm_mankombu_moonnilavu",
+    "name": "Mankombu (Moonnilavu)",
+    "district": "Kottayam",
+    "lat": 9.792,
+    "lng": 76.828,
+    "type": "disaster_hotspot",
+    "desc": "Mankombu High Altitude Landslide Prone Valley"
+  },
+  {
     "id": "kottayam_maravanthuruthu",
     "name": "Maravanthuruthu",
     "district": "Kottayam",
@@ -3661,6 +5182,24 @@
     "lng": 76.418,
     "type": "village",
     "desc": "Maravanthuruthu Water Street Eco-Tourism"
+  },
+  {
+    "id": "ktm_mathumoola",
+    "name": "Mathumoola (Vazhappally)",
+    "district": "Kottayam",
+    "lat": 9.462,
+    "lng": 76.548,
+    "type": "transit_hub",
+    "desc": "Mathumoola Commercial Crossroads, Changanassery"
+  },
+  {
+    "id": "ktm_mattathippara",
+    "name": "Mattathippara Falls",
+    "district": "Kottayam",
+    "lat": 9.808,
+    "lng": 76.798,
+    "type": "landmark",
+    "desc": "Mattathippara Waterfalls & Trekking Slopes, Melukavu"
   },
   {
     "id": "kottayam_melukavu",
@@ -3699,6 +5238,15 @@
     "desc": "Mundakayam High Range Highway Gateway, NH-183"
   },
   {
+    "id": "ktm_mutholy",
+    "name": "Mutholy",
+    "district": "Kottayam",
+    "lat": 9.728,
+    "lng": 76.668,
+    "type": "landmark",
+    "desc": "Mutholy Kadappattoor Mahadeva Temple & Bypass"
+  },
+  {
     "id": "ktm_nagampadam",
     "name": "Nagampadam",
     "district": "Kottayam",
@@ -3706,6 +5254,15 @@
     "lng": 76.528,
     "type": "transit_hub",
     "desc": "Nagampadam Private Bus Terminal & Railway Overbridge"
+  },
+  {
+    "id": "ktm_nattakom",
+    "name": "Nattakom Port",
+    "district": "Kottayam",
+    "lat": 9.558,
+    "lng": 76.518,
+    "type": "transit_hub",
+    "desc": "Nattakom Inland Port & Cement Industrial Area"
   },
   {
     "id": "kottayam_nedumkunnam",
@@ -3744,6 +5301,15 @@
     "desc": "Pala Meenachil River Basin Municipal Town"
   },
   {
+    "id": "ktm_pallom",
+    "name": "Pallom",
+    "district": "Kottayam",
+    "lat": 9.538,
+    "lng": 76.518,
+    "type": "transit_hub",
+    "desc": "Pallom KSEB Major Substation & Ancient Church"
+  },
+  {
     "id": "kottayam_pampady",
     "name": "Pampady",
     "district": "Kottayam",
@@ -3751,6 +5317,15 @@
     "lng": 76.642,
     "type": "town",
     "desc": "Pampady High School Junction, KK Road"
+  },
+  {
+    "id": "ktm_panachikkad",
+    "name": "Panachikkad (Dakshina Mookambika)",
+    "district": "Kottayam",
+    "lat": 9.542,
+    "lng": 76.538,
+    "type": "landmark",
+    "desc": "Panachikkad Dakshina Mookambika Saraswathi Temple"
   },
   {
     "id": "ktm_perunna",
@@ -3807,6 +5382,15 @@
     "desc": "Four Temples Nalambalam Route"
   },
   {
+    "id": "ktm_pala_college",
+    "name": "St. Thomas College (Pala)",
+    "district": "Kottayam",
+    "lat": 9.718,
+    "lng": 76.678,
+    "type": "landmark",
+    "desc": "St. Thomas College Campus & Arunapuram"
+  },
+  {
     "id": "ktm_teekoy",
     "name": "Teekoy",
     "district": "Kottayam",
@@ -3814,6 +5398,24 @@
     "lng": 76.842,
     "type": "disaster_hotspot",
     "desc": "Teekoy Vagamon Ghat Ascent & Landslide Zone"
+  },
+  {
+    "id": "ktm_teekoy_adivaram",
+    "name": "Teekoy Adivaram",
+    "district": "Kottayam",
+    "lat": 9.718,
+    "lng": 76.828,
+    "type": "disaster_hotspot",
+    "desc": "Teekoy Riverbank Meenachil Flood Valley"
+  },
+  {
+    "id": "ktm_thalanad",
+    "name": "Thalanad",
+    "district": "Kottayam",
+    "lat": 9.748,
+    "lng": 76.848,
+    "type": "village",
+    "desc": "Thalanad High Altitude Rubber Hill"
   },
   {
     "id": "ktm_thalayolaparambu",
@@ -3915,6 +5517,15 @@
     "desc": "Vechoor Heritage Cow Origin & Vembanad Lake Shore"
   },
   {
+    "id": "ktm_vijayapuram",
+    "name": "Vijayapuram",
+    "district": "Kottayam",
+    "lat": 9.588,
+    "lng": 76.568,
+    "type": "village",
+    "desc": "Vijayapuram Diocese & Manarcad Route"
+  },
+  {
     "id": "ktm_yendayar",
     "name": "Yendayar",
     "district": "Kottayam",
@@ -3951,6 +5562,15 @@
     "desc": "Atholi Korapuzha River Basin"
   },
   {
+    "id": "kkd_avala_pandi",
+    "name": "Avala Pandi Wetland",
+    "district": "Kozhikode",
+    "lat": 11.558,
+    "lng": 75.728,
+    "type": "landmark",
+    "desc": "Avala Pandi Vast Paddy Wetland & Migratory Birds"
+  },
+  {
     "id": "kkd_balussery",
     "name": "Balussery",
     "district": "Kozhikode",
@@ -3967,6 +5587,15 @@
     "lng": 75.808,
     "type": "landmark",
     "desc": "Beypore Port, Ancient Uru Shipbuilding & Breakwater"
+  },
+  {
+    "id": "kkd_changaroth",
+    "name": "Changaroth",
+    "district": "Kozhikode",
+    "lat": 11.578,
+    "lng": 75.788,
+    "type": "village",
+    "desc": "Changaroth Grama Panchayat, Perambra"
   },
   {
     "id": "kkd_chelannur",
@@ -4021,6 +5650,15 @@
     "lng": 75.748,
     "type": "transit_hub",
     "desc": "Elathur Korapuzha Confluence & Railway Station"
+  },
+  {
+    "id": "kkd_elettil_vattoli",
+    "name": "Elettil Vattoli",
+    "district": "Kozhikode",
+    "lat": 11.398,
+    "lng": 75.898,
+    "type": "town",
+    "desc": "Elettil Vattoli MJ Higher Secondary School"
   },
   {
     "id": "kkd_engapuzha",
@@ -4095,6 +5733,15 @@
     "desc": "Kakkodi Korapuzha River Suburb"
   },
   {
+    "id": "kkd_kakkur",
+    "name": "Kakkur",
+    "district": "Kozhikode",
+    "lat": 11.388,
+    "lng": 75.848,
+    "type": "village",
+    "desc": "Kakkur Grama Panchayat & Agricultural Center"
+  },
+  {
     "id": "kkd_kallachi",
     "name": "Kallachi",
     "district": "Kozhikode",
@@ -4140,6 +5787,24 @@
     "desc": "Kayanna Spices Valley & Historical Police Station"
   },
   {
+    "id": "kkd_keezhariyur",
+    "name": "Keezhariyur",
+    "district": "Kozhikode",
+    "lat": 11.478,
+    "lng": 75.748,
+    "type": "landmark",
+    "desc": "Keezhariyur Historic 1942 Bomb Case Memorial"
+  },
+  {
+    "id": "kkd_kizhakkoth",
+    "name": "Kizhakkoth",
+    "district": "Kozhikode",
+    "lat": 11.378,
+    "lng": 75.918,
+    "type": "village",
+    "desc": "Kizhakkoth Grama Panchayat, Koduvally"
+  },
+  {
     "id": "kozhikode_kodenchery",
     "name": "Kodenchery",
     "district": "Kozhikode",
@@ -4158,6 +5823,15 @@
     "desc": "Koduvally Commercial & Gold Market Center"
   },
   {
+    "id": "kkd_koodathayi",
+    "name": "Koodathayi",
+    "district": "Kozhikode",
+    "lat": 11.418,
+    "lng": 75.948,
+    "type": "village",
+    "desc": "Koodathayi St. Mary's Forane Church & Foothills"
+  },
+  {
     "id": "kkd_koorachundu",
     "name": "Koorachundu",
     "district": "Kozhikode",
@@ -4165,6 +5839,15 @@
     "lng": 75.848,
     "type": "village",
     "desc": "Koorachundu Foothill Plantation Town & Kakkayam Gateway"
+  },
+  {
+    "id": "kkd_kottur",
+    "name": "Kottur (Balussery)",
+    "district": "Kozhikode",
+    "lat": 11.498,
+    "lng": 75.818,
+    "type": "village",
+    "desc": "Kottur Grama Panchayat, Balussery Route"
   },
   {
     "id": "clt_koyilandy",
@@ -4230,6 +5913,15 @@
     "desc": "Mananchira Historical Water Reservoir Park & Heritage Round"
   },
   {
+    "id": "kkd_mattanode",
+    "name": "Mattanode",
+    "district": "Kozhikode",
+    "lat": 11.558,
+    "lng": 75.828,
+    "type": "village",
+    "desc": "Mattanode High Range Rubber Slopes, Kayanna"
+  },
+  {
     "id": "kkd_mavoor",
     "name": "Mavoor",
     "district": "Kozhikode",
@@ -4257,6 +5949,15 @@
     "desc": "Government Medical College Hospital Kozhikode"
   },
   {
+    "id": "kkd_moodadi",
+    "name": "Moodadi",
+    "district": "Kozhikode",
+    "lat": 11.458,
+    "lng": 75.698,
+    "type": "transit_hub",
+    "desc": "Moodadi Railway Station & Coastal NH-66"
+  },
+  {
     "id": "kozhikode_mukkam",
     "name": "Mukkam",
     "district": "Kozhikode",
@@ -4275,6 +5976,15 @@
     "desc": "Kuttiady River Basin Town"
   },
   {
+    "id": "kkd_nanminda",
+    "name": "Nanminda",
+    "district": "Kozhikode",
+    "lat": 11.418,
+    "lng": 75.832,
+    "type": "town",
+    "desc": "Nanminda 14th Mile Commercial Junction"
+  },
+  {
     "id": "kozhikode_nit",
     "name": "NIT Calicut",
     "district": "Kozhikode",
@@ -4282,6 +5992,15 @@
     "lng": 75.934,
     "type": "landmark",
     "desc": "National Institute of Technology Calicut Campus"
+  },
+  {
+    "id": "kkd_nochad",
+    "name": "Nochad",
+    "district": "Kozhikode",
+    "lat": 11.518,
+    "lng": 75.778,
+    "type": "village",
+    "desc": "Nochad Higher Secondary School & Rural Valley"
   },
   {
     "id": "kkd_omassery",
@@ -4300,6 +6019,15 @@
     "lng": 75.908,
     "type": "landmark",
     "desc": "Oorakuzhi Waterfalls & Riverbed Canyon, Kakkayam"
+  },
+  {
+    "id": "kkd_panangad_kkd",
+    "name": "Panangad (Kozhikode)",
+    "district": "Kozhikode",
+    "lat": 11.478,
+    "lng": 75.828,
+    "type": "village",
+    "desc": "Panangad Higher Secondary School & Panchayat"
   },
   {
     "id": "kozhikode_pantheerankavu",
@@ -4336,6 +6064,24 @@
     "lng": 75.818,
     "type": "disaster_hotspot",
     "desc": "Kuttiady Irrigation Project Dam, Crocodile Farm & Catchment"
+  },
+  {
+    "id": "kkd_pookad",
+    "name": "Pookad (Chemancheri)",
+    "district": "Kozhikode",
+    "lat": 11.412,
+    "lng": 75.718,
+    "type": "landmark",
+    "desc": "Pookad Kalalayam Cultural & Theatrical Arts Center"
+  },
+  {
+    "id": "kkd_poonoor",
+    "name": "Poonoor",
+    "district": "Kozhikode",
+    "lat": 11.438,
+    "lng": 75.878,
+    "type": "town",
+    "desc": "Poonoor Markaz Garden & Commercial Market"
   },
   {
     "id": "kkd_poovaranthode",
@@ -4419,6 +6165,15 @@
     "desc": "Iruvanjippuzha River & Thusharagiri Falls Gateway"
   },
   {
+    "id": "kkd_thurayur",
+    "name": "Thurayur",
+    "district": "Kozhikode",
+    "lat": 11.518,
+    "lng": 75.718,
+    "type": "village",
+    "desc": "Thurayur Grama Panchayat, Payyoli Route"
+  },
+  {
     "id": "kkd_thusharagiri",
     "name": "Thusharagiri",
     "district": "Kozhikode",
@@ -4435,6 +6190,15 @@
     "lng": 75.782,
     "type": "transit_hub",
     "desc": "Ulliyeri Major Junction on SH-38"
+  },
+  {
+    "id": "kkd_unnikulam",
+    "name": "Unnikulam",
+    "district": "Kozhikode",
+    "lat": 11.448,
+    "lng": 75.888,
+    "type": "village",
+    "desc": "Unnikulam Poonoor River Basin"
   },
   {
     "id": "clt_vadakara",
@@ -4482,6 +6246,24 @@
     "desc": "Abdurahiman Nagar Panchayat on NH-66"
   },
   {
+    "id": "mlp_adakkakundu",
+    "name": "Adakkakundu Glass Bridge",
+    "district": "Malappuram",
+    "lat": 11.178,
+    "lng": 76.348,
+    "type": "landmark",
+    "desc": "Adakkakundu Waterfalls & Glass Bridge Eco-Park"
+  },
+  {
+    "id": "mlp_alathiyoor",
+    "name": "Alathiyoor Hanuman Kavu",
+    "district": "Malappuram",
+    "lat": 10.878,
+    "lng": 75.948,
+    "type": "landmark",
+    "desc": "Alathiyoor Sri Hanuman Kavu Famous Temple"
+  },
+  {
     "id": "malappuram_amarambalam",
     "name": "Amarambalam",
     "district": "Malappuram",
@@ -4509,6 +6291,24 @@
     "desc": "Football Capital & Chaliyar Crossing"
   },
   {
+    "id": "mlp_athavanad",
+    "name": "Athavanad",
+    "district": "Malappuram",
+    "lat": 10.888,
+    "lng": 76.018,
+    "type": "landmark",
+    "desc": "Azhvanchery Thamprakkal Mana & Palace"
+  },
+  {
+    "id": "mlp_ayankalam",
+    "name": "Ayankalam (Edappal)",
+    "district": "Malappuram",
+    "lat": 10.778,
+    "lng": 75.968,
+    "type": "village",
+    "desc": "Ayankalam Paddy Wetland Polders"
+  },
+  {
     "id": "mlp_bhoodanam",
     "name": "Bhoodanam (Pothukal)",
     "district": "Malappuram",
@@ -4516,6 +6316,15 @@
     "lng": 76.275,
     "type": "disaster_hotspot",
     "desc": "Bhoodanam Flood Plain & Kavalappara Landslide Base"
+  },
+  {
+    "id": "mlp_biyyam_kayal",
+    "name": "Biyyam Kayal (Ponnani)",
+    "district": "Malappuram",
+    "lat": 10.768,
+    "lng": 75.938,
+    "type": "landmark",
+    "desc": "Biyyam Kayal Tourist Park & Water Sports Pavilion"
   },
   {
     "id": "mlp_bp_angadi",
@@ -4545,6 +6354,15 @@
     "desc": "Chamravattom Regulator Cum Bridge across Bharathapuzha"
   },
   {
+    "id": "mlp_chandakkunnu",
+    "name": "Chandakkunnu (Nilambur)",
+    "district": "Malappuram",
+    "lat": 11.288,
+    "lng": 76.238,
+    "type": "transit_hub",
+    "desc": "Chandakkunnu Commercial Crossroads, Nilambur"
+  },
+  {
     "id": "malappuram_changaramkulam",
     "name": "Changaramkulam",
     "district": "Malappuram",
@@ -4552,6 +6370,15 @@
     "lng": 76.012,
     "type": "town",
     "desc": "Changaramkulam Junction on NH-66"
+  },
+  {
+    "id": "mlp_changuvetti",
+    "name": "Changuvetti (Kottakkal)",
+    "district": "Malappuram",
+    "lat": 11.008,
+    "lng": 75.998,
+    "type": "transit_hub",
+    "desc": "Changuvetti NH-66 Major Flyover & Hospital Node"
   },
   {
     "id": "malappuram_chemmad",
@@ -4572,6 +6399,15 @@
     "desc": "Chaliyar River Basin Village"
   },
   {
+    "id": "mlp_devadhar",
+    "name": "Devadhar (Tanur)",
+    "district": "Malappuram",
+    "lat": 10.968,
+    "lng": 75.888,
+    "type": "village",
+    "desc": "Devadhar Government Higher Secondary School Corridor"
+  },
+  {
     "id": "mlp_edakkara",
     "name": "Edakkara",
     "district": "Malappuram",
@@ -4588,6 +6424,15 @@
     "lng": 75.982,
     "type": "transit_hub",
     "desc": "Edappal Major Commercial Crossroads"
+  },
+  {
+    "id": "mlp_edarikode",
+    "name": "Edarikode",
+    "district": "Malappuram",
+    "lat": 11.018,
+    "lng": 75.978,
+    "type": "town",
+    "desc": "Edarikode Textile Mills & Juma Masjid"
   },
   {
     "id": "malappuram_edavanna",
@@ -4608,6 +6453,15 @@
     "desc": "Edavanna Chaliyar River Crossing"
   },
   {
+    "id": "mlp_indianoor",
+    "name": "Indianoor",
+    "district": "Malappuram",
+    "lat": 11.018,
+    "lng": 76.018,
+    "type": "landmark",
+    "desc": "Indianoor Maha Ganapathy Temple & Heritage"
+  },
+  {
     "id": "malappuram_kadalundi_nagaram",
     "name": "Kadalundi Nagaram",
     "district": "Malappuram",
@@ -4615,6 +6469,24 @@
     "lng": 75.832,
     "type": "coastal_hamlet",
     "desc": "Kadalundi Estuary & Bird Sanctuary (South Bank)"
+  },
+  {
+    "id": "mlp_kadampuzha",
+    "name": "Kadampuzha Temple",
+    "district": "Malappuram",
+    "lat": 10.958,
+    "lng": 76.048,
+    "type": "landmark",
+    "desc": "Kadampuzha Bhagavathy Temple (Muttarukkal Pilgrimage)"
+  },
+  {
+    "id": "mlp_kadannamanna",
+    "name": "Kadannamanna",
+    "district": "Malappuram",
+    "lat": 11.028,
+    "lng": 76.208,
+    "type": "village",
+    "desc": "Kadannamanna Kovilakam, Mankada"
   },
   {
     "id": "mlp_kalikavu",
@@ -4716,6 +6588,24 @@
     "desc": "Kottakkunnu DTPC Marine Park & Hilltop"
   },
   {
+    "id": "mlp_kumbidi",
+    "name": "Kumbidi",
+    "district": "Malappuram",
+    "lat": 10.818,
+    "lng": 76.018,
+    "type": "village",
+    "desc": "Kumbidi Anakkara Border on Bharathapuzha River"
+  },
+  {
+    "id": "mlp_kuruva",
+    "name": "Kuruva",
+    "district": "Malappuram",
+    "lat": 10.988,
+    "lng": 76.128,
+    "type": "village",
+    "desc": "Kuruva Grama Panchayat, Perinthalmanna"
+  },
+  {
     "id": "mlp_kuttippuram",
     "name": "Kuttippuram",
     "district": "Malappuram",
@@ -4752,6 +6642,15 @@
     "desc": "Mampad College & Chaliyar Valley"
   },
   {
+    "id": "mlp_manathumangalam",
+    "name": "Manathumangalam",
+    "district": "Malappuram",
+    "lat": 10.978,
+    "lng": 76.238,
+    "type": "transit_hub",
+    "desc": "Manathumangalam Bypass, Perinthalmanna"
+  },
+  {
     "id": "mlp_manjeri",
     "name": "Manjeri",
     "district": "Malappuram",
@@ -4768,6 +6667,15 @@
     "lng": 76.182,
     "type": "village",
     "desc": "Mankada Assembly Segment & Hill Hamlet"
+  },
+  {
+    "id": "mlp_marakkara",
+    "name": "Marakkara",
+    "district": "Malappuram",
+    "lat": 10.928,
+    "lng": 76.048,
+    "type": "village",
+    "desc": "Marakkara Grama Panchayat, Kadampuzha Route"
   },
   {
     "id": "malappuram_melattur",
@@ -4788,6 +6696,24 @@
     "desc": "Moorkanad Puzhakkattiri Rural River Basin"
   },
   {
+    "id": "mlp_morayur",
+    "name": "Morayur",
+    "district": "Malappuram",
+    "lat": 11.158,
+    "lng": 76.028,
+    "type": "village",
+    "desc": "Morayur Hill Panchayat & Ancient Mosques"
+  },
+  {
+    "id": "mlp_narukara",
+    "name": "Narukara (Manjeri)",
+    "district": "Malappuram",
+    "lat": 11.128,
+    "lng": 76.108,
+    "type": "village",
+    "desc": "Narukara Educational Hub & Hill Slopes"
+  },
+  {
     "id": "mlp_nedumkayam",
     "name": "Nedumkayam Rainforest",
     "district": "Malappuram",
@@ -4795,6 +6721,15 @@
     "lng": 76.358,
     "type": "landmark",
     "desc": "Nedumkayam Rainforest & Wooden Bridge, Karulai Range"
+  },
+  {
+    "id": "mlp_neduva",
+    "name": "Neduva (Parappanangadi)",
+    "district": "Malappuram",
+    "lat": 11.052,
+    "lng": 75.862,
+    "type": "village",
+    "desc": "Neduva Village, Parappanangadi Suburb"
   },
   {
     "id": "mlp_nilambur",
@@ -4824,6 +6759,15 @@
     "desc": "Oorngattiri Chaliyar River Panchayat"
   },
   {
+    "id": "mlp_padinjarekkara",
+    "name": "Padinjarekkara Beach",
+    "district": "Malappuram",
+    "lat": 10.798,
+    "lng": 75.918,
+    "type": "coastal_hamlet",
+    "desc": "Bharathapuzha & Tirur River Ocean Mouth Confluence"
+  },
+  {
     "id": "malappuram_pandikkad",
     "name": "Pandikkad",
     "district": "Malappuram",
@@ -4851,6 +6795,24 @@
     "desc": "Perinthalmanna Major Healthcare & Hospital City"
   },
   {
+    "id": "mlp_klari",
+    "name": "Perumanna Klari",
+    "district": "Malappuram",
+    "lat": 10.998,
+    "lng": 75.968,
+    "type": "village",
+    "desc": "Klari Town & Spices Trading Market"
+  },
+  {
+    "id": "mlp_ponmundam",
+    "name": "Ponmundam",
+    "district": "Malappuram",
+    "lat": 10.978,
+    "lng": 75.968,
+    "type": "village",
+    "desc": "Ponmundam Grama Panchayat, Tirur"
+  },
+  {
     "id": "mlp_ponnani",
     "name": "Ponnani",
     "district": "Malappuram",
@@ -4867,6 +6829,15 @@
     "lng": 76.282,
     "type": "disaster_hotspot",
     "desc": "Pothukal Flood Plain & Kavalappara Base"
+  },
+  {
+    "id": "mlp_puzhakkattiri",
+    "name": "Puzhakkattiri",
+    "district": "Malappuram",
+    "lat": 10.958,
+    "lng": 76.108,
+    "type": "village",
+    "desc": "Puzhakkattiri River Basin & Market"
   },
   {
     "id": "mlp_tanur",
@@ -4896,6 +6867,24 @@
     "desc": "Thavanur Kelappaji College of Agricultural Engineering"
   },
   {
+    "id": "mlp_thazhepalam",
+    "name": "Thazhepalam (Tirur)",
+    "district": "Malappuram",
+    "lat": 10.918,
+    "lng": 75.928,
+    "type": "transit_hub",
+    "desc": "Thazhepalam Central Bus Stand & Market"
+  },
+  {
+    "id": "mlp_therattammal",
+    "name": "Therattammal (Areekode)",
+    "district": "Malappuram",
+    "lat": 11.238,
+    "lng": 76.058,
+    "type": "village",
+    "desc": "Chaliyar Riverfront Football & Agriculture Village"
+  },
+  {
     "id": "mlp_thunchan_parambu",
     "name": "Thunchan Parambu (Tirur)",
     "district": "Malappuram",
@@ -4921,6 +6910,24 @@
     "lng": 75.932,
     "type": "town",
     "desc": "Tirurangadi Historical Moplah Rebellion Center"
+  },
+  {
+    "id": "mlp_triprangode",
+    "name": "Triprangode",
+    "district": "Malappuram",
+    "lat": 10.858,
+    "lng": 75.938,
+    "type": "landmark",
+    "desc": "Triprangode Siva Temple & Kalasamharam Legend"
+  },
+  {
+    "id": "mlp_tuvvur",
+    "name": "Tuvvur",
+    "district": "Malappuram",
+    "lat": 11.078,
+    "lng": 76.318,
+    "type": "transit_hub",
+    "desc": "Tuvvur Historical Railway Line & Market"
   },
   {
     "id": "mlp_unniyal",
@@ -4957,6 +6964,15 @@
     "lng": 75.852,
     "type": "coastal_hamlet",
     "desc": "Vallikkunnu Beach & Eco-Tourism Village"
+  },
+  {
+    "id": "mlp_vattamkulam",
+    "name": "Vattamkulam",
+    "district": "Malappuram",
+    "lat": 10.748,
+    "lng": 76.048,
+    "type": "village",
+    "desc": "Vattamkulam Grama Panchayat, Edappal"
   },
   {
     "id": "mlp_vazhikadavu",
@@ -5002,6 +7018,24 @@
     "lng": 76.55,
     "type": "town",
     "desc": "Alathur Taluk & NH-544 Corridor"
+  },
+  {
+    "id": "pkd_anikkode",
+    "name": "Anikkode (Chittur)",
+    "district": "Palakkad",
+    "lat": 10.692,
+    "lng": 76.728,
+    "type": "village",
+    "desc": "Anikkode Mahadeva Temple & Agraharam"
+  },
+  {
+    "id": "pkd_anjumoorthy",
+    "name": "Anjumoorthy Mangalam",
+    "district": "Palakkad",
+    "lat": 10.608,
+    "lng": 76.492,
+    "type": "landmark",
+    "desc": "Anjumoorthy Temple & Mangalam River Bridge"
   },
   {
     "id": "pkd_attappadi",
@@ -5085,6 +7119,15 @@
     "desc": "Gopalapuram Interstate Border Checkpost"
   },
   {
+    "id": "pkd_chittur_college",
+    "name": "Govt Victoria / Chittur College",
+    "district": "Palakkad",
+    "lat": 10.702,
+    "lng": 76.718,
+    "type": "landmark",
+    "desc": "Government College Chittur Campus & Sokanashini River"
+  },
+  {
     "id": "pkd_jellippara",
     "name": "Jellippara",
     "district": "Palakkad",
@@ -5092,6 +7135,15 @@
     "lng": 76.618,
     "type": "village",
     "desc": "Jellippara Bhavani Riverbank Settlement"
+  },
+  {
+    "id": "pkd_kacherikkunnu",
+    "name": "Kacherikkunnu (Cherpulassery)",
+    "district": "Palakkad",
+    "lat": 10.878,
+    "lng": 76.312,
+    "type": "town",
+    "desc": "Kacherikkunnu Government Sub-Registrar & Bus Stand"
   },
   {
     "id": "pkd_kadampazhipuram",
@@ -5130,6 +7182,15 @@
     "desc": "Kanjirapuzha Dam & Deep Forest Catchment Basin"
   },
   {
+    "id": "pkd_kannadi",
+    "name": "Kannadi",
+    "district": "Palakkad",
+    "lat": 10.748,
+    "lng": 76.628,
+    "type": "village",
+    "desc": "Kannadi Higher Secondary School & NH-544 Bypass"
+  },
+  {
     "id": "pkd_kava",
     "name": "Kava (Malampuzha)",
     "district": "Palakkad",
@@ -5139,6 +7200,24 @@
     "desc": "Kava Rain Gateway & Western Ghats Foothills"
   },
   {
+    "id": "pkd_keralassery",
+    "name": "Keralassery",
+    "district": "Palakkad",
+    "lat": 10.878,
+    "lng": 76.498,
+    "type": "village",
+    "desc": "Keralassery Grama Panchayat & Temples"
+  },
+  {
+    "id": "pkd_killikkurussimangalam",
+    "name": "Killikkurussimangalam",
+    "district": "Palakkad",
+    "lat": 10.788,
+    "lng": 76.448,
+    "type": "landmark",
+    "desc": "Kunchan Nambiar Smarakam & Thullal Art Birthplace"
+  },
+  {
     "id": "pkd_kizhakkencherry",
     "name": "Kizhakkencherry",
     "district": "Palakkad",
@@ -5146,6 +7225,15 @@
     "lng": 76.518,
     "type": "village",
     "desc": "Kizhakkencherry Rubber & Spices Hill Slopes"
+  },
+  {
+    "id": "pkd_koduvayur",
+    "name": "Koduvayur",
+    "district": "Palakkad",
+    "lat": 10.688,
+    "lng": 76.662,
+    "type": "town",
+    "desc": "Koduvayur Major Commercial Rice & Textile Town"
   },
   {
     "id": "pkd_kollengode",
@@ -5265,6 +7353,24 @@
     "desc": "Melarcode (Melarkode) Grama Panchayat & Ancient Temples"
   },
   {
+    "id": "pkd_mele_pattambi",
+    "name": "Mele Pattambi",
+    "district": "Palakkad",
+    "lat": 10.812,
+    "lng": 76.182,
+    "type": "transit_hub",
+    "desc": "Mele Pattambi Commercial Crossroads, Cherpulassery Route"
+  },
+  {
+    "id": "pkd_moolamcode",
+    "name": "Moolamcode",
+    "district": "Palakkad",
+    "lat": 10.572,
+    "lng": 76.508,
+    "type": "village",
+    "desc": "Moolamcode Hill Valley & Rubber Estates"
+  },
+  {
     "id": "pkd_mudappallur",
     "name": "Mudappallur",
     "district": "Palakkad",
@@ -5382,6 +7488,15 @@
     "desc": "Panniyankara NH-544 Six-Lane Highway Toll Plaza Corridor"
   },
   {
+    "id": "pkd_parakkad",
+    "name": "Parakkad (Kavassery)",
+    "district": "Palakkad",
+    "lat": 10.652,
+    "lng": 76.532,
+    "type": "landmark",
+    "desc": "Parakkad Bhagavathy Pooram Grounds"
+  },
+  {
     "id": "pkd_parli",
     "name": "Parli",
     "district": "Palakkad",
@@ -5409,6 +7524,33 @@
     "desc": "Pattambi Rice Research Station & Nila River"
   },
   {
+    "id": "pkd_pazhambalacode",
+    "name": "Pazhambalacode",
+    "district": "Palakkad",
+    "lat": 10.678,
+    "lng": 76.458,
+    "type": "village",
+    "desc": "Pazhambalacode Handloom & Paddy Village"
+  },
+  {
+    "id": "pkd_peruvemba",
+    "name": "Peruvemba",
+    "district": "Palakkad",
+    "lat": 10.728,
+    "lng": 76.678,
+    "type": "landmark",
+    "desc": "Peruvemba Traditional Percussion Instrument (Mridangam) Heritage"
+  },
+  {
+    "id": "pkd_pirayiri",
+    "name": "Pirayiri",
+    "district": "Palakkad",
+    "lat": 10.772,
+    "lng": 76.618,
+    "type": "village",
+    "desc": "Pirayiri Grama Panchayat, Palakkad"
+  },
+  {
     "id": "pkd_pothundi_dam",
     "name": "Pothundi Dam",
     "district": "Palakkad",
@@ -5416,6 +7558,15 @@
     "lng": 76.688,
     "type": "disaster_hotspot",
     "desc": "Pothundi Core Dam Catchment, Nelliyampathy Foothills"
+  },
+  {
+    "id": "pkd_pudunagaram",
+    "name": "Pudunagaram",
+    "district": "Palakkad",
+    "lat": 10.698,
+    "lng": 76.682,
+    "type": "transit_hub",
+    "desc": "Pudunagaram Handloom Weaving & Railway Station"
   },
   {
     "id": "pkd_pudur",
@@ -5443,6 +7594,15 @@
     "lng": 76.468,
     "type": "village",
     "desc": "Puthucode Annapoorneswari Temple & Agraharam"
+  },
+  {
+    "id": "pkd_rishinaradamangalam",
+    "name": "Rishinaradamangalam",
+    "district": "Palakkad",
+    "lat": 10.622,
+    "lng": 76.488,
+    "type": "landmark",
+    "desc": "Rishinaradamangalam Ancient Vedic Heritage, Kannambra"
   },
   {
     "id": "pkd_sairandhri",
@@ -5488,6 +7648,15 @@
     "lng": 76.388,
     "type": "village",
     "desc": "Sreekrishnapuram Cultural Arts & Engineering College"
+  },
+  {
+    "id": "pkd_swathi_junction",
+    "name": "Swathi Junction (Alathur)",
+    "district": "Palakkad",
+    "lat": 10.648,
+    "lng": 76.542,
+    "type": "transit_hub",
+    "desc": "Alathur Taluk Hospital & KSRTC Station"
   },
   {
     "id": "palakkad_tarur",
@@ -5571,6 +7740,15 @@
     "desc": "Walayar Dam Reservoir & Forest Edge"
   },
   {
+    "id": "pkd_yakkara",
+    "name": "Yakkara",
+    "district": "Palakkad",
+    "lat": 10.762,
+    "lng": 76.648,
+    "type": "landmark",
+    "desc": "Yakkara River & Viswanatha Swamy Temple"
+  },
+  {
     "id": "pta_adoor",
     "name": "Adoor",
     "district": "Pathanamthitta",
@@ -5578,6 +7756,15 @@
     "lng": 76.7328,
     "type": "town",
     "desc": "Adoor Central Junction & MC Road Hub"
+  },
+  {
+    "id": "pt_adoor_central",
+    "name": "Adoor Central Stand",
+    "district": "Pathanamthitta",
+    "lat": 9.158,
+    "lng": 76.732,
+    "type": "transit_hub",
+    "desc": "Adoor KSRTC Central Terminal & Revenue Tower"
   },
   {
     "id": "pt_anathode",
@@ -5607,6 +7794,33 @@
     "desc": "Aranmula Heritage Metal Mirror & Pamba Flood Plain"
   },
   {
+    "id": "pt_athikkayam",
+    "name": "Athikkayam",
+    "district": "Pathanamthitta",
+    "lat": 9.368,
+    "lng": 76.898,
+    "type": "village",
+    "desc": "Athikkayam Kakkad Riverbank Hamlet"
+  },
+  {
+    "id": "pt_ayroor_kathakali",
+    "name": "Ayroor Kathakali Gramam",
+    "district": "Pathanamthitta",
+    "lat": 9.348,
+    "lng": 76.738,
+    "type": "landmark",
+    "desc": "World's First Kathakali Heritage Village, Pamba Bank"
+  },
+  {
+    "id": "pt_chandanapally",
+    "name": "Chandanapally",
+    "district": "Pathanamthitta",
+    "lat": 9.208,
+    "lng": 76.818,
+    "type": "landmark",
+    "desc": "Chandanapally St. George Valiyapally & Chembavedu"
+  },
+  {
     "id": "pt_cherukolpuzha",
     "name": "Cherukolpuzha (Ayroor)",
     "district": "Pathanamthitta",
@@ -5614,6 +7828,15 @@
     "lng": 76.745,
     "type": "landmark",
     "desc": "Pamba Riverbank Hindu Matha Convention Ground"
+  },
+  {
+    "id": "pt_chethackal",
+    "name": "Chethackal",
+    "district": "Pathanamthitta",
+    "lat": 9.368,
+    "lng": 76.828,
+    "type": "village",
+    "desc": "Chethackal Rubber Research Station"
   },
   {
     "id": "pta_chittar",
@@ -5632,6 +7855,33 @@
     "lng": 76.768,
     "type": "village",
     "desc": "Elanthoor Khadi Village & Mahatma Gandhi Heritage"
+  },
+  {
+    "id": "pt_erathu",
+    "name": "Erathu (Adoor)",
+    "district": "Pathanamthitta",
+    "lat": 9.168,
+    "lng": 76.728,
+    "type": "village",
+    "desc": "Erathu Panchayat & Adoor Bypass"
+  },
+  {
+    "id": "pt_eraviperoor",
+    "name": "Eraviperoor",
+    "district": "Pathanamthitta",
+    "lat": 9.408,
+    "lng": 76.608,
+    "type": "town",
+    "desc": "Eraviperoor National Model Digital Panchayat"
+  },
+  {
+    "id": "pt_ezhamkulam",
+    "name": "Ezhamkulam",
+    "district": "Pathanamthitta",
+    "lat": 9.168,
+    "lng": 76.762,
+    "type": "landmark",
+    "desc": "Ezhamkulam Devi Temple (Thookkam Festival)"
   },
   {
     "id": "pathanamthitta_ezhumattoor",
@@ -5670,6 +7920,15 @@
     "desc": "Kadampanad Ancient St. Thomas Church & Crossroads"
   },
   {
+    "id": "pt_kadapra_sugar",
+    "name": "Kadapra",
+    "district": "Pathanamthitta",
+    "lat": 9.348,
+    "lng": 76.538,
+    "type": "village",
+    "desc": "Kadapra Sugar Mill & Pamba Plains"
+  },
+  {
     "id": "pathanamthitta_kakki",
     "name": "Kakki Reservoir",
     "district": "Pathanamthitta",
@@ -5686,6 +7945,15 @@
     "lng": 76.882,
     "type": "village",
     "desc": "Kalanjoor Granite & Rubber Valley on Punalur Route"
+  },
+  {
+    "id": "pt_konni_achankovil_route",
+    "name": "Kallely (Konni)",
+    "district": "Pathanamthitta",
+    "lat": 9.218,
+    "lng": 76.878,
+    "type": "village",
+    "desc": "Kallely Oorali Appooppan Kavu & Forest River Basin"
   },
   {
     "id": "pathanamthitta_kallooppara",
@@ -5715,6 +7983,24 @@
     "desc": "Kochu Pamba Dam Reservoir & Forest Catchment"
   },
   {
+    "id": "pt_kodumon",
+    "name": "Kodumon (Spider Temple)",
+    "district": "Pathanamthitta",
+    "lat": 9.188,
+    "lng": 76.788,
+    "type": "landmark",
+    "desc": "Kodumon Chilanthivalavu Sacred Spider Shrine & Plantations"
+  },
+  {
+    "id": "pt_kollamula",
+    "name": "Kollamula",
+    "district": "Pathanamthitta",
+    "lat": 9.428,
+    "lng": 76.882,
+    "type": "village",
+    "desc": "Kollamula High Range Valley, Mukkoottuthara Route"
+  },
+  {
     "id": "pta_konni",
     "name": "Konni",
     "district": "Pathanamthitta",
@@ -5740,6 +8026,15 @@
     "lng": 76.892,
     "type": "village",
     "desc": "Koodal Rural Junction on Konni-Achankovil Route"
+  },
+  {
+    "id": "pt_kottanad",
+    "name": "Kottanad",
+    "district": "Pathanamthitta",
+    "lat": 9.438,
+    "lng": 76.768,
+    "type": "village",
+    "desc": "Kottanad High Range Fringe"
   },
   {
     "id": "pta_kozhencherry",
@@ -5778,6 +8073,15 @@
     "desc": "Kunnamthanam Model IT & Complete Yoga Village"
   },
   {
+    "id": "pt_kuttoor",
+    "name": "Kuttoor",
+    "district": "Pathanamthitta",
+    "lat": 9.398,
+    "lng": 76.588,
+    "type": "transit_hub",
+    "desc": "Kuttoor Railway Line & Flood Spillway"
+  },
+  {
     "id": "pt_laha",
     "name": "Laha",
     "district": "Pathanamthitta",
@@ -5785,6 +8089,15 @@
     "lng": 76.932,
     "type": "village",
     "desc": "Laha High Altitude Rubber Estate & Forest Camp"
+  },
+  {
+    "id": "pt_malayalapuzha",
+    "name": "Malayalapuzha",
+    "district": "Pathanamthitta",
+    "lat": 9.288,
+    "lng": 76.848,
+    "type": "landmark",
+    "desc": "Malayalapuzha Bhadrakali Tantric Pilgrim Temple"
   },
   {
     "id": "pta_mallappally",
@@ -5832,6 +8145,15 @@
     "desc": "Moozhiyar Dam, Sabarigiri Hydroelectric Project"
   },
   {
+    "id": "pt_mukkoottuthara",
+    "name": "Mukkoottuthara",
+    "district": "Pathanamthitta",
+    "lat": 9.448,
+    "lng": 76.898,
+    "type": "town",
+    "desc": "Mukkoottuthara Sabarimala Transit Point"
+  },
+  {
     "id": "pathanamthitta_mylapra",
     "name": "Mylapra",
     "district": "Pathanamthitta",
@@ -5839,6 +8161,24 @@
     "lng": 76.804,
     "type": "village",
     "desc": "Mylapra Kumbazha Bypass & Sacred Church"
+  },
+  {
+    "id": "pt_naranammoozhy",
+    "name": "Naranammoozhy",
+    "district": "Pathanamthitta",
+    "lat": 9.378,
+    "lng": 76.912,
+    "type": "village",
+    "desc": "Naranammoozhy High Range Panchayat, Ranni"
+  },
+  {
+    "id": "pt_nedumpuram",
+    "name": "Nedumpuram",
+    "district": "Pathanamthitta",
+    "lat": 9.368,
+    "lng": 76.532,
+    "type": "village",
+    "desc": "Nedumpuram Manimala River Basin"
   },
   {
     "id": "pta_nilakkal",
@@ -5868,6 +8208,15 @@
     "desc": "Omalloor Rakthakanta Swamy Temple & Ancient Cattle Fair"
   },
   {
+    "id": "pt_pallickal_adoor",
+    "name": "Pallickal (Adoor)",
+    "district": "Pathanamthitta",
+    "lat": 9.148,
+    "lng": 76.698,
+    "type": "village",
+    "desc": "Pallickal Model Panchayat, Adoor"
+  },
+  {
     "id": "pathanamthitta_pamba",
     "name": "Pamba (Triveni)",
     "district": "Pathanamthitta",
@@ -5884,6 +8233,15 @@
     "lng": 76.6789,
     "type": "town",
     "desc": "Pandalam Palace & Valiyakoikkal Temple"
+  },
+  {
+    "id": "pt_pandalam_medical",
+    "name": "Pandalam Medical Mission",
+    "district": "Pathanamthitta",
+    "lat": 9.228,
+    "lng": 76.688,
+    "type": "hospital_hub",
+    "desc": "Pandalam Medical Mission Hospital & MC Road Corridor"
   },
   {
     "id": "pt_pandalam_palace",
@@ -5911,6 +8269,24 @@
     "lng": 76.787,
     "type": "town",
     "desc": "Pathanamthitta Town & Central Bus Stand"
+  },
+  {
+    "id": "pt_pazhavangadi_ranni",
+    "name": "Pazhavangadi (Ranni)",
+    "district": "Pathanamthitta",
+    "lat": 9.388,
+    "lng": 76.808,
+    "type": "village",
+    "desc": "Ranni Pazhavangadi Panchayat & Colleges"
+  },
+  {
+    "id": "pt_peringara",
+    "name": "Peringara",
+    "district": "Pathanamthitta",
+    "lat": 9.378,
+    "lng": 76.542,
+    "type": "village",
+    "desc": "Peringara Grama Panchayat, Thiruvalla"
   },
   {
     "id": "pta_perunad",
@@ -5949,6 +8325,15 @@
     "desc": "Ranni Pamba River Floodplain Basin"
   },
   {
+    "id": "pt_ranni_angadi",
+    "name": "Ranni Angadi",
+    "district": "Pathanamthitta",
+    "lat": 9.378,
+    "lng": 76.778,
+    "type": "village",
+    "desc": "Historic Valiyakavu & Pamba River Valley"
+  },
+  {
     "id": "pt_ranni_ittiyappara",
     "name": "Ranni Ittiyappara",
     "district": "Pathanamthitta",
@@ -5974,6 +8359,15 @@
     "lng": 77.081,
     "type": "landmark",
     "desc": "Sabarimala Sannidhanam Temple Complex"
+  },
+  {
+    "id": "pt_scs_junction",
+    "name": "SCS Junction (Thiruvalla)",
+    "district": "Pathanamthitta",
+    "lat": 9.388,
+    "lng": 76.574,
+    "type": "transit_hub",
+    "desc": "SCS Junction & Suvishesha Sangham Grounds"
   },
   {
     "id": "pta_seethathode",
@@ -6003,6 +8397,15 @@
     "desc": "Thiruvalla Town Center & MC Road Overbridge"
   },
   {
+    "id": "pt_thottamon",
+    "name": "Thottamon (Ranni)",
+    "district": "Pathanamthitta",
+    "lat": 9.362,
+    "lng": 76.782,
+    "type": "village",
+    "desc": "Thottamon Riverbank Hamlet"
+  },
+  {
     "id": "pathanamthitta_thumpamon",
     "name": "Thumpamon",
     "district": "Pathanamthitta",
@@ -6019,6 +8422,24 @@
     "lng": 76.828,
     "type": "town",
     "desc": "Kallada-Pamba Highway Confluence"
+  },
+  {
+    "id": "pt_vaipur",
+    "name": "Vaipur",
+    "district": "Pathanamthitta",
+    "lat": 9.428,
+    "lng": 76.712,
+    "type": "village",
+    "desc": "Vaipur Ancient Port on Manimala River"
+  },
+  {
+    "id": "pt_vallicode",
+    "name": "Vallicode",
+    "district": "Pathanamthitta",
+    "lat": 9.228,
+    "lng": 76.788,
+    "type": "village",
+    "desc": "Vallicode Vazhamuttom Village"
   },
   {
     "id": "pathanamthitta_vennikulam",
@@ -6039,6 +8460,15 @@
     "desc": "Amaravila Interstate Checkpost, NH-66"
   },
   {
+    "id": "tvm_amboori",
+    "name": "Amboori",
+    "district": "Thiruvananthapuram",
+    "lat": 8.482,
+    "lng": 77.218,
+    "type": "disaster_hotspot",
+    "desc": "Amboori Landslide Prone Mountain Valley, Agasthyarkoodam Foothills"
+  },
+  {
     "id": "tvm_anjengo",
     "name": "Anjuthengu (Anjengo Fort)",
     "district": "Thiruvananthapuram",
@@ -6055,6 +8485,15 @@
     "lng": 77.042,
     "type": "village",
     "desc": "Aryanad Hill Town & Karamana River Valley"
+  },
+  {
+    "id": "tvm_aryancode",
+    "name": "Aryancode",
+    "district": "Thiruvananthapuram",
+    "lat": 8.498,
+    "lng": 77.168,
+    "type": "village",
+    "desc": "Aryancode Neyyar Dam Downstream River Village"
   },
   {
     "id": "tvm_attingal",
@@ -6082,6 +8521,24 @@
     "lng": 77.189,
     "type": "disaster_hotspot",
     "desc": "Agasthyarkoodam Base & Hill Tea Valley"
+  },
+  {
+    "id": "tvm_chenkal",
+    "name": "Chenkal",
+    "district": "Thiruvananthapuram",
+    "lat": 8.332,
+    "lng": 77.128,
+    "type": "landmark",
+    "desc": "Chenkal Shiva Temple (World's Tallest Shivalingam)"
+  },
+  {
+    "id": "tvm_cherunniyoor",
+    "name": "Cherunniyoor",
+    "district": "Thiruvananthapuram",
+    "lat": 8.718,
+    "lng": 76.748,
+    "type": "village",
+    "desc": "Cherunniyoor Dalavapuram Rural Panchayat"
   },
   {
     "id": "tvm_chirayinkeezhu",
@@ -6129,6 +8586,15 @@
     "desc": "Jagathy Cultural Grounds & Bridge"
   },
   {
+    "id": "tvm_kadakkavoor",
+    "name": "Kadakkavoor",
+    "district": "Thiruvananthapuram",
+    "lat": 8.678,
+    "lng": 76.788,
+    "type": "transit_hub",
+    "desc": "Kadakkavoor Railway Station & Coir Village"
+  },
+  {
     "id": "tvm_kadinamkulam",
     "name": "Kadinamkulam",
     "district": "Thiruvananthapuram",
@@ -6156,6 +8622,42 @@
     "desc": "Kallar River & Meenmutty Waterfalls Trekking Base"
   },
   {
+    "id": "tvm_kallikkad",
+    "name": "Kallikkad",
+    "district": "Thiruvananthapuram",
+    "lat": 8.528,
+    "lng": 77.142,
+    "type": "landmark",
+    "desc": "Kallikkad Sivananda Ashram & Neyyar Foothills"
+  },
+  {
+    "id": "tvm_kalliyoor",
+    "name": "Kalliyoor",
+    "district": "Thiruvananthapuram",
+    "lat": 8.448,
+    "lng": 76.988,
+    "type": "village",
+    "desc": "Kalliyoor Vellayani Lake Lotus Village"
+  },
+  {
+    "id": "tvm_kanjiramkulam",
+    "name": "Kanjiramkulam",
+    "district": "Thiruvananthapuram",
+    "lat": 8.368,
+    "lng": 77.042,
+    "type": "town",
+    "desc": "Kanjiramkulam Government College & Rural Center"
+  },
+  {
+    "id": "tvm_kanyakulangara",
+    "name": "Kanyakulangara",
+    "district": "Thiruvananthapuram",
+    "lat": 8.632,
+    "lng": 76.932,
+    "type": "town",
+    "desc": "Kanyakulangara Commercial Market, MC Road"
+  },
+  {
     "id": "tvm_karamana",
     "name": "Karamana",
     "district": "Thiruvananthapuram",
@@ -6172,6 +8674,15 @@
     "lng": 76.883,
     "type": "landmark",
     "desc": "Kerala University Kariavattom Campus & Sports Hub"
+  },
+  {
+    "id": "tvm_karode",
+    "name": "Karode",
+    "district": "Thiruvananthapuram",
+    "lat": 8.338,
+    "lng": 77.078,
+    "type": "village",
+    "desc": "Karode NH-66 Bypass Interstate Border Panchayat"
   },
   {
     "id": "tvm_kattakada",
@@ -6219,6 +8730,15 @@
     "desc": "Kochuveli Long Distance Express Train Terminal"
   },
   {
+    "id": "tvm_kottukal",
+    "name": "Kottukal",
+    "district": "Thiruvananthapuram",
+    "lat": 8.398,
+    "lng": 77.018,
+    "type": "landmark",
+    "desc": "Kottukal Rock Cut Cave Temple & Village"
+  },
+  {
     "id": "tvm_kovalam",
     "name": "Kovalam Beach",
     "district": "Thiruvananthapuram",
@@ -6235,6 +8755,15 @@
     "lng": 76.963,
     "type": "landmark",
     "desc": "Kowdiar Palace & Avenue"
+  },
+  {
+    "id": "tvm_kulathoor_uchakkada",
+    "name": "Kulathoor (Uchakkada)",
+    "district": "Thiruvananthapuram",
+    "lat": 8.348,
+    "lng": 77.058,
+    "type": "village",
+    "desc": "Uchakkada Coastal Access Hub & Markets"
   },
   {
     "id": "tvm_kumarapuram",
@@ -6264,6 +8793,15 @@
     "desc": "Madathara TVM-Kollam Border High Range Foothills"
   },
   {
+    "id": "tvm_madavoor_tvm",
+    "name": "Madavoor (TVM)",
+    "district": "Thiruvananthapuram",
+    "lat": 8.748,
+    "lng": 76.848,
+    "type": "village",
+    "desc": "Madavoor Grama Panchayat, Kilimanoor"
+  },
+  {
     "id": "tvm_malayinkeezhu",
     "name": "Malayinkeezhu",
     "district": "Thiruvananthapuram",
@@ -6280,6 +8818,15 @@
     "lng": 76.848,
     "type": "transit_hub",
     "desc": "Mangalapuram NH-66 Industrial & Bio360 Park"
+  },
+  {
+    "id": "tvm_manickal",
+    "name": "Manickal (Pirappancode)",
+    "district": "Thiruvananthapuram",
+    "lat": 8.658,
+    "lng": 76.928,
+    "type": "village",
+    "desc": "Manickal Pirappancode Panchayat"
   },
   {
     "id": "tvm_mannanthala",
@@ -6309,6 +8856,15 @@
     "desc": "Menamkulam Coastal Hamlet & Marian Engineering College"
   },
   {
+    "id": "tvm_mudakkal",
+    "name": "Mudakkal",
+    "district": "Thiruvananthapuram",
+    "lat": 8.688,
+    "lng": 76.848,
+    "type": "village",
+    "desc": "Mudakkal Grama Panchayat, Attingal Suburb"
+  },
+  {
     "id": "tvm_murukkumpuzha",
     "name": "Murukkumpuzha",
     "district": "Thiruvananthapuram",
@@ -6325,6 +8881,15 @@
     "lng": 76.772,
     "type": "disaster_hotspot",
     "desc": "Muthalapozhi Estuary Mouth & High-Risk Maritime Corridor"
+  },
+  {
+    "id": "tvm_nagaroor",
+    "name": "Nagaroor",
+    "district": "Thiruvananthapuram",
+    "lat": 8.738,
+    "lng": 76.828,
+    "type": "village",
+    "desc": "Nagaroor Rural Crossroads & Cashew Mills"
   },
   {
     "id": "tvm_nalanchira",
@@ -6354,6 +8919,15 @@
     "desc": "Nedumangad Koyikkal Palace & Foothills"
   },
   {
+    "id": "tvm_nellanad",
+    "name": "Nellanad",
+    "district": "Thiruvananthapuram",
+    "lat": 8.678,
+    "lng": 76.924,
+    "type": "village",
+    "desc": "Nellanad MC Road Village, Venjaramoodu"
+  },
+  {
     "id": "tvm_nemom",
     "name": "Nemom Railway Terminal",
     "district": "Thiruvananthapuram",
@@ -6363,6 +8937,15 @@
     "desc": "Nemom Satellite Railway Terminal & NH Corridor"
   },
   {
+    "id": "tvm_neyyar_dam_base",
+    "name": "Neyyar Dam Base",
+    "district": "Thiruvananthapuram",
+    "lat": 8.532,
+    "lng": 77.152,
+    "type": "disaster_hotspot",
+    "desc": "Neyyar Dam Reservoir & Crocodile Sanctuary"
+  },
+  {
     "id": "tvm_neyyattinkara",
     "name": "Neyyattinkara",
     "district": "Thiruvananthapuram",
@@ -6370,6 +8953,15 @@
     "lng": 77.0833,
     "type": "town",
     "desc": "Neyyattinkara Neyyar River Basin & Southern Border"
+  },
+  {
+    "id": "tvm_ottasekharamangalam",
+    "name": "Ottasekharamangalam",
+    "district": "Thiruvananthapuram",
+    "lat": 8.488,
+    "lng": 77.148,
+    "type": "village",
+    "desc": "Ottasekharamangalam High School & River Basin"
   },
   {
     "id": "tvm_palayam",
@@ -6390,6 +8982,15 @@
     "desc": "Palode Western Ghats Botanical Garden (TBGRI)"
   },
   {
+    "id": "tvm_panavoor",
+    "name": "Panavoor",
+    "district": "Thiruvananthapuram",
+    "lat": 8.648,
+    "lng": 76.988,
+    "type": "village",
+    "desc": "Panavoor Rural Village, Nedumangad Taluk"
+  },
+  {
     "id": "tvm_pangode",
     "name": "Pangode",
     "district": "Thiruvananthapuram",
@@ -6397,6 +8998,15 @@
     "lng": 76.974,
     "type": "landmark",
     "desc": "Pangode Military Station & Camp"
+  },
+  {
+    "id": "tvm_pangode_kallara",
+    "name": "Pangode (Kallara)",
+    "district": "Thiruvananthapuram",
+    "lat": 8.738,
+    "lng": 76.978,
+    "type": "landmark",
+    "desc": "Pangode Historical 1938 Freedom Struggle Village"
   },
   {
     "id": "tvm_parassala",
@@ -6489,6 +9099,15 @@
     "desc": "Neyyar River Estuary & Golden Sand Beach"
   },
   {
+    "id": "tvm_poovar_pozhi",
+    "name": "Poovar Pozhi",
+    "district": "Thiruvananthapuram",
+    "lat": 8.318,
+    "lng": 77.072,
+    "type": "landmark",
+    "desc": "Poovar Estuary Confluence & Golden Sand Beach"
+  },
+  {
     "id": "tvm_pothencode",
     "name": "Pothencode",
     "district": "Thiruvananthapuram",
@@ -6561,6 +9180,15 @@
     "desc": "Technopark Phase 1, Bypass & IT Corridor"
   },
   {
+    "id": "tvm_theviyancode",
+    "name": "Theviyancode (Vithura)",
+    "district": "Thiruvananthapuram",
+    "lat": 8.668,
+    "lng": 77.098,
+    "type": "village",
+    "desc": "Vithura Rubber & Spices Hub, Ponmudi Route"
+  },
+  {
     "id": "tvm_thirumala",
     "name": "Thirumala",
     "district": "Thiruvananthapuram",
@@ -6568,6 +9196,15 @@
     "lng": 76.989,
     "type": "town",
     "desc": "Thirumala Hilltop Junction"
+  },
+  {
+    "id": "tvm_thirupuram",
+    "name": "Thirupuram",
+    "district": "Thiruvananthapuram",
+    "lat": 8.342,
+    "lng": 77.098,
+    "type": "village",
+    "desc": "Thirupuram Shiva Temple & Neyyar River Basin"
   },
   {
     "id": "tvm_central",
@@ -6588,6 +9225,15 @@
     "desc": "Thumba Equatorial Rocket Launching Station & ISRO VSSC"
   },
   {
+    "id": "tvm_tolikode",
+    "name": "Tolikode",
+    "district": "Thiruvananthapuram",
+    "lat": 8.638,
+    "lng": 77.072,
+    "type": "village",
+    "desc": "Tolikode High Range Foothill Village"
+  },
+  {
     "id": "tvm_ulloor",
     "name": "Ulloor",
     "district": "Thiruvananthapuram",
@@ -6604,6 +9250,15 @@
     "lng": 77.067,
     "type": "village",
     "desc": "Uzhamalakkal Hill Panchayat"
+  },
+  {
+    "id": "tvm_vakkom",
+    "name": "Vakkom",
+    "district": "Thiruvananthapuram",
+    "lat": 8.672,
+    "lng": 76.808,
+    "type": "landmark",
+    "desc": "Vakkom Moulavi Birthplace & Kayal Coastal Village"
   },
   {
     "id": "tvm_valiyathura",
@@ -6669,6 +9324,15 @@
     "desc": "Vellayambalam City Square & Museum Corridor"
   },
   {
+    "id": "tvm_vellayani",
+    "name": "Vellayani Lake",
+    "district": "Thiruvananthapuram",
+    "lat": 8.438,
+    "lng": 76.992,
+    "type": "landmark",
+    "desc": "Vellayani Freshwater Lake & Agricultural College"
+  },
+  {
     "id": "tvm_vembayam",
     "name": "Vembayam",
     "district": "Thiruvananthapuram",
@@ -6676,6 +9340,15 @@
     "lng": 76.921,
     "type": "transit_hub",
     "desc": "Vembayam MC Road Junction to Nedumangad"
+  },
+  {
+    "id": "tvm_venganoor",
+    "name": "Venganoor",
+    "district": "Thiruvananthapuram",
+    "lat": 8.428,
+    "lng": 76.988,
+    "type": "landmark",
+    "desc": "Mahatma Ayyankali Smarakam & Historical Heritage"
   },
   {
     "id": "tvm_venjaramoodu",
@@ -6712,6 +9385,15 @@
     "lng": 76.9917,
     "type": "transit_hub",
     "desc": "Vizhinjam International Deepwater Transshipment Port"
+  },
+  {
+    "id": "tsr_alagappanagar",
+    "name": "Alagappanagar",
+    "district": "Thrissur",
+    "lat": 10.398,
+    "lng": 76.288,
+    "type": "transit_hub",
+    "desc": "Alagappanagar Historic Textile Mill & Rail Stop"
   },
   {
     "id": "thrissur_amala_nagar",
@@ -6768,6 +9450,15 @@
     "desc": "Athirappilly Waterfalls & Sholayar Dam Forest"
   },
   {
+    "id": "tsr_avinissery",
+    "name": "Avinissery",
+    "district": "Thrissur",
+    "lat": 10.468,
+    "lng": 76.218,
+    "type": "village",
+    "desc": "Avinissery Khadi & Weavers Panchayat"
+  },
+  {
     "id": "thrissur_ayyanthole",
     "name": "Ayyanthole",
     "district": "Thrissur",
@@ -6795,6 +9486,15 @@
     "desc": "Chalakudy River Basin & Athirappilly Route"
   },
   {
+    "id": "tsr_tramway_heritage",
+    "name": "Chalakudy Tramway Heritage",
+    "district": "Thrissur",
+    "lat": 10.302,
+    "lng": 76.348,
+    "type": "landmark",
+    "desc": "Historic Cochin State Forest Tramway Base & River Bank"
+  },
+  {
     "id": "tsr_charpa",
     "name": "Charpa Falls",
     "district": "Thrissur",
@@ -6811,6 +9511,15 @@
     "lng": 76.009,
     "type": "disaster_hotspot",
     "desc": "Chavakkad Beach & Coastal Sea Erosion Belt"
+  },
+  {
+    "id": "tsr_chazhur",
+    "name": "Chazhur",
+    "district": "Thrissur",
+    "lat": 10.428,
+    "lng": 76.148,
+    "type": "village",
+    "desc": "Chazhur Pazhuvil St. Antony's Forane & Cole Fields"
   },
   {
     "id": "tsr_chelakkara",
@@ -6849,6 +9558,24 @@
     "desc": "Chettuva Backwaters & Marine Sanctuary"
   },
   {
+    "id": "tsr_chirangara",
+    "name": "Chirangara (Koratty)",
+    "district": "Thrissur",
+    "lat": 10.268,
+    "lng": 76.368,
+    "type": "village",
+    "desc": "Chirangara Bhagavathy Temple & Rail Line"
+  },
+  {
+    "id": "tsr_chowannur",
+    "name": "Chowannur Cave",
+    "district": "Thrissur",
+    "lat": 10.638,
+    "lng": 76.082,
+    "type": "landmark",
+    "desc": "Chowannur Megalithic Burial Cave Heritage"
+  },
+  {
     "id": "thrissur_engandiyur",
     "name": "Engandiyur",
     "district": "Thrissur",
@@ -6885,6 +9612,15 @@
     "desc": "Irinjalakuda Koodalmanikyam Temple Town"
   },
   {
+    "id": "tsr_kadangode",
+    "name": "Kadangode",
+    "district": "Thrissur",
+    "lat": 10.678,
+    "lng": 76.128,
+    "type": "village",
+    "desc": "Kadangode Rural Panchayat, Wadakkanchery"
+  },
+  {
     "id": "tsr_kaipamangalam",
     "name": "Kaipamangalam",
     "district": "Thrissur",
@@ -6901,6 +9637,15 @@
     "lng": 76.138,
     "type": "transit_hub",
     "desc": "Kanjany Major Commercial Crossroads, Thrissur Coastal Route"
+  },
+  {
+    "id": "tsr_kattakampal",
+    "name": "Kattakampal",
+    "district": "Thrissur",
+    "lat": 10.678,
+    "lng": 76.038,
+    "type": "village",
+    "desc": "Kattakampal Temple & Historic Pooram Grounds"
   },
   {
     "id": "thrissur_kodakara",
@@ -6966,6 +9711,15 @@
     "desc": "Kuthiran Twin-Tube Highway Tunnel, NH-544"
   },
   {
+    "id": "tsr_madathumpady",
+    "name": "Madathumpady (Poyya)",
+    "district": "Thrissur",
+    "lat": 10.228,
+    "lng": 76.238,
+    "type": "village",
+    "desc": "Madathumpady Junction & Waterways"
+  },
+  {
     "id": "tsr_mala",
     "name": "Mala",
     "district": "Thrissur",
@@ -6982,6 +9736,15 @@
     "lng": 76.852,
     "type": "disaster_hotspot",
     "desc": "Malakkappara High Range Border Tea Estate & Jungle Outpost"
+  },
+  {
+    "id": "tsr_mammiyur",
+    "name": "Mammiyur Temple",
+    "district": "Thrissur",
+    "lat": 10.602,
+    "lng": 76.038,
+    "type": "landmark",
+    "desc": "Mammiyur Sri Mahadeva Temple (Mandatory Guruvayur Pilgrim Link)"
   },
   {
     "id": "thrissur_mannuthy",
@@ -7002,6 +9765,15 @@
     "desc": "Mathilakam Ancient Jain Heritage & Commercial Crossroads"
   },
   {
+    "id": "tsr_mattathur",
+    "name": "Mattathur",
+    "district": "Thrissur",
+    "lat": 10.388,
+    "lng": 76.368,
+    "type": "village",
+    "desc": "Mattathur Vasupuram Rubber Hill Slopes"
+  },
+  {
     "id": "thrissur_methala",
     "name": "Methala",
     "district": "Thrissur",
@@ -7018,6 +9790,15 @@
     "lng": 76.242,
     "type": "village",
     "desc": "Mulloorkkara Railway Station & Shoranur Road"
+  },
+  {
+    "id": "tsr_mundathikode",
+    "name": "Mundathikode",
+    "district": "Thrissur",
+    "lat": 10.628,
+    "lng": 76.208,
+    "type": "village",
+    "desc": "Mundathikode Asoka Hospital & Valley"
   },
   {
     "id": "thrissur_muringoor",
@@ -7038,6 +9819,15 @@
     "desc": "Nattika Sree Rama Temple & Beach"
   },
   {
+    "id": "tsr_nenmanikkara",
+    "name": "Nenmanikkara",
+    "district": "Thrissur",
+    "lat": 10.428,
+    "lng": 76.278,
+    "type": "village",
+    "desc": "Nenmanikkara NH-544 Highway Panchayat"
+  },
+  {
     "id": "tsr_ollur",
     "name": "Ollur",
     "district": "Thrissur",
@@ -7045,6 +9835,15 @@
     "lng": 76.238,
     "type": "town",
     "desc": "Ollur Industrial Estate & St. Anthony's Forane Church"
+  },
+  {
+    "id": "tsr_orumanayur",
+    "name": "Orumanayur",
+    "district": "Thrissur",
+    "lat": 10.568,
+    "lng": 76.028,
+    "type": "village",
+    "desc": "Orumanayur Grama Panchayat, Chavakkad"
   },
   {
     "id": "thrissur_pattikkad",
@@ -7119,6 +9918,24 @@
     "desc": "Pudukad Railway Station & NH Highway Corridor"
   },
   {
+    "id": "tsr_punnayoorkkulam",
+    "name": "Punnayoorkkulam",
+    "district": "Thrissur",
+    "lat": 10.638,
+    "lng": 75.988,
+    "type": "landmark",
+    "desc": "Kamala Das (Madhavikutty) Literary Heritage Village"
+  },
+  {
+    "id": "tsr_puthur_zoo",
+    "name": "Puthur Zoological Park",
+    "district": "Thrissur",
+    "lat": 10.518,
+    "lng": 76.302,
+    "type": "landmark",
+    "desc": "Puthur International Zoological Park & Eco-Forest Reserve"
+  },
+  {
     "id": "thrissur_puzhakkal",
     "name": "Puzhakkal",
     "district": "Thrissur",
@@ -7146,6 +9963,15 @@
     "desc": "Sholayar Dam & Deep Jungle Hydroelectric Basin"
   },
   {
+    "id": "tsr_thaikkattussery",
+    "name": "Thaikkattussery (Ollur)",
+    "district": "Thrissur",
+    "lat": 10.468,
+    "lng": 76.228,
+    "type": "landmark",
+    "desc": "Vaidyaratnam Oushadhasala & Ayurveda Museum"
+  },
+  {
     "id": "thrissur_thalikulam",
     "name": "Thalikulam",
     "district": "Thrissur",
@@ -7153,6 +9979,24 @@
     "lng": 76.078,
     "type": "coastal_hamlet",
     "desc": "Thalikulam Snehatheeram Beach & Coastal Belt"
+  },
+  {
+    "id": "tsr_thalore",
+    "name": "Thalore",
+    "district": "Thrissur",
+    "lat": 10.452,
+    "lng": 76.262,
+    "type": "transit_hub",
+    "desc": "Thalore NH-544 Bypass & Deepam Junction"
+  },
+  {
+    "id": "tsr_thanniyam",
+    "name": "Thanniyam",
+    "district": "Thrissur",
+    "lat": 10.418,
+    "lng": 76.138,
+    "type": "village",
+    "desc": "Thanniyam Grama Panchayat, Nattika Coastal"
   },
   {
     "id": "thrissur_thiruvilwamala",
@@ -7182,6 +10026,15 @@
     "desc": "Vadakkumnathan Temple Circular Avenue & City Center"
   },
   {
+    "id": "tsr_trikkur",
+    "name": "Trikkur Cave Temple",
+    "district": "Thrissur",
+    "lat": 10.448,
+    "lng": 76.288,
+    "type": "landmark",
+    "desc": "Trikkur AD 7th-Century Rock Cut Cave Temple"
+  },
+  {
     "id": "tsr_triprayar",
     "name": "Triprayar",
     "district": "Thrissur",
@@ -7189,6 +10042,15 @@
     "lng": 76.118,
     "type": "town",
     "desc": "Triprayar Sree Rama Temple, Coastal Highway"
+  },
+  {
+    "id": "tsr_vadakkekad",
+    "name": "Vadakkekad",
+    "district": "Thrissur",
+    "lat": 10.648,
+    "lng": 76.018,
+    "type": "village",
+    "desc": "Vadakkekad Panchayat, Kunnamkulam Route"
   },
   {
     "id": "thrissur_vadanappally",
@@ -7227,6 +10089,15 @@
     "desc": "Vellangallur Konathukunnu Junction"
   },
   {
+    "id": "tsr_vellikulangara",
+    "name": "Vellikulangara",
+    "district": "Thrissur",
+    "lat": 10.358,
+    "lng": 76.418,
+    "type": "village",
+    "desc": "Vellikulangara Forest Range Headquarters"
+  },
+  {
     "id": "tsr_wadakkanchery",
     "name": "Wadakkanchery",
     "district": "Thrissur",
@@ -7243,6 +10114,15 @@
     "lng": 76.032,
     "type": "village",
     "desc": "Achoor Tea Plantations & Pozhuthana River Basin"
+  },
+  {
+    "id": "wyd_achooranam",
+    "name": "Achooranam",
+    "district": "Wayanad",
+    "lat": 11.602,
+    "lng": 76.028,
+    "type": "village",
+    "desc": "Achooranam Tea Factory & Mountain Stream"
   },
   {
     "id": "wayanad_ambalavayal",
@@ -7263,6 +10143,15 @@
     "desc": "Attamala Hill Hamlet, Wayanad Ghats"
   },
   {
+    "id": "wyd_banasura_meenmutty",
+    "name": "Banasura Meenmutty Falls",
+    "district": "Wayanad",
+    "lat": 11.688,
+    "lng": 75.928,
+    "type": "landmark",
+    "desc": "Banasura Meenmutty Cascading Mountain Falls"
+  },
+  {
     "id": "wyd_banasura_dam",
     "name": "Banasura Sagar Dam",
     "district": "Wayanad",
@@ -7279,6 +10168,15 @@
     "lng": 76.128,
     "type": "landmark",
     "desc": "Bavali Interstate Forest Checkpost"
+  },
+  {
+    "id": "wyd_beenachi",
+    "name": "Beenachi",
+    "district": "Wayanad",
+    "lat": 11.668,
+    "lng": 76.242,
+    "type": "transit_hub",
+    "desc": "Beenachi Junction, NH-766 Sulthan Bathery Bypass"
   },
   {
     "id": "wayanad_begur",
@@ -7317,6 +10215,15 @@
     "desc": "Cheeral Village, Sulthan Bathery"
   },
   {
+    "id": "wyd_cheeyambam",
+    "name": "Cheeyambam",
+    "district": "Wayanad",
+    "lat": 11.788,
+    "lng": 76.178,
+    "type": "village",
+    "desc": "Cheeyambam 73 Forest Settlement, Pulpally"
+  },
+  {
     "id": "wayanad_chembra_peak",
     "name": "Chembra Peak",
     "district": "Wayanad",
@@ -7333,6 +10240,15 @@
     "lng": 76.1772,
     "type": "disaster_hotspot",
     "desc": "Chooralmala Riverine Corridor, Meppadi Panchayat"
+  },
+  {
+    "id": "wyd_chulliyode",
+    "name": "Chulliyode",
+    "district": "Wayanad",
+    "lat": 11.628,
+    "lng": 76.298,
+    "type": "town",
+    "desc": "Chulliyode Commercial Town on Gudalur Border Route"
   },
   {
     "id": "wyd_chundale",
@@ -7362,6 +10278,15 @@
     "desc": "Edakkal Caves Prehistoric Heritage Site"
   },
   {
+    "id": "wyd_eranellur",
+    "name": "Eranellur",
+    "district": "Wayanad",
+    "lat": 11.688,
+    "lng": 76.148,
+    "type": "village",
+    "desc": "Eranellur Farm Village, Poothadi"
+  },
+  {
     "id": "wayanad_kainatty",
     "name": "Kainatty",
     "district": "Wayanad",
@@ -7369,6 +10294,15 @@
     "lng": 76.083,
     "type": "transit_hub",
     "desc": "Kainatty Junction, Kalpetta Bypass"
+  },
+  {
+    "id": "wyd_kalloor",
+    "name": "Kalloor (Noolpuzha)",
+    "district": "Wayanad",
+    "lat": 11.658,
+    "lng": 76.348,
+    "type": "village",
+    "desc": "Kalloor Wild Elephant Corridor & Tribal Settlements"
   },
   {
     "id": "wayanad_kalpetta",
@@ -7389,6 +10323,15 @@
     "desc": "Kambalakkad Junction, Kalpetta-Mananthavady Rd"
   },
   {
+    "id": "wyd_kanjirangad",
+    "name": "Kanjirangad",
+    "district": "Wayanad",
+    "lat": 11.768,
+    "lng": 75.968,
+    "type": "village",
+    "desc": "Kanjirangad St. Sebastian Church, Thondernad"
+  },
+  {
     "id": "wayanad_karapuzha",
     "name": "Karapuzha",
     "district": "Wayanad",
@@ -7398,6 +10341,15 @@
     "desc": "Karapuzha Dam Reservoir & Flood Catchment"
   },
   {
+    "id": "wyd_kariambadi",
+    "name": "Kariambadi",
+    "district": "Wayanad",
+    "lat": 11.658,
+    "lng": 76.178,
+    "type": "village",
+    "desc": "Kariambadi High Range Hamlet, Meenangadi Route"
+  },
+  {
     "id": "wayanad_kattikkulam",
     "name": "Kattikkulam",
     "district": "Wayanad",
@@ -7405,6 +10357,15 @@
     "lng": 76.108,
     "type": "village",
     "desc": "Kattikkulam Forest Junction to Thirunelli"
+  },
+  {
+    "id": "wyd_kayakkunnu",
+    "name": "Kayakkunnu",
+    "district": "Wayanad",
+    "lat": 11.738,
+    "lng": 76.078,
+    "type": "village",
+    "desc": "Kayakkunnu Rural Church & Farm Hamlet"
   },
   {
     "id": "wyd_kenichira",
@@ -7533,6 +10494,15 @@
     "desc": "Mundakkai High Range Hill Slopes, Meppadi"
   },
   {
+    "id": "wyd_muppainad",
+    "name": "Muppainad",
+    "district": "Wayanad",
+    "lat": 11.548,
+    "lng": 76.188,
+    "type": "village",
+    "desc": "Muppainad Grama Panchayat, Vaduvanchal Road"
+  },
+  {
     "id": "wayanad_muthanga",
     "name": "Muthanga",
     "district": "Wayanad",
@@ -7596,6 +10566,15 @@
     "desc": "Old Vythiri Tea Estates & Resort Corridor"
   },
   {
+    "id": "wyd_ozhakkodi",
+    "name": "Ozhakkodi",
+    "district": "Wayanad",
+    "lat": 11.738,
+    "lng": 75.988,
+    "type": "village",
+    "desc": "Ozhakkodi High Range Hamlet, Vellamunda"
+  },
+  {
     "id": "wayanad_padinjarathara",
     "name": "Padinjarathara",
     "district": "Wayanad",
@@ -7630,6 +10609,15 @@
     "lng": 76.048,
     "type": "village",
     "desc": "Payyampally Koodalkadavu Mananthavady River Confluence"
+  },
+  {
+    "id": "wyd_perikalloor",
+    "name": "Perikalloor",
+    "district": "Wayanad",
+    "lat": 11.858,
+    "lng": 76.208,
+    "type": "landmark",
+    "desc": "Perikalloor Kabini Riverfront Interstate Border"
   },
   {
     "id": "wayanad_pinangode",
@@ -7668,6 +10656,15 @@
     "desc": "Pozhuthana River Catchment & Tea Estates"
   },
   {
+    "id": "wyd_puliyarmala",
+    "name": "Puliyarmala",
+    "district": "Wayanad",
+    "lat": 11.628,
+    "lng": 76.078,
+    "type": "landmark",
+    "desc": "Ananthanatha Swami Jain Temple & Kalpetta Bypass"
+  },
+  {
     "id": "wayanad_pulpally",
     "name": "Pulpally",
     "district": "Wayanad",
@@ -7704,6 +10701,15 @@
     "desc": "Sasimala High Range Hamlet, Pulpally"
   },
   {
+    "id": "wyd_seetha_mount",
+    "name": "Seetha Mount",
+    "district": "Wayanad",
+    "lat": 11.808,
+    "lng": 76.178,
+    "type": "landmark",
+    "desc": "Seetha Mount Pilgrim Valley & Pulpally Forest"
+  },
+  {
     "id": "wayanad_sulthan_bathery",
     "name": "Sulthan Bathery",
     "district": "Wayanad",
@@ -7711,6 +10717,15 @@
     "lng": 76.25,
     "type": "town",
     "desc": "Sulthan Bathery Commercial & Interstate Hub"
+  },
+  {
+    "id": "wyd_thalappuzha",
+    "name": "Thalappuzha",
+    "district": "Wayanad",
+    "lat": 11.838,
+    "lng": 75.958,
+    "type": "village",
+    "desc": "Thalappuzha Tea Plantations & Engineering College"
   },
   {
     "id": "wayanad_thariode",
@@ -7756,6 +10771,15 @@
     "lng": 76.064,
     "type": "landmark",
     "desc": "Tholpetty Wildlife Sanctuary & Karnataka Border"
+  },
+  {
+    "id": "wyd_thrissillery",
+    "name": "Thrissillery",
+    "district": "Wayanad",
+    "lat": 11.858,
+    "lng": 76.018,
+    "type": "landmark",
+    "desc": "Thrissillery Shiva Temple & Thirunelli Pilgrim Link"
   },
   {
     "id": "wayanad_vaduvanchal",
@@ -7810,6 +10834,24 @@
     "lng": 76.179,
     "type": "disaster_hotspot",
     "desc": "Vellarmala Vocational HSS Ground Zero Corridor, Meppadi"
+  },
+  {
+    "id": "wyd_vengappally",
+    "name": "Vengappally",
+    "district": "Wayanad",
+    "lat": 11.638,
+    "lng": 76.098,
+    "type": "village",
+    "desc": "Vengappally Grama Panchayat, Kalpetta"
+  },
+  {
+    "id": "wyd_venniyode",
+    "name": "Venniyode",
+    "district": "Wayanad",
+    "lat": 11.678,
+    "lng": 76.068,
+    "type": "village",
+    "desc": "Venniyode River & Sree Vishnu Temple"
   },
   {
     "id": "wayanad_vythiri",
