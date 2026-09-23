@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://emergency-dispatch-2.onrender.com/sitemap.xml
+Sitemap: https://emergency-dispatch-2.onrender.com/sitemap_index.xml
+
