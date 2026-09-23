@@ -80,18 +80,30 @@ export async function clearSyncQueue() {
 
 export async function logVisitorAudit(audit) {
   try {
+    if (!db.isOpen()) await db.open();
+    if (!db.audits) return;
     await db.audits.add(audit);
+    // Keep max 250 records to prevent IndexedDB storage quota exhaustion
+    const count = await db.audits.count();
+    if (count > 250) {
+      const excess = count - 250;
+      const oldestKeys = await db.audits.orderBy('id').limit(excess).primaryKeys();
+      if (oldestKeys.length > 0) {
+        await db.audits.bulkDelete(oldestKeys);
+      }
+    }
   } catch (err) {
-    console.error("DB failed to log audit:", err);
+    console.warn("DB audit log deferred:", err?.message || err);
   }
 }
 
 export async function getVisitorAudits() {
   try {
+    if (!db.isOpen()) await db.open();
     if (!db.audits) return [];
     return await db.audits.reverse().sortBy('timestamp');
   } catch (err) {
-    console.error("DB failed to read audits:", err);
+    console.warn("DB audit read deferred:", err?.message || err);
     return [];
   }
 }

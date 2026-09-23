@@ -8,6 +8,9 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import androidx.core.content.ContextCompat;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -94,6 +97,45 @@ public class EmergencyMeshNativePlugin extends Plugin {
             }
         } catch (Exception e) {
             call.reject("Failed to request battery optimization exemption: " + e.getMessage(), e);
+        }
+    }
+
+    @PluginMethod
+    public void isBluetoothAvailable(PluginCall call) {
+        Context context = getContext();
+        try {
+            BluetoothManager manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+            BluetoothAdapter adapter = manager != null ? manager.getAdapter() : null;
+            boolean available = adapter != null;
+            boolean enabled = adapter != null && adapter.isEnabled();
+
+            JSObject ret = new JSObject();
+            ret.put("available", available);
+            ret.put("enabled", enabled);
+            call.resolve(ret);
+        } catch (Exception e) {
+            call.reject("Error checking Bluetooth state: " + e.getMessage(), e);
+        }
+    }
+
+    @PluginMethod
+    public void getDiscoveredBeacons(PluginCall call) {
+        try {
+            JSArray array = new JSArray();
+            for (EmergencyMeshBackgroundService.DiscoveredBeacon beacon : EmergencyMeshBackgroundService.discoveredBeacons.values()) {
+                JSObject obj = new JSObject();
+                obj.put("id", "native-ble-" + beacon.address.replace(":", "-"));
+                obj.put("address", beacon.address);
+                obj.put("name", beacon.name);
+                obj.put("rssi", beacon.rssi);
+                obj.put("timestamp", beacon.timestamp);
+                array.put(obj);
+            }
+            JSObject ret = new JSObject();
+            ret.put("beacons", array);
+            call.resolve(ret);
+        } catch (Exception e) {
+            call.reject("Error fetching discovered BLE beacons: " + e.getMessage(), e);
         }
     }
 }

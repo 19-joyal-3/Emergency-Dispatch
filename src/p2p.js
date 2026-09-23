@@ -8,6 +8,8 @@
  * 4. Autonomous Field Simulation for training and hardware-free drills
  */
 
+import { nativeBackgroundMesh } from './nativeBackground.js';
+
 export const P2P_PROTOCOLS = {
   BLE: 'Bluetooth Low Energy',
   WIFI_MESH: 'Local Wi-Fi Mesh'
@@ -199,75 +201,350 @@ class P2PEmergencyMeshEngine {
   }
 
   /**
-   * Check if Web Bluetooth is available on this device/browser
+   * Check if Bluetooth is available (Web Bluetooth in browser, or Native BLE on Android)
    */
   isBluetoothAvailable() {
+    if (typeof window !== 'undefined' && nativeBackgroundMesh?.isNativeApp?.()) {
+      return true;
+    }
     return typeof navigator !== 'undefined' && 
            'bluetooth' in navigator && 
            typeof navigator.bluetooth.requestDevice === 'function';
   }
 
   /**
-   * Scan for real Bluetooth Low Energy devices using Web Bluetooth
+   * Detailed diagnostic status of the host Bluetooth radio
    */
-  async scanForBluetoothDevice() {
-    if (!this.isBluetoothAvailable()) {
-      throw new Error('Web Bluetooth is not supported on this browser/platform. Running in Local Wi-Fi Mesh & Tactical Simulation mode.');
+  async getBluetoothStatus() {
+    if (typeof window !== 'undefined' && nativeBackgroundMesh?.isNativeApp?.()) {
+      const nativeStatus = await nativeBackgroundMesh.checkNativeBluetoothStatus();
+      return {
+        supported: true,
+        enabled: Boolean(nativeStatus?.enabled),
+        mode: 'native_android',
+        label: nativeStatus?.enabled ? 'Android Native BLE Active' : 'Bluetooth Radio Disabled'
+      };
     }
 
+    if (typeof navigator !== 'undefined' && 'bluetooth' in navigator) {
+      let enabled = true;
+      if (typeof navigator.bluetooth.getAvailability === 'function') {
+        try {
+          enabled = await navigator.bluetooth.getAvailability();
+        } catch {
+          enabled = true;
+        }
+      }
+      return {
+        supported: true,
+        enabled,
+        mode: 'web_bluetooth',
+        label: enabled ? 'Web Bluetooth Active' : 'Bluetooth Adapter Turned Off'
+      };
+    }
+
+    return {
+      supported: false,
+      enabled: false,
+      mode: 'unsupported',
+      label: 'Mesh Simulation / Wi-Fi P2P'
+    };
+  }
+
+  /**
+   * Scan for real Bluetooth Low Energy devices using Web Bluetooth or Native Android BLE
+   */
+  async scanForBluetoothDevice() {
+    // 1. Android Native Platform Discovery Bridge
+    if (typeof window !== 'undefined' && nativeBackgroundMesh?.isNativeApp?.()) {
+      const beacons = await nativeBackgroundMesh.getDiscoveredNativeBeacons();
+      if (beacons && beacons.length > 0) {
+        const beacon = beacons[0];
+        const dist = rssiToDistance(beacon.rssi || -70);
+        const deviceData = {
+          id: beacon.id || `native-ble-${Date.now()}`,
+          name: beacon.name || 'Android BLE Field Beacon',
+          protocol: P2P_PROTOCOLS.BLE,
+          rssi: beacon.rssi || -70,
+          distanceMeters: dist,
+          bearingAngle: Math.floor(Math.random() * 360),
+          battery: 88,
+          lastSeen: beacon.timestamp || Date.now(),
+          lat: this.lastKnownPosition.lat + 0.0005,
+          lng: this.lastKnownPosition.lng + 0.0005,
+          connected: true,
+          isHardware: true
+        };
+        this.discoveredDevices.set(deviceData.id, deviceData);
+        this.notify('DEVICE_FOUND', deviceData);
+        this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
+        return deviceData;
+      }
+      const nativeErr = new Error('No background BLE beacons detected by Android radio yet. Ensure nearby units have Bluetooth active.');
+      nativeErr.code = 'NO_NATIVE_BEACONS';
+      throw nativeErr;
+    }
+
+    // 2. Pre-flight Hardware & Browser Capability Verification
+    const status = await this.getBluetoothStatus();
+    if (!status.supported) {
+      const err = new Error('Web Bluetooth is not supported on this browser (e.g. Safari, Firefox, or iOS). Please use Google Chrome or Microsoft Edge on Windows, Mac, Linux, or Android.');
+      err.code = 'UNSUPPORTED_BROWSER';
+      throw err;
+    }
+
+    if (status.enabled === false) {
+      const err = new Error('Bluetooth adapter is turned OFF on your computer or device. Please enable Bluetooth in your device settings.');
+      err.code = 'ADAPTER_DISABLED';
+      throw err;
+    }
+
+    // 3. Web Bluetooth API in Chromium (Desktop & Android Chrome)
     try {
-      // Request nearby BLE devices advertising standard emergency alert or generic access
+      // Extensive standard & emergency mesh BLE service UUIDs
+      const optionalServices = [
+        'generic_access',
+        'battery_service',
+        'immediate_alert',
+        'device_information',
+        'tx_power',
+        'link_loss',
+        '0000ffe0-0000-1000-8000-00805f9b34fb', // Standard HM-10 / ESP32 BLE UART
+        '6e400001-b5a3-f393-e0a9-e50e24dcca9e'  // Nordic UART Service (NUS)
+      ];
+
       const device = await navigator.bluetooth.requestDevice({
         acceptAllDevices: true,
-        optionalServices: [
-          'generic_access',
-          'immediate_alert',
-          'link_loss',
-          'tx_power',
-          'battery_service',
-          0x1802,
-          0x1803,
-          0x1804
-        ]
+        optionalServices
       });
 
-      const rssi = -50 - Math.floor(Math.random() * 35);
+      if (!device) {
+        const err = new Error('No device selected in Bluetooth dialog.');
+        err.code = 'NO_DEVICE_SELECTED';
+        throw err;
+      }
+
+      const deviceId = `ble-${device.id}`;
+      let gattServer = null;
+      let isConnected = false;
+      let batteryLevel = 85;
+      let txCharacteristic = null;
+
+      // Establish real physical GATT connection if supported by peripheral
+      if (device.gatt) {
+        try {
+          gattServer = await device.gatt.connect();
+          isConnected = Boolean(gattServer?.connected);
+
+          // Attempt to read live battery percentage
+          try {
+            const batteryService = await gattServer.getPrimaryService('battery_service');
+            const char = await batteryService.getCharacteristic('battery_level');
+            const val = await char.readValue();
+            batteryLevel = val.getUint8(0);
+          } catch {
+            // Battery service optional on this peripheral
+          }
+
+          // Search for a writable transmission characteristic
+          try {
+            const services = await gattServer.getPrimaryServices();
+            for (const s of services) {
+              try {
+                const chars = await s.getCharacteristics();
+                for (const c of chars) {
+                  if (c.properties.write || c.properties.writeWithoutResponse) {
+                    txCharacteristic = c;
+                    break;
+                  }
+                }
+                if (txCharacteristic) break;
+              } catch {}
+            }
+          } catch {}
+
+          // Register hardware disconnection handler
+          device.addEventListener('gattserverdisconnected', () => {
+            this.handleBleDeviceDisconnected(deviceId);
+          });
+        } catch (gattErr) {
+          console.warn('[P2P BLE] Peripheral paired; GATT auto-connect deferred:', gattErr?.message || gattErr);
+        }
+      }
+
+      const rssi = -55 - Math.floor(Math.random() * 25);
       const angle = Math.floor(Math.random() * 360);
       const dist = rssiToDistance(rssi);
 
       const deviceData = {
-        id: `ble-${device.id}`,
-        name: device.name || `BLE Beacon (${device.id.slice(0, 6)})`,
+        id: deviceId,
+        name: device.name || `BLE Peripheral (${device.id.slice(0, 6)})`,
         protocol: P2P_PROTOCOLS.BLE,
         rssi,
         distanceMeters: dist,
         bearingAngle: angle,
-        battery: 85,
+        battery: batteryLevel,
         lastSeen: Date.now(),
         lat: this.lastKnownPosition.lat + (Math.sin(angle * Math.PI / 180) * 0.0008),
         lng: this.lastKnownPosition.lng + (Math.cos(angle * Math.PI / 180) * 0.0008),
-        nativeDevice: device
+        nativeDevice: device,
+        gattServer,
+        txCharacteristic,
+        connected: isConnected,
+        isHardware: true
       };
 
       this.discoveredDevices.set(deviceData.id, deviceData);
       this.notify('DEVICE_FOUND', deviceData);
+      this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
       return deviceData;
     } catch (err) {
-      if (err.name === 'NotFoundError') {
-        // User cancelled picker dialog
-        return null;
+      if (err.name === 'NotFoundError' || err.message?.includes('User cancelled')) {
+        const notFoundErr = new Error('No Bluetooth device was selected or in advertising range.');
+        notFoundErr.code = 'NO_DEVICE_SELECTED';
+        throw notFoundErr;
       }
       throw err;
     }
   }
 
   /**
+   * Explicitly connect or reconnect to a paired Bluetooth device
+   */
+  async connectDevice(deviceId) {
+    const dev = this.discoveredDevices.get(deviceId);
+    if (!dev) throw new Error('Device not found in registry');
+
+    if (dev.nativeDevice && dev.nativeDevice.gatt) {
+      try {
+        const server = await dev.nativeDevice.gatt.connect();
+        dev.gattServer = server;
+        dev.connected = Boolean(server?.connected);
+        dev.lastSeen = Date.now();
+        this.notify('DEVICE_UPDATED', dev);
+        this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
+        return true;
+      } catch (err) {
+        dev.connected = false;
+        this.notify('DEVICE_UPDATED', dev);
+        throw err;
+      }
+    } else {
+      // Mesh or simulated peer
+      dev.connected = true;
+      dev.lastSeen = Date.now();
+      this.notify('DEVICE_UPDATED', dev);
+      this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
+      return true;
+    }
+  }
+
+  /**
+   * Disconnect from a Bluetooth device
+   */
+  async disconnectDevice(deviceId) {
+    const dev = this.discoveredDevices.get(deviceId);
+    if (!dev) return;
+
+    if (dev.nativeDevice && dev.nativeDevice.gatt) {
+      try {
+        if (dev.nativeDevice.gatt.connected) {
+          dev.nativeDevice.gatt.disconnect();
+        }
+      } catch {}
+    }
+    dev.connected = false;
+    this.notify('DEVICE_UPDATED', dev);
+    this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
+  }
+
+  handleBleDeviceDisconnected(deviceId) {
+    const dev = this.discoveredDevices.get(deviceId);
+    if (dev) {
+      dev.connected = false;
+      dev.gattServer = null;
+      this.notify('DEVICE_DISCONNECTED', dev);
+      this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
+    }
+  }
+
+  /**
+   * Spawn simulated tactical field peers for training, radar verification, and hardware-free drills
+   */
+  spawnTacticalPeers() {
+    const demoPeers = [
+      {
+        id: 'sim-ble-medic',
+        name: '🚑 Ambulance Medic (BLE Mesh)',
+        protocol: P2P_PROTOCOLS.BLE,
+        type: 'medical',
+        rssi: -58,
+        distanceMeters: 2.1,
+        bearingAngle: 45,
+        battery: 92,
+        connected: true,
+        lastSeen: Date.now(),
+        lat: this.lastKnownPosition.lat + 0.0004,
+        lng: this.lastKnownPosition.lng + 0.0004
+      },
+      {
+        id: 'sim-ble-rescue',
+        name: '🛥️ Rescue Squad Boat 04 (BLE)',
+        protocol: P2P_PROTOCOLS.BLE,
+        type: 'rescue_boat',
+        rssi: -72,
+        distanceMeters: 11.4,
+        bearingAngle: 190,
+        battery: 78,
+        connected: false,
+        lastSeen: Date.now(),
+        lat: this.lastKnownPosition.lat - 0.0007,
+        lng: this.lastKnownPosition.lng - 0.0003
+      },
+      {
+        id: 'sim-ble-patrol',
+        name: '🚓 Kerala Police Patrol Echo',
+        protocol: P2P_PROTOCOLS.BLE,
+        type: 'patrol',
+        rssi: -84,
+        distanceMeters: 38.6,
+        bearingAngle: 310,
+        battery: 64,
+        connected: false,
+        lastSeen: Date.now(),
+        lat: this.lastKnownPosition.lat + 0.0012,
+        lng: this.lastKnownPosition.lng - 0.0008
+      }
+    ];
+
+    demoPeers.forEach(peer => {
+      this.discoveredDevices.set(peer.id, peer);
+      this.notify('DEVICE_FOUND', peer);
+    });
+    this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
+    return demoPeers;
+  }
+
+  clearTacticalPeers() {
+    for (const [id] of this.discoveredDevices.entries()) {
+      if (id.startsWith('sim-')) {
+        this.discoveredDevices.delete(id);
+      }
+    }
+    this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
+  }
+
+  /**
    * Start continuous scanning across Wi-Fi Mesh and real hardware Bluetooth beacons
    */
-  startScanning() {
+  startScanning(enableDemoPeers = false) {
     if (this.isScanning) return;
     this.isScanning = true;
     this.notify('SCAN_STARTED');
+
+    if (enableDemoPeers) {
+      this.spawnTacticalPeers();
+    }
 
     // 1. Broadcast immediate discovery heartbeat over local mesh network
     this.broadcastHeartbeat();
@@ -281,6 +558,39 @@ class P2PEmergencyMeshEngine {
       this.gossipInterval = setInterval(() => {
         if (this.isScanning) this.broadcastGossipDigest();
       }, 10000);
+
+      // 3. If native Android, poll for newly discovered background BLE beacons
+      if (nativeBackgroundMesh?.isNativeApp?.()) {
+        this.nativeBlePollInterval = setInterval(async () => {
+          if (!this.isScanning) return;
+          try {
+            const beacons = await nativeBackgroundMesh.getDiscoveredNativeBeacons();
+            beacons.forEach(b => {
+              const id = b.id || `native-ble-${b.address.replace(/:/g, '-')}`;
+              if (!this.discoveredDevices.has(id)) {
+                const dist = rssiToDistance(b.rssi || -70);
+                const angle = Math.floor(Math.random() * 360);
+                const dev = {
+                  id,
+                  name: b.name || 'Disaster BLE Beacon',
+                  protocol: P2P_PROTOCOLS.BLE,
+                  rssi: b.rssi || -70,
+                  distanceMeters: dist,
+                  bearingAngle: angle,
+                  battery: 85,
+                  connected: true,
+                  lastSeen: b.timestamp || Date.now(),
+                  lat: this.lastKnownPosition.lat + 0.0006,
+                  lng: this.lastKnownPosition.lng + 0.0006
+                };
+                this.discoveredDevices.set(id, dev);
+                this.notify('DEVICE_FOUND', dev);
+                this.notify('DEVICES_UPDATED', Array.from(this.discoveredDevices.values()));
+              }
+            });
+          } catch {}
+        }, 6000);
+      }
     }
   }
 
@@ -288,6 +598,7 @@ class P2PEmergencyMeshEngine {
     this.isScanning = false;
     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
     if (this.gossipInterval) clearInterval(this.gossipInterval);
+    if (this.nativeBlePollInterval) clearInterval(this.nativeBlePollInterval);
     this.notify('SCAN_STOPPED');
   }
 
@@ -353,7 +664,7 @@ class P2PEmergencyMeshEngine {
   /**
    * Send a direct emergency dispatch message to a specific target device
    */
-  sendDirectMessage(targetDeviceId, textMessage) {
+  async sendDirectMessage(targetDeviceId, textMessage) {
     const target = this.discoveredDevices.get(targetDeviceId);
     const packet = {
       id: `DIR-${Date.now().toString(36).toUpperCase()}`,
@@ -366,6 +677,29 @@ class P2PEmergencyMeshEngine {
       timestamp: Date.now()
     };
 
+    let bleSent = false;
+    // If target has an active Bluetooth GATT transmission characteristic, write directly over BLE!
+    if (target?.txCharacteristic && target?.connected) {
+      try {
+        const encoder = new TextEncoder();
+        const payload = encoder.encode(JSON.stringify({
+          type: 'DISPATCH',
+          id: packet.id,
+          sender: this.callsign,
+          msg: textMessage,
+          ts: packet.timestamp
+        }));
+        if (target.txCharacteristic.writeValueWithoutResponse) {
+          await target.txCharacteristic.writeValueWithoutResponse(payload);
+        } else if (target.txCharacteristic.writeValue) {
+          await target.txCharacteristic.writeValue(payload);
+        }
+        bleSent = true;
+      } catch (e) {
+        console.warn('[P2P BLE] Failed to write to GATT characteristic, falling back to mesh:', e);
+      }
+    }
+
     if (this.broadcastChannel) {
       try {
         this.broadcastChannel.postMessage(packet);
@@ -374,7 +708,7 @@ class P2PEmergencyMeshEngine {
       }
     }
 
-    return packet;
+    return { ...packet, bleSent };
   }
 
   /**
@@ -551,8 +885,11 @@ class P2PEmergencyMeshEngine {
       this.handleGossipRequest(data);
     }
 
-    if (data.type === 'P2P_EMERGENCY_SOS' && data.packet) {
-      const sos = data.packet;
+    const sos = (data.type === 'P2P_EMERGENCY_SOS' && data.packet) 
+      ? data.packet 
+      : ((data.id && (data.message || data.emergencyType)) ? data : null);
+
+    if (sos) {
       const alreadyLogged = this.receivedMessages.some(m => m.id === sos.id);
       
       if (!alreadyLogged) {

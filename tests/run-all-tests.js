@@ -19,6 +19,7 @@ const testFiles = [
   { name: 'Dynamic Geofence Polygon & Proximity Warning', file: path.join(__dirname, 'geofence.test.js') },
   { name: 'Kerala AI Place Matcher & Road Network Routing', file: path.join(__dirname, 'aiPlaceMatcher.test.js') },
   { name: 'Universal Real-Road Routing Engine & Maneuvers', file: path.join(__dirname, 'routingEngine.test.js') },
+  { name: 'Loopholes Remediation & Security Verification', file: path.join(__dirname, 'loopholes-remediation.test.mjs') },
   { name: 'Google Play Store Mobile Package & Policy Audit', file: path.join(root, 'test-playstore-readiness.js') }
 ];
 

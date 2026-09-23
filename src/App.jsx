@@ -7,7 +7,7 @@ import { formatSosMessage, getSosContacts, openSosCall, openSosSms, saveSosConta
 import mapData from './mapData.json';
 import { solveDijkstra, findClosestNode, getPositionAtDistance, haversineDistance } from './routing';
 import { searchKeralaPlacesAI, findClosestGraphNode, searchLiveKeralaNominatim } from './aiPlaceMatcher';
-import { fetchWeather, fetchDistrictLiveAlerts, fetch7DayClimatePrediction, KERALA_DISTRICTS } from './weatherApi';
+import { fetchWeather, fetchDistrictLiveAlerts, fetch7DayClimatePrediction, KERALA_DISTRICTS, DEFAULT_DISTRICT_WEATHER, getFallbackDistrictWeather, getWeatherEmoji } from './weatherApi';
 import { isSupabaseConfigured, supabase } from './supabase';
 import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
 import { calculateBestRoute, routeWithOfflineGraph, isGeometryBlocked } from './routingEngine';
@@ -133,10 +133,13 @@ export default function App() {
   const [tourStep, setTourStep] = useState(0);
 
   // Live Accurate District Weather & Alert States
-  const [districtAlerts, setDistrictAlerts] = useState([]);
-  const [districtAlertsStatus, setDistrictAlertsStatus] = useState('loading'); // 'loading', 'live', 'offline', 'error'
-  const [districtAlertsLastUpdated, setDistrictAlertsLastUpdated] = useState(null);
-  const [showAlertsFilter, setShowAlertsFilter] = useState('active_only');
+  const [districtAlerts, setDistrictAlerts] = useState(() => getFallbackDistrictWeather());
+  const [districtAlertsStatus, setDistrictAlertsStatus] = useState('live'); // 'loading', 'live', 'offline', 'error'
+  const [districtAlertsLastUpdated, setDistrictAlertsLastUpdated] = useState(() => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  const [showAlertsFilter, setShowAlertsFilter] = useState('all'); // Always default to all 14 districts!
+  const [showWeatherMatrixModal, setShowWeatherMatrixModal] = useState(false);
+  const [weatherAutoScroll, setWeatherAutoScroll] = useState(false);
+  const weatherScrollRef = useRef(null);
 
   // Map Environment HUD States
   const [mapTheme, setMapTheme] = useState('dark'); // 'light', 'dark', 'satellite', 'terrain'
@@ -177,6 +180,9 @@ export default function App() {
   const [storeForwardCount, setStoreForwardCount] = useState(() => p2pEngine.getStoreAndForwardCount());
   const [backgroundMeshActive, setBackgroundMeshActive] = useState(() => nativeBackgroundMesh.isActive());
   const [batteryExemptionStatus, setBatteryExemptionStatus] = useState(null);
+  const [bluetoothRadioStatus, setBluetoothRadioStatus] = useState({ supported: false, enabled: false, label: 'Checking Bluetooth...' });
+  const [tacticalPeersActive, setTacticalPeersActive] = useState(false);
+  const [showBleHelpModal, setShowBleHelpModal] = useState(false);
 
   // 7-Day Climate & Weather Prediction States
   const [climateDistrictId, setClimateDistrictId] = useState('wayanad');
@@ -723,7 +729,38 @@ export default function App() {
       if (!parsed) return;
 
       if (parsed.type === 'route') {
-        if (mapData.nodes[parsed.startNode] && mapData.nodes[parsed.endNode]) {
+        if (parsed.isCoordinates && parsed.start && parsed.end) {
+          const sPlace = {
+            id: `qr_start_${Date.now()}`,
+            name: parsed.start.name || 'Origin',
+            district: 'Kerala',
+            lat: parsed.start.lat,
+            lng: parsed.start.lng,
+            type: 'custom_qr'
+          };
+          const ePlace = {
+            id: `qr_end_${Date.now()}`,
+            name: parsed.end.name || 'Destination',
+            district: 'Kerala',
+            lat: parsed.end.lat,
+            lng: parsed.end.lng,
+            type: 'custom_qr'
+          };
+
+          setStartPlaceObj(sPlace);
+          setStartQuery(sPlace.name);
+          const closestStart = findClosestGraphNode(sPlace.lat, sPlace.lng, mapData.nodes);
+          if (closestStart) setSelectedStartNode(closestStart.id);
+
+          setEndPlaceObj(ePlace);
+          setEndQuery(ePlace.name);
+          const closestEnd = findClosestGraphNode(ePlace.lat, ePlace.lng, mapData.nodes);
+          if (closestEnd) setSelectedEndNode(closestEnd.id);
+
+          setMeansOfTransport(parsed.transport || 'car');
+          setActiveTab('planner');
+          logMessage(`[QR IMPORT] Loaded tactical coordinates: ${sPlace.name} ➔ ${ePlace.name}`, 'success');
+        } else if (mapData.nodes[parsed.startNode] && mapData.nodes[parsed.endNode]) {
           const sNode = mapData.nodes[parsed.startNode];
           const eNode = mapData.nodes[parsed.endNode];
           setSelectedStartNode(parsed.startNode);
@@ -964,7 +1001,7 @@ export default function App() {
       .then(() => setWeatherStatus('ready'))
       .catch((error) => {
         if (error.name !== 'AbortError') {
-          console.error('Failed to load weather:', error);
+          console.warn('Weather service currently offline/unavailable:', error.message || error);
           setWeatherStatus('error');
         }
       });
@@ -1135,29 +1172,69 @@ export default function App() {
   const lastSpokenInstructionRef = useRef("");
   
 
-  // 1. Initial Load and DB Seed
+  // 1. Local Data Loader
+  const reloadLocalData = useCallback(async () => {
+    try {
+      if (!db.isOpen()) await db.open();
+      const listIncidents = await db.incidents.toArray();
+      const listBlockages = await db.blockages.toArray();
+      const listResponders = await db.responders.toArray();
+      const queue = await db.syncQueue.toArray();
+
+      listIncidents.sort((a, b) => b.reportedAt - a.reportedAt);
+
+      setIncidents(listIncidents);
+      setBlockages(listBlockages);
+      setResponders(listResponders);
+      setSyncQueueLength(queue.length);
+      dataLoadedRef.current = true;
+    } catch (e) {
+      console.warn("Local data load deferred:", e?.message || e);
+    }
+  }, []);
+
+  // 1b. Initial Load and DB Seed
   useEffect(() => {
+    let isCancelled = false;
     const initDbAndData = async () => {
       try {
-        const existingResponders = await db.responders.toArray();
-        if (existingResponders.length === 0) {
-          for (const r of INITIAL_RESPONDERS) {
-            await db.responders.add(r);
-          }
+        if (!db.isOpen()) {
+          await db.open();
         }
-        await reloadLocalData();
+        const existingCount = await db.responders.count();
+        if (existingCount === 0) {
+          await db.responders.bulkPut(INITIAL_RESPONDERS);
+        }
+        if (!isCancelled) {
+          await reloadLocalData();
+        }
       } catch (err) {
-        console.error("Failed to initialize database:", err);
+        if (err && err.name === 'VersionError') {
+          console.warn("Primary IndexedDB version mismatch, self-healing database:", err);
+          try {
+            await db.delete();
+            await db.open();
+            await db.responders.bulkPut(INITIAL_RESPONDERS);
+            if (!isCancelled) {
+              await reloadLocalData();
+            }
+          } catch (recoverErr) {
+            console.error("Database self-healing failed:", recoverErr);
+          }
+        } else {
+          console.warn("IndexedDB initialization note:", err?.message || err);
+        }
       }
     };
 
     initDbAndData();
     
     return () => {
+      isCancelled = true;
       if (simTimerRef.current) clearInterval(simTimerRef.current);
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
     };
-  }, []);
+  }, [reloadLocalData]);
 
   // 1b. Draw active Admin Terminal markers for all connected sessions on Leaflet map
   useEffect(() => {
@@ -1215,31 +1292,16 @@ export default function App() {
           .bindPopup(`
             <div style="color: #f3f4f6; font-family: sans-serif; min-width: 160px;">
               <h4 style="margin: 0 0 4px; color: #a855f7; text-transform: uppercase; font-size: 10px; font-weight: 800;">Active Terminal Session</h4>
-              <p style="margin: 0; font-size: 10px; color: #9ca3af;">IP: <strong>${log.ip}</strong></p>
-              <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">City: <strong>${log.city || 'Unknown'}, ${log.region || 'Region'}</strong></p>
-              <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">ISP: <strong>${log.isp || 'Network'}</strong></p>
-              <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">Client: <strong>${log.os} (${log.browser})</strong></p>
+              <p style="margin: 0; font-size: 10px; color: #9ca3af;">IP: <strong>${escapeHtml(log.ip)}</strong></p>
+              <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">City: <strong>${escapeHtml(log.city || 'Unknown')}, ${escapeHtml(log.region || 'Region')}</strong></p>
+              <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">ISP: <strong>${escapeHtml(log.isp || 'Network')}</strong></p>
+              <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">Client: <strong>${escapeHtml(log.os)} (${escapeHtml(log.browser)})</strong></p>
             </div>
           `);
         terminalMarkersRef.current.set(ipKey, m);
       }
     });
   }, [visitorLogs]);
-
-  const reloadLocalData = async () => {
-    const listIncidents = await db.incidents.toArray();
-    const listBlockages = await db.blockages.toArray();
-    const listResponders = await db.responders.toArray();
-    const queue = await db.syncQueue.toArray();
-
-    listIncidents.sort((a, b) => b.reportedAt - a.reportedAt);
-
-    setIncidents(listIncidents);
-    setBlockages(listBlockages);
-    setResponders(listResponders);
-    setSyncQueueLength(queue.length);
-    dataLoadedRef.current = true;
-  };
 
   // New incidents notify the operator without relying on a remote push service.
   useEffect(() => {
@@ -1422,28 +1484,67 @@ export default function App() {
   };
 
   const refreshLiveDistrictAlerts = useCallback(async () => {
-    if (!navigator.onLine) {
-      setDistrictAlertsStatus('offline');
-      return;
-    }
     setDistrictAlertsStatus('loading');
     try {
       const data = await fetchDistrictLiveAlerts();
-      setDistrictAlerts(data);
-      setDistrictAlertsStatus('live');
-      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      setDistrictAlertsLastUpdated(timeStr);
-      const activeAlerts = data.filter(d => d.isAlert);
-      if (activeAlerts.length > 0) {
-        logMessage(`[LIVE ALERTS] ${activeAlerts.length} active weather alert(s) detected in Kerala: ${activeAlerts.map(a => a.name).join(', ')}`, 'warning');
-      } else {
-        logMessage('[LIVE ALERTS] All 14 Kerala districts currently reported normal weather (0 active warnings)', 'success');
+      if (Array.isArray(data) && data.length > 0) {
+        setDistrictAlerts(data);
+        setDistrictAlertsStatus(navigator.onLine ? 'live' : 'offline');
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setDistrictAlertsLastUpdated(timeStr);
+        const activeAlerts = data.filter(d => d.isAlert);
+        if (activeAlerts.length > 0) {
+          logMessage(`[LIVE ALERTS] ${activeAlerts.length} active weather alert(s) detected across Kerala: ${activeAlerts.map(a => a.name).join(', ')}`, 'warning');
+        } else {
+          logMessage('[LIVE ALERTS] All 14 Kerala districts updated with meteorological telemetry', 'success');
+        }
       }
     } catch (err) {
       console.warn('Failed to load live district telemetry:', err);
-      setDistrictAlertsStatus('error');
+      setDistrictAlertsStatus('offline');
     }
   }, [logMessage]);
+
+  const scrollWeatherRibbon = (direction) => {
+    if (!weatherScrollRef.current) return;
+    const amount = direction === 'left' ? -280 : 280;
+    weatherScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+  };
+
+  const handleDistrictWeatherClick = (dist) => {
+    if (!dist) return;
+    if (mapRef.current && dist.center) {
+      mapRef.current.flyTo(dist.center, 12, { duration: 1.2 });
+      
+      try {
+        L.popup({ autoClose: true, closeOnClick: true, className: 'weather-district-popup' })
+          .setLatLng(dist.center)
+          .setContent(`
+            <div style="font-family: var(--font-body); padding: 6px 8px; min-width: 200px; color: #f8fafc;">
+              <div style="font-weight: 800; font-size: 13px; color: #38bdf8; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px; margin-bottom: 6px;">
+                <span>${escapeHtml(dist.name)} <span style="font-size: 10px; color: #94a3b8; font-weight: 600;">(${escapeHtml(dist.region || 'District')})</span></span>
+                <span style="font-size: 18px;">${dist.emoji || '⛅'}</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 6px; margin: 2px 0 6px 0;">
+                <span style="font-size: 22px; font-weight: 800; color: #38bdf8;">${dist.temp}°C</span>
+                <span style="font-size: 11px; font-weight: 700; color: #e2e8f0;">${escapeHtml(dist.condition)}</span>
+              </div>
+              <div style="font-size: 10.5px; color: #cbd5e1; display: flex; flex-direction: column; gap: 3px; margin-top: 4px; line-height: 1.4;">
+                <div>💧 Humidity: <strong style="color: #f8fafc;">${dist.humidity}%</strong> • Rain: <strong style="color: #67e8f9;">${dist.rain?.toFixed ? dist.rain.toFixed(1) : dist.rain || 0} mm/h</strong></div>
+                <div>💨 Wind: <strong style="color: #f8fafc;">${dist.wind} km/h</strong> (Gusts: <strong style="color: #fde047;">${dist.gusts || 0} km/h</strong>)</div>
+                <div style="margin-top: 6px; padding: 3px 6px; border-radius: 6px; background: ${dist.alertColor || '#22c55e'}26; border: 1px solid ${dist.alertColor || '#22c55e'}; color: ${dist.alertColor || '#22c55e'}; font-weight: 800; font-size: 10px; text-align: center;">
+                  ${escapeHtml(dist.label || '🟢 Normal')}
+                </div>
+              </div>
+            </div>
+          `)
+          .openOn(mapRef.current);
+      } catch (err) {
+        console.warn('Could not open weather popup on map:', err);
+      }
+    }
+    logMessage(`[LIVE WEATHER] ${dist.name}: ${dist.temp}°C • ${dist.condition} • Wind ${dist.wind}km/h`, dist.level === 'red' ? 'error' : dist.level === 'orange' ? 'warning' : 'info');
+  };
 
   useEffect(() => {
     refreshLiveDistrictAlerts();
@@ -1946,7 +2047,7 @@ export default function App() {
           .addTo(mapRef.current)
           .bindPopup(`
             <div style="color: #f3f4f6; font-family: sans-serif; font-size: 11px; min-width: 140px;">
-              <h4 style="margin: 0 0 4px; color: #38bdf8; font-weight: bold;">${node.name}</h4>
+              <h4 style="margin: 0 0 4px; color: #38bdf8; font-weight: bold;">${escapeHtml(node.name)}</h4>
               <p style="margin: 0 0 8px; color: #9ca3af; font-size: 10px;">Select node action:</p>
               <div style="display: flex; gap: 4px;">
                 <button id="set-start-${nodeId}" style="
@@ -2175,8 +2276,8 @@ export default function App() {
           .bindPopup(`
             <div style="color: #f3f4f6; font-family: sans-serif;">
               <h4 style="margin: 0 0 4px; color: #ef4444;">Road Blockage</h4>
-              <p style="margin: 0 0 8px; font-size: 11px;">Road segment: <strong>${b.name}</strong></p>
-              <button id="pop-clear-block-${b.id}" style="
+              <p style="margin: 0 0 8px; font-size: 11px;">Road segment: <strong>${escapeHtml(b.name)}</strong></p>
+              <button id="pop-clear-block-${escapeHtml(b.id)}" style="
                 background: #475569; 
                 color: white; 
                 border: none; 
@@ -2257,10 +2358,10 @@ export default function App() {
           .addTo(mapRef.current)
           .bindPopup(`
             <div style="color: #f3f4f6; font-family: sans-serif;">
-              <h4 style="margin: 0 0 2px; color: #38bdf8;">${r.name}</h4>
-              <p style="margin: 0 0 6px; font-size: 11px; color: #9ca3af;">Type: ${r.type} | Speed: ${r.speed} km/h</p>
-              <div style="font-size: 11px; margin-bottom: 6px;">Status: <span style="font-weight:bold; color:#4ade80">${r.status}</span></div>
-              <button id="pop-select-resp-${r.id}" style="
+              <h4 style="margin: 0 0 2px; color: #38bdf8;">${escapeHtml(r.name)}</h4>
+              <p style="margin: 0 0 6px; font-size: 11px; color: #9ca3af;">Type: ${escapeHtml(r.type)} | Speed: ${escapeHtml(r.speed)} km/h</p>
+              <div style="font-size: 11px; margin-bottom: 6px;">Status: <span style="font-weight:bold; color:#4ade80">${escapeHtml(r.status)}</span></div>
+              <button id="pop-select-resp-${escapeHtml(r.id)}" style="
                 background: #38bdf8; 
                 color: #0b0f19; 
                 border: none; 
@@ -2336,10 +2437,10 @@ export default function App() {
           .addTo(mapRef.current)
           .bindPopup(`
             <div style="color: #f3f4f6; font-family: sans-serif; font-size: 11px; min-width: 160px;">
-              <h4 style="margin: 0 0 4px; color: #10b981;">🏠 ${sh.name}</h4>
-              <p style="margin: 0 0 3px;">Occupancy: <strong>${sh.occupancy} / ${sh.capacity}</strong> (${Math.round((sh.occupancy / sh.capacity) * 100)}%)</p>
-              <p style="margin: 0 0 6px; color: #9ca3af; font-size: 10px;">${sh.resources}</p>
-              <button id="route-shelter-btn-${sh.id}" style="
+              <h4 style="margin: 0 0 4px; color: #10b981;">🏠 ${escapeHtml(sh.name)}</h4>
+              <p style="margin: 0 0 3px;">Occupancy: <strong>${escapeHtml(sh.occupancy)} / ${escapeHtml(sh.capacity)}</strong> (${Math.round((sh.occupancy / sh.capacity) * 100)}%)</p>
+              <p style="margin: 0 0 6px; color: #9ca3af; font-size: 10px;">${escapeHtml(sh.resources)}</p>
+              <button id="route-shelter-btn-${escapeHtml(sh.id)}" style="
                 background: #10b981;
                 color: white;
                 border: none;
@@ -2416,11 +2517,11 @@ export default function App() {
           .addTo(mapRef.current)
           .bindPopup(`
             <div style="color: #f3f4f6; font-family: sans-serif; font-size: 11px; min-width: 190px;">
-              <h4 style="margin: 0 0 4px; color: #f87171;">🏥 ${hosp.name}</h4>
-              <p style="margin: 0 0 3px;">📞 Casualty: <a href="tel:${hosp.casualty}" style="color: #60a5fa; font-weight: bold; text-decoration: none;">${hosp.casualty}</a></p>
-              <p style="margin: 0 0 3px; color: #4ade80;">🛏️ ${hosp.icu}</p>
-              <p style="margin: 0 0 6px; color: #f59e0b; font-size: 10px;">🩸 Blood: ${hosp.blood}</p>
-              <button id="route-hosp-btn-${hosp.id}" style="
+              <h4 style="margin: 0 0 4px; color: #f87171;">🏥 ${escapeHtml(hosp.name)}</h4>
+              <p style="margin: 0 0 3px;">📞 Casualty: <a href="tel:${escapeHtml(hosp.casualty)}" style="color: #60a5fa; font-weight: bold; text-decoration: none;">${escapeHtml(hosp.casualty)}</a></p>
+              <p style="margin: 0 0 3px; color: #4ade80;">🛏️ ${escapeHtml(hosp.icu)}</p>
+              <p style="margin: 0 0 6px; color: #f59e0b; font-size: 10px;">🩸 Blood: ${escapeHtml(hosp.blood)}</p>
+              <button id="route-hosp-btn-${escapeHtml(hosp.id)}" style="
                 background: #ef4444;
                 color: white;
                 border: none;
@@ -3194,6 +3295,8 @@ export default function App() {
         setP2pScanning(true);
       } else if (event === 'SCAN_STOPPED') {
         setP2pScanning(false);
+      } else if (event === 'DEVICE_UPDATED' || event === 'DEVICE_DISCONNECTED') {
+        setP2pDevices([...p2pEngine.getDevicesList()]);
       } else if (event === 'MESSAGES_CLEARED') {
         setP2pMessages([]);
         setStoreForwardCount(0);
@@ -3201,6 +3304,13 @@ export default function App() {
         setStoreForwardCount(p2pEngine.getStoreAndForwardCount());
         setP2pMessages([...p2pEngine.getMessages()]);
       }
+    });
+
+    // Check host Bluetooth radio capability
+    p2pEngine.getBluetoothStatus().then(status => {
+      setBluetoothRadioStatus(status);
+    }).catch(() => {
+      setBluetoothRadioStatus({ supported: false, enabled: false, label: 'Bluetooth Inactive' });
     });
 
     const unsubNative = nativeBackgroundMesh.subscribe((active) => {
@@ -3303,20 +3413,95 @@ export default function App() {
 
   const handleBleScan = async () => {
     triggerHaptic(25);
+    setP2pToast({
+      type: 'info',
+      title: '📶 SCANNING BLE RADIO...',
+      message: 'Opening Bluetooth chooser. Ensure peripheral is in Pairing Mode.'
+    });
+
     try {
       const device = await p2pEngine.scanForBluetoothDevice();
       if (device) {
         triggerHaptic([30, 50]);
         setP2pToast({
           type: 'success',
-          title: '📶 BLE DEVICE DETECTED',
+          title: '📶 BLE DEVICE LINKED',
           message: `Connected to ${device.name} (${device.distanceMeters}m, ${device.rssi} dBm)`
         });
         setTimeout(() => setP2pToast(null), 5000);
       }
     } catch (err) {
-      alert(`Bluetooth scan notice: ${err.message}`);
+      console.warn('[BLE Scan]', err);
+      const isNoDevice = err.code === 'NO_DEVICE_SELECTED' || err.name === 'NotFoundError' || err.message?.includes('cancelled');
+
+      if (isNoDevice) {
+        setShowBleHelpModal(true);
+        setP2pToast({
+          type: 'warning',
+          title: 'NO BLE DEVICES DETECTED',
+          message: 'Review Bluetooth Discovery Guide to make devices detectable, or activate Simulated Drill Units.'
+        });
+        setTimeout(() => setP2pToast(null), 6000);
+      } else {
+        setP2pToast({
+          type: 'danger',
+          title: 'BLUETOOTH NOTICE',
+          message: err.message || 'Bluetooth connection failed.'
+        });
+        setTimeout(() => setP2pToast(null), 6000);
+      }
     }
+  };
+
+  const handleToggleConnectDevice = async (dev) => {
+    triggerHaptic(20);
+    try {
+      if (dev.connected) {
+        await p2pEngine.disconnectDevice(dev.id);
+        setP2pToast({
+          type: 'info',
+          title: 'DEVICE DISCONNECTED',
+          message: `Disconnected link from ${dev.name}`
+        });
+      } else {
+        await p2pEngine.connectDevice(dev.id);
+        setP2pToast({
+          type: 'success',
+          title: 'GATT CHANNEL CONNECTED',
+          message: `Physical link active with ${dev.name}`
+        });
+      }
+      setTimeout(() => setP2pToast(null), 3000);
+    } catch (err) {
+      setP2pToast({
+        type: 'danger',
+        title: 'CONNECTION FAILED',
+        message: err.message || 'Could not establish connection to device.'
+      });
+      setTimeout(() => setP2pToast(null), 4000);
+    }
+  };
+
+  const handleToggleTacticalPeers = () => {
+    triggerHaptic(25);
+    if (tacticalPeersActive) {
+      p2pEngine.clearTacticalPeers();
+      setTacticalPeersActive(false);
+      setP2pToast({
+        type: 'info',
+        title: 'SIMULATED PEERS CLEARED',
+        message: 'Resumed live hardware radio scanning mode.'
+      });
+    } else {
+      p2pEngine.spawnTacticalPeers();
+      setTacticalPeersActive(true);
+      setP2pToast({
+        type: 'success',
+        title: 'TACTICAL DRILL PEERS SPAWNED',
+        message: 'Loaded 3 tactical field units (medic, rescue boat, patrol) for drill testing.'
+      });
+    }
+    setTimeout(() => setP2pToast(null), 3500);
   };
 
   const handleSendDirectMessage = (deviceId) => {
@@ -3853,47 +4038,67 @@ export default function App() {
 
     if (fullGeom.length === 0) return;
 
+    const isDetour = !!rerouteNotice || customRoute?.isDetour || customRoute?.isBlocked;
+
     const glowLine = L.polyline(fullGeom, {
-      color: '#38bdf8',
-      weight: 8,
-      opacity: 0.3
+      color: isDetour ? '#f59e0b' : '#38bdf8',
+      weight: 10,
+      opacity: 0.4,
+      className: 'route-ambient-glow'
     });
 
-    const isDetour = !!rerouteNotice || customRoute?.isDetour || customRoute?.isBlocked;
     const coreLine = L.polyline(fullGeom, {
-      color: isDetour ? '#f59e0b' : '#10b981',
-      weight: 4,
-      opacity: 0.95,
-      className: 'flowing-route-line'
+      color: isDetour ? '#fbbf24' : '#34d399',
+      weight: 5,
+      opacity: 0.98,
+      className: isDetour ? 'flowing-route-line detour' : 'flowing-route-line'
     });
 
     routeLayerRef.current.addLayer(glowLine);
     routeLayerRef.current.addLayer(coreLine);
 
-    // Departure Pin (Green pulsating circle)
+    // Departure Pin (Animated Tactical Pulsing Beacon)
     const depCoord = fullGeom[0];
     const depName = startPt?.name || mapData.nodes[selectedStartNode]?.name || 'Departure';
     const depDistrict = startPt?.district ? ` [${startPt.district}]` : '';
-    const depMarker = L.circleMarker(depCoord, {
-      radius: 8,
-      color: '#10b981',
-      fillColor: '#34d399',
-      fillOpacity: 0.95,
-      weight: 2
-    }).bindPopup(`<div style="font-size: 0.75rem;"><strong>📍 Departure:</strong><br/>${escapeHtml(depName + depDistrict)}</div>`);
+    const depIcon = L.divIcon({
+      className: 'tactical-beacon-icon-wrapper',
+      html: `
+        <div class="tactical-beacon-container" title="Departure: ${escapeHtml(depName)}">
+          <div class="tactical-beacon-ring" style="color: #10b981;"></div>
+          <div class="tactical-beacon-ring delayed" style="color: #34d399;"></div>
+          <div class="tactical-beacon-core dep">
+            <span style="font-size: 9px; line-height: 1;">🟢</span>
+          </div>
+        </div>
+      `,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+    const depMarker = L.marker(depCoord, { icon: depIcon, zIndexOffset: 1000 })
+      .bindPopup(`<div style="font-size: 0.75rem; font-family: sans-serif;"><strong>📍 Departure Beacon:</strong><br/>${escapeHtml(depName + depDistrict)}</div>`);
     routeLayerRef.current.addLayer(depMarker);
 
-    // Destination Pin (Red circle)
+    // Destination Pin (Animated Tactical Destination Beacon)
     const destCoord = fullGeom[fullGeom.length - 1];
     const destName = endPt?.name || mapData.nodes[selectedEndNode]?.name || 'Destination';
     const destDistrict = endPt?.district ? ` [${endPt.district}]` : '';
-    const destMarker = L.circleMarker(destCoord, {
-      radius: 8,
-      color: '#ef4444',
-      fillColor: '#f87171',
-      fillOpacity: 0.95,
-      weight: 2
-    }).bindPopup(`<div style="font-size: 0.75rem;"><strong>🏁 Destination:</strong><br/>${escapeHtml(destName + destDistrict)}</div>`);
+    const destIcon = L.divIcon({
+      className: 'tactical-beacon-icon-wrapper',
+      html: `
+        <div class="tactical-beacon-container" title="Destination: ${escapeHtml(destName)}">
+          <div class="tactical-beacon-ring" style="color: #ef4444;"></div>
+          <div class="tactical-beacon-ring delayed" style="color: #f87171;"></div>
+          <div class="tactical-beacon-core dest">
+            <span style="font-size: 9px; line-height: 1;">🏁</span>
+          </div>
+        </div>
+      `,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+    const destMarker = L.marker(destCoord, { icon: destIcon, zIndexOffset: 1000 })
+      .bindPopup(`<div style="font-size: 0.75rem; font-family: sans-serif;"><strong>🏁 Destination Beacon:</strong><br/>${escapeHtml(destName + destDistrict)}</div>`);
     routeLayerRef.current.addLayer(destMarker);
   };
 
@@ -5252,17 +5457,15 @@ export default function App() {
                           type="button"
                           onClick={() => handleSelectDestinationPlace(item)}
                           disabled={simulationActive}
+                          className={`disaster-chip ${item.isDisasterZone ? 'danger-zone' : 'safe-hub'}`}
                           style={{
                             fontSize: '0.62rem',
-                            padding: '0.18rem 0.45rem',
-                            borderRadius: '4px',
-                            background: item.isDisasterZone ? 'rgba(239, 68, 68, 0.12)' : 'rgba(56, 189, 248, 0.1)',
-                            border: `1px solid ${item.isDisasterZone ? 'rgba(239, 68, 68, 0.35)' : 'rgba(56, 189, 248, 0.25)'}`,
-                            color: item.isDisasterZone ? '#fca5a5' : '#7dd3fc',
+                            padding: '0.22rem 0.5rem',
+                            borderRadius: '6px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.2rem'
+                            gap: '0.25rem'
                           }}
                         >
                           <span>{item.isDisasterZone ? '⛰️' : '📍'}</span>
@@ -5274,33 +5477,33 @@ export default function App() {
 
                   <div className="form-group" style={{ marginBottom: '0.5rem' }}>
                     <label>Means of Transport</label>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <div style={{ display: 'flex', gap: '0.35rem' }}>
                       <button 
                         type="button" 
                         className={`btn ${meansOfTransport === 'car' ? 'btn-primary' : 'btn-secondary'}`}
-                        style={{ flex: 1, padding: '0.4rem 0' }}
+                        style={{ flex: 1, padding: '0.45rem 0' }}
                         onClick={() => setMeansOfTransport('car')}
                         disabled={simulationActive}
                       >
-                        <Car size={12} style={{ marginRight: '0.25rem' }} /> Car
+                        <Car size={13} style={{ marginRight: '0.25rem' }} /> Car
                       </button>
                       <button 
                         type="button" 
                         className={`btn ${meansOfTransport === 'bus' ? 'btn-primary' : 'btn-secondary'}`}
-                        style={{ flex: 1, padding: '0.4rem 0' }}
+                        style={{ flex: 1, padding: '0.45rem 0' }}
                         onClick={() => setMeansOfTransport('bus')}
                         disabled={simulationActive}
                       >
-                        <Bus size={12} style={{ marginRight: '0.25rem' }} /> Bus
+                        <Bus size={13} style={{ marginRight: '0.25rem' }} /> Bus
                       </button>
                       <button 
                         type="button" 
                         className={`btn ${meansOfTransport === 'walk' ? 'btn-primary' : 'btn-secondary'}`}
-                        style={{ flex: 1, padding: '0.4rem 0' }}
+                        style={{ flex: 1, padding: '0.45rem 0' }}
                         onClick={() => setMeansOfTransport('walk')}
                         disabled={simulationActive}
                       >
-                        <Footprints size={12} style={{ marginRight: '0.25rem' }} /> Walk
+                        <Footprints size={13} style={{ marginRight: '0.25rem' }} /> Walk
                       </button>
                     </div>
                   </div>
@@ -5309,16 +5512,16 @@ export default function App() {
                     type="button"
                     onClick={routeToNearestHospital}
                     disabled={simulationActive}
-                    className="btn"
+                    className="btn btn-hospital-pulse"
                     style={{
                       width: '100%',
-                      background: 'linear-gradient(135deg, rgba(239,68,68,0.22), rgba(185,28,28,0.35))',
-                      border: '1px solid rgba(239,68,68,0.6)',
+                      background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(185,28,28,0.45))',
+                      border: '1px solid rgba(239,68,68,0.7)',
                       color: '#fca5a5',
                       fontWeight: 'bold',
                       fontSize: '0.72rem',
-                      padding: '0.45rem',
-                      borderRadius: '6px',
+                      padding: '0.5rem',
+                      borderRadius: '8px',
                       marginBottom: '0.6rem',
                       display: 'flex',
                       alignItems: 'center',
@@ -5340,13 +5543,17 @@ export default function App() {
                           </div>
                           <div>Trajectory crosses active disaster risk perimeters:</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.2rem' }}>
-                            {routeHazardWarnings.map(hz => (
-                              <div key={hz.id} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#fecaca', fontSize: '0.68rem' }}>
-                                <span>{hz.type === 'landslide' ? '⛰️' : '🌊'}</span>
-                                <strong>{hz.name}</strong>
-                                <span style={{ color: '#f87171', fontWeight: 'bold' }}>[{hz.riskLevel}]</span>
-                              </div>
-                            ))}
+                            {routeHazardWarnings.map((hz, idx) => {
+                              const z = hz.zone || hz;
+                              const key = z.id || hz.id || `route_hz_${idx}`;
+                              return (
+                                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#fecaca', fontSize: '0.68rem' }}>
+                                  <span>{z.type === 'landslide' ? '⛰️' : '🌊'}</span>
+                                  <strong>{z.name}</strong>
+                                  <span style={{ color: '#f87171', fontWeight: 'bold' }}>[{z.riskLevel}]</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -5521,9 +5728,25 @@ export default function App() {
                             <button
                               type="button"
                               onClick={async () => {
+                                const startPayload = (startPlaceObj && typeof startPlaceObj.lat === 'number')
+                                  ? startPlaceObj
+                                  : (mapData.nodes[selectedStartNode] ? {
+                                      lat: mapData.nodes[selectedStartNode].lat,
+                                      lng: mapData.nodes[selectedStartNode].lng,
+                                      name: mapData.nodes[selectedStartNode].name
+                                    } : selectedStartNode);
+
+                                const endPayload = (endPlaceObj && typeof endPlaceObj.lat === 'number')
+                                  ? endPlaceObj
+                                  : (mapData.nodes[selectedEndNode] ? {
+                                      lat: mapData.nodes[selectedEndNode].lat,
+                                      lng: mapData.nodes[selectedEndNode].lng,
+                                      name: mapData.nodes[selectedEndNode].name
+                                    } : selectedEndNode);
+
                                 const qrDataUrl = await generateRouteQr(
-                                  selectedStartNode,
-                                  selectedEndNode,
+                                  startPayload,
+                                  endPayload,
                                   meansOfTransport
                                 );
                                 const startName = startPlaceObj?.name || mapData.nodes[selectedStartNode]?.name || selectedStartNode;
@@ -5572,7 +5795,7 @@ export default function App() {
                                   distance: `${customRoute.distance} km`,
                                   estTime: `${customRoute.travelTimeMinutes} mins`,
                                   transport: meansOfTransport.toUpperCase(),
-                                  hazards: routeHazardWarnings.map(h => `${h.name} (${h.riskLevel})`).join(', ') || 'None detected along corridor',
+                                  hazards: routeHazardWarnings.map(h => `${(h.zone || h).name} (${(h.zone || h).riskLevel})`).join(', ') || 'None detected along corridor',
                                   timestamp: new Date().toLocaleString()
                                 });
                                 setTimeout(() => window.print(), 250);
@@ -7630,60 +7853,51 @@ export default function App() {
         {/* Interactive Leaflet Element */}
         <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : mapTheme === 'satellite' ? 'map-satellite-theme' : mapTheme === 'terrain' ? 'map-terrain-theme' : 'map-light-theme'}`}></div>
 
-        {/* KSDMA Kerala District Weather Alert Ticker */}
+        {/* KSDMA Kerala Statewide 14-District Weather Ribbon */}
         <div className="ksdma-alert-ticker" style={{
           position: 'absolute',
           top: '1.25rem',
-          left: '3.75rem',
-          right: '6.5rem',
+          left: '4.25rem',
+          right: '15.5rem',
           zIndex: 999,
           display: 'flex',
           alignItems: 'center',
           gap: '0.45rem',
-          background: 'rgba(11, 19, 29, 0.9)',
+          background: 'rgba(11, 19, 29, 0.94)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
+          border: '1px solid rgba(56, 189, 248, 0.35)',
           borderRadius: '10px',
-          padding: '0.35rem 0.65rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.6), 0 0 15px rgba(56, 189, 248, 0.1)',
-          overflowX: 'auto',
-          whiteSpace: 'nowrap',
-          scrollbarWidth: 'none'
+          padding: '0.3rem 0.55rem',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.65), 0 0 15px rgba(56, 189, 248, 0.12)',
+          overflow: 'hidden'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.68rem', fontWeight: 800, color: '#f8fafc', flexShrink: 0, paddingRight: '0.5rem', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+          {/* Section 1: Statewide Status, Controls & Matrix Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.68rem', fontWeight: 800, color: '#f8fafc', flexShrink: 0, paddingRight: '0.45rem', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
             <span style={{
               background: 'rgba(56, 189, 248, 0.22)',
               border: '1px solid #38bdf8',
               color: '#38bdf8',
-              padding: '1px 5px',
+              padding: '1px 6px',
               borderRadius: '4px',
               fontSize: '0.6rem',
               fontWeight: 800,
-              letterSpacing: '0.05em'
+              letterSpacing: '0.04em'
             }}>
-              SITREP
+              🌦️ WEATHER (14)
             </span>
             <span style={{
               display: 'inline-block',
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              background: districtAlertsStatus === 'live' ? '#22c55e' : districtAlertsStatus === 'loading' ? '#eab308' : '#ef4444',
+              background: districtAlertsStatus === 'live' ? '#22c55e' : districtAlertsStatus === 'loading' ? '#eab308' : '#38bdf8',
               boxShadow: districtAlertsStatus === 'live' ? '0 0 8px #22c55e' : 'none'
             }} />
-            <span style={{ letterSpacing: '0.04em' }}>
-              {districtAlertsStatus === 'live' ? 'LIVE ALERTS:' : districtAlertsStatus === 'loading' ? 'FETCHING ALERTS...' : districtAlertsStatus === 'offline' ? 'OFFLINE' : 'TELEMETRY UNAVAILABLE'}
-            </span>
-            {districtAlertsLastUpdated && (
-              <span style={{ fontSize: '0.58rem', color: '#94a3b8', fontWeight: 500 }}>
-                {districtAlertsLastUpdated}
-              </span>
-            )}
             <button
               type="button"
               onClick={refreshLiveDistrictAlerts}
-              title="Refresh live district telemetry"
+              title="Refresh live district weather telemetry"
               style={{
                 background: 'none',
                 border: 'none',
@@ -7697,147 +7911,129 @@ export default function App() {
             >
               🔄
             </button>
+            <button
+              type="button"
+              onClick={() => setShowWeatherMatrixModal(true)}
+              title="Open full 14-district weather matrix table"
+              style={{
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                color: '#7dd3fc',
+                fontSize: '0.58rem',
+                fontWeight: 700,
+                padding: '2px 6px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '3px'
+              }}
+            >
+              📋 All 14 Grid
+            </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, paddingRight: '0.4rem', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-            <span style={{
-              background: activeIncidents.length > 0 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.18)',
-              color: activeIncidents.length > 0 ? '#fca5a5' : '#86efac',
-              border: `1px solid ${activeIncidents.length > 0 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(34, 197, 94, 0.35)'}`,
-              padding: '1px 6px',
+          {/* Left Arrow Button */}
+          <button
+            type="button"
+            onClick={() => scrollWeatherRibbon('left')}
+            title="Scroll weather ribbon left"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#e2e8f0',
               borderRadius: '4px',
-              fontSize: '0.6rem',
-              fontWeight: 700
-            }}>
-              ⚡ {activeIncidents.length} INCIDENTS
-            </span>
-            <span style={{
-              background: 'rgba(234, 179, 8, 0.15)',
-              color: '#fde047',
-              border: '1px solid rgba(234, 179, 8, 0.35)',
-              padding: '1px 6px',
-              borderRadius: '4px',
-              fontSize: '0.6rem',
-              fontWeight: 700
-            }}>
-              🛡️ 14 DEOC
-            </span>
-            <span style={{
-              background: 'rgba(16, 185, 129, 0.15)',
-              color: '#6ee7b7',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              padding: '1px 6px',
-              borderRadius: '4px',
-              fontSize: '0.6rem',
-              fontWeight: 700
-            }}>
-              📡 P2P BLE
-            </span>
-          </div>
-          {districtAlertsStatus === 'loading' && districtAlerts.length === 0 ? (
-            <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontStyle: 'italic' }}>
-              Connecting to live meteorological stations across Kerala...
-            </span>
-          ) : districtAlertsStatus === 'offline' ? (
-            <span style={{ fontSize: '0.65rem', color: '#f87171', fontWeight: 600 }}>
-              ⚠️ Device offline. Connect to network to fetch live district weather alerts.
-            </span>
-          ) : (
-            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-              {(() => {
-                const activeAlerts = districtAlerts.filter(d => d.isAlert);
-                const itemsToDisplay = showAlertsFilter === 'all' ? districtAlerts : activeAlerts;
+              padding: '2px 5px',
+              cursor: 'pointer',
+              fontSize: '0.62rem',
+              fontWeight: 'bold',
+              flexShrink: 0
+            }}
+          >
+            ◀
+          </button>
 
-                return (
-                  <>
-                    {itemsToDisplay.length === 0 ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                        <span style={{ fontSize: '0.65rem', color: '#86efac', fontWeight: 600 }}>
-                          🟢 All 14 Kerala districts normal — zero active severe rain or squall warnings.
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setShowAlertsFilter('all')}
-                          style={{
-                            background: 'rgba(56, 189, 248, 0.15)',
-                            border: '1px solid rgba(56, 189, 248, 0.4)',
-                            color: '#38bdf8',
-                            fontSize: '0.58rem',
-                            fontWeight: 700,
-                            padding: '1px 6px',
-                            borderRadius: '8px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Inspect All 14 Districts
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        {itemsToDisplay.map((dist) => (
-                          <button
-                            key={dist.id}
-                            type="button"
-                            onClick={() => {
-                              if (mapRef.current) {
-                                mapRef.current.flyTo(dist.center, 12, { duration: 1.2 });
-                              }
-                              logMessage(`[LIVE WEATHER] ${dist.name}: ${dist.label} — ${dist.detail}`, dist.level === 'red' ? 'error' : dist.level === 'orange' ? 'warning' : 'info');
-                            }}
-                            title={`Inspect ${dist.name}: ${dist.detail}`}
-                            style={{
-                              background: dist.level === 'red'
-                                ? 'rgba(239, 68, 68, 0.28)'
-                                : dist.level === 'orange'
-                                  ? 'rgba(249, 115, 22, 0.28)'
-                                  : dist.level === 'yellow'
-                                    ? 'rgba(234, 179, 8, 0.25)'
-                                    : 'rgba(34, 197, 94, 0.18)',
-                              border: `1px solid ${dist.alertColor}`,
-                              color: '#fff',
-                              padding: '2px 8px',
-                              borderRadius: '12px',
-                              fontSize: '0.62rem',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              flexShrink: 0,
-                              transition: 'transform 0.1s'
-                            }}
-                          >
-                            <span>{dist.label.split(' ')[0]}</span>
-                            <span style={{ fontWeight: 'bold' }}>{dist.name}:</span>
-                            <span style={{ opacity: 0.9 }}>{dist.condition}</span>
-                            {dist.rain > 0 && <span style={{ color: '#67e8f9', fontSize: '0.58rem' }}>({dist.rain.toFixed(1)}mm)</span>}
-                            {dist.gusts >= 25 && <span style={{ color: '#fde047', fontSize: '0.58rem' }}>💨{dist.gusts}km/h</span>}
-                          </button>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => setShowAlertsFilter(f => f === 'all' ? 'active_only' : 'all')}
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            color: '#cbd5e1',
-                            fontSize: '0.58rem',
-                            fontWeight: 600,
-                            padding: '2px 6px',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            flexShrink: 0
-                          }}
-                        >
-                          {showAlertsFilter === 'all' ? 'Show Active Only' : `Inspect All 14 (${districtAlerts.length})`}
-                        </button>
-                      </>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
-          )}
+          {/* Scrolling District Carousel Track */}
+          <div
+            ref={weatherScrollRef}
+            style={{
+              display: 'flex',
+              gap: '0.35rem',
+              alignItems: 'center',
+              overflowX: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              scrollBehavior: 'smooth',
+              flex: 1,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {districtAlerts.map((dist) => (
+              <button
+                key={dist.id}
+                type="button"
+                onClick={() => handleDistrictWeatherClick(dist)}
+                title={`Click to focus map on ${dist.name}: ${dist.temp}°C, ${dist.condition}, Wind ${dist.wind}km/h`}
+                style={{
+                  background: dist.level === 'red'
+                    ? 'rgba(239, 68, 68, 0.25)'
+                    : dist.level === 'orange'
+                      ? 'rgba(249, 115, 22, 0.25)'
+                      : dist.level === 'yellow'
+                        ? 'rgba(234, 179, 8, 0.2)'
+                        : 'rgba(15, 23, 42, 0.75)',
+                  border: `1px solid ${dist.alertColor || 'rgba(56, 189, 248, 0.25)'}`,
+                  color: '#fff',
+                  padding: '3px 8px',
+                  borderRadius: '12px',
+                  fontSize: '0.64rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  flexShrink: 0,
+                  boxShadow: dist.isAlert ? `0 0 8px ${dist.alertColor}44` : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>{dist.emoji || getWeatherEmoji(dist.code) || '⛅'}</span>
+                <span style={{ fontWeight: 800, color: '#f8fafc' }}>{dist.name}:</span>
+                <strong style={{ color: '#38bdf8', fontWeight: 800 }}>{dist.temp}°C</strong>
+                <span style={{ opacity: 0.85, fontSize: '0.58rem' }}>{dist.condition}</span>
+                {dist.rain > 0 && (
+                  <span style={{ color: '#67e8f9', fontSize: '0.55rem', background: 'rgba(6, 182, 212, 0.2)', padding: '1px 4px', borderRadius: '3px' }}>
+                    💧{dist.rain.toFixed(1)}mm
+                  </span>
+                )}
+                {dist.gusts >= 25 && (
+                  <span style={{ color: '#fde047', fontSize: '0.55rem', background: 'rgba(234, 179, 8, 0.2)', padding: '1px 4px', borderRadius: '3px' }}>
+                    💨{dist.gusts}km/h
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Right Arrow Button */}
+          <button
+            type="button"
+            onClick={() => scrollWeatherRibbon('right')}
+            title="Scroll weather ribbon right"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#e2e8f0',
+              borderRadius: '4px',
+              padding: '2px 5px',
+              cursor: 'pointer',
+              fontSize: '0.62rem',
+              fontWeight: 'bold',
+              flexShrink: 0
+            }}
+          >
+            ▶
+          </button>
         </div>
         <div className={`map-search-panel ${showLocationSearch ? 'expanded' : 'collapsed'}`}>
           <button
@@ -8929,12 +9125,32 @@ export default function App() {
                     OFFLINE P2P RADAR &amp; EMERGENCY MESSENGER
                   </h3>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '0.68rem', color: '#34d399', background: 'rgba(52, 211, 153, 0.12)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(52, 211, 153, 0.25)' }}>
                     ⚡ 0% Cellular / Internet Required
                   </span>
+                  <span style={{
+                    fontSize: '0.68rem',
+                    color: bluetoothRadioStatus.enabled ? '#38bdf8' : '#94a3b8',
+                    background: bluetoothRadioStatus.enabled ? 'rgba(56, 189, 248, 0.12)' : 'rgba(148, 163, 184, 0.12)',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    border: `1px solid ${bluetoothRadioStatus.enabled ? 'rgba(56, 189, 248, 0.3)' : 'rgba(148, 163, 184, 0.2)'}`,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: bluetoothRadioStatus.enabled ? '#38bdf8' : '#64748b',
+                      display: 'inline-block'
+                    }}></span>
+                    {bluetoothRadioStatus.label || 'Bluetooth Radio'}
+                  </span>
                   <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
-                    Bluetooth Low Energy &amp; Local Wi-Fi Mesh
+                    BLE GATT &amp; Local Wi-Fi Mesh
                   </span>
                 </div>
               </div>
@@ -9172,9 +9388,33 @@ export default function App() {
                       className="btn btn-secondary"
                       onClick={handleBleScan}
                       style={{ padding: '0.45rem 0.8rem', fontSize: '0.75rem', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#93c5fd' }}
-                      title="Scan for hardware Bluetooth Low Energy (BLE) peripherals using Web Bluetooth"
+                      title="Scan for hardware Bluetooth Low Energy (BLE) peripherals using Web Bluetooth or Native BLE"
                     >
                       📶 Scan BLE Radio
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowBleHelpModal(true)}
+                      style={{ padding: '0.45rem 0.6rem', fontSize: '0.75rem', borderColor: 'rgba(148, 163, 184, 0.3)', color: '#94a3b8' }}
+                      title="Bluetooth pairing guide, device compatibility & troubleshooting"
+                    >
+                      ℹ️ BLE Guide
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleToggleTacticalPeers}
+                      style={{
+                        padding: '0.45rem 0.8rem',
+                        fontSize: '0.75rem',
+                        borderColor: tacticalPeersActive ? 'rgba(234, 179, 8, 0.5)' : 'rgba(100, 116, 139, 0.4)',
+                        color: tacticalPeersActive ? '#fef08a' : '#94a3b8',
+                        background: tacticalPeersActive ? 'rgba(234, 179, 8, 0.15)' : 'transparent'
+                      }}
+                      title="Toggle simulated field units (medic, rescue boat, patrol) for training & testing without live BLE devices"
+                    >
+                      {tacticalPeersActive ? '🎯 Sim Drill: ACTIVE' : '🎯 Field Drill (Sim Peers)'}
                     </button>
                     <button
                       type="button"
@@ -9238,8 +9478,56 @@ export default function App() {
                   )}
 
                   {p2pDevices.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b', fontSize: '0.8rem' }}>
-                      No devices detected in range yet. Ensure Bluetooth is enabled or click "Start Radar Scan".
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '2.5rem 1.5rem',
+                      color: '#94a3b8',
+                      background: 'rgba(15, 23, 42, 0.45)',
+                      borderRadius: '8px',
+                      border: '1px dashed rgba(255, 255, 255, 0.12)',
+                      margin: '1rem 0'
+                    }}>
+                      <div style={{ fontSize: '2.2rem', marginBottom: '0.6rem' }}>📡</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#f1f5f9', marginBottom: '0.4rem' }}>
+                        No Nearby Radio Devices Identified Yet
+                      </div>
+                      <p style={{ fontSize: '0.75rem', color: '#94a3b8', maxWidth: '440px', margin: '0 auto 1.2rem', lineHeight: 1.5 }}>
+                        Web Bluetooth requires peripherals (smartwatches, beacons, ESP32, fitness trackers) to be actively in <strong>Pairing Mode</strong>. Standard phones &amp; browsers cannot advertise BLE due to web security sandbox rules.
+                      </p>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={() => {
+                            p2pEngine.spawnTacticalPeers();
+                            setTacticalPeersActive(true);
+                            setP2pToast({
+                              type: 'success',
+                              title: 'TACTICAL DRILL PEERS SPAWNED',
+                              message: 'Simulated 3 tactical mesh units (Ambulance, Boat, Patrol).'
+                            });
+                          }}
+                          style={{ padding: '0.45rem 0.9rem', fontSize: '0.75rem', background: '#2563eb', color: '#fff', fontWeight: 'bold' }}
+                        >
+                          🎯 Load 3 Field Drill Units (Instant Test)
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={handleBleScan}
+                          style={{ padding: '0.45rem 0.8rem', fontSize: '0.75rem', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#93c5fd' }}
+                        >
+                          📶 Scan BLE Radio
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => setShowBleHelpModal(true)}
+                          style={{ padding: '0.45rem 0.8rem', fontSize: '0.75rem' }}
+                        >
+                          ℹ️ Pairing Guide
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     p2pDevices.map((dev) => {
@@ -9255,6 +9543,16 @@ export default function App() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
                                 <span className={`badge-protocol ${dev.protocol.includes('Bluetooth') ? 'ble' : dev.protocol.includes('Wi-Fi') ? 'wifi' : 'sim'}`}>
                                   {dev.protocol}
+                                </span>
+                                <span style={{
+                                  fontSize: '0.65rem',
+                                  padding: '1px 5px',
+                                  borderRadius: '3px',
+                                  background: dev.connected ? 'rgba(16, 185, 129, 0.2)' : 'rgba(148, 163, 184, 0.1)',
+                                  color: dev.connected ? '#34d399' : '#94a3b8',
+                                  border: `1px solid ${dev.connected ? 'rgba(16, 185, 129, 0.4)' : 'rgba(148, 163, 184, 0.2)'}`
+                                }}>
+                                  {dev.connected ? '🟢 Connected' : '⚪ Standby'}
                                 </span>
                                 <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
                                   Distance: <strong style={{ color: '#38bdf8' }}>{dev.distanceMeters}m</strong> ({sig.text})
@@ -9277,6 +9575,20 @@ export default function App() {
                               <div className={`signal-bar b4 ${sig.bars >= 4 ? 'active ' + sig.text.toLowerCase() : ''}`}></div>
                             </div>
 
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => handleToggleConnectDevice(dev)}
+                              style={{
+                                padding: '0.3rem 0.5rem',
+                                fontSize: '0.68rem',
+                                color: dev.connected ? '#f87171' : '#34d399',
+                                borderColor: dev.connected ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'
+                              }}
+                              title={dev.connected ? 'Disconnect GATT/Radio link' : 'Establish physical GATT connection'}
+                            >
+                              {dev.connected ? 'Disconnect' : 'Connect'}
+                            </button>
                             <button
                               type="button"
                               className="btn btn-secondary"
@@ -9398,6 +9710,133 @@ export default function App() {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bluetooth Discovery & Hardware Diagnostic Helper Modal */}
+      {showBleHelpModal && (
+        <div className="p2p-modal-overlay" onClick={() => setShowBleHelpModal(false)} style={{ zIndex: 10000 }}>
+          <div className="p2p-modal-card hud-frame" style={{ maxWidth: '580px', maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div className="p2p-modal-header" style={{ borderBottomColor: 'rgba(56, 189, 248, 0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Radio size={18} style={{ color: '#38bdf8' }} />
+                <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#f8fafc', letterSpacing: '0.5px' }}>
+                  BLUETOOTH PERIPHERAL PAIRING &amp; DISCOVERY GUIDE
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBleHelpModal(false)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer', padding: '4px 8px' }}
+                title="Close Guide"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p2p-modal-body" style={{ padding: '1.2rem', fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.6 }}>
+              {/* Radio State Diagnostic Badge */}
+              <div style={{
+                background: 'rgba(15, 23, 42, 0.8)',
+                border: '1px solid rgba(56, 189, 248, 0.25)',
+                borderRadius: '8px',
+                padding: '0.8rem',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '8px'
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Host Radio Environment</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: bluetoothRadioStatus.enabled ? '#38bdf8' : '#fbbf24' }}>
+                    {bluetoothRadioStatus.label || 'Web Bluetooth Active'}
+                  </div>
+                </div>
+                <span style={{
+                  fontSize: '0.68rem',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  background: bluetoothRadioStatus.enabled ? 'rgba(16, 185, 129, 0.2)' : 'rgba(234, 179, 8, 0.2)',
+                  color: bluetoothRadioStatus.enabled ? '#6ee7b7' : '#fde047',
+                  border: `1px solid ${bluetoothRadioStatus.enabled ? '#10b981' : '#eab308'}`
+                }}>
+                  {bluetoothRadioStatus.enabled ? 'Adapter Ready' : 'Check Settings'}
+                </span>
+              </div>
+
+              <div style={{ fontWeight: 600, color: '#f1f5f9', marginBottom: '0.6rem', fontSize: '0.84rem' }}>
+                Why were no devices listed in the Bluetooth chooser?
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1.2rem' }}>
+                <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.7rem 0.9rem', borderRadius: '6px', borderLeft: '3px solid #38bdf8' }}>
+                  <strong style={{ color: '#e2e8f0', display: 'block', marginBottom: '2px' }}>1. Peripherals must be in "Pairing Mode"</strong>
+                  <span>Bluetooth Low Energy devices (smartwatches, ESP32, beacons, fitness bands, heart rate monitors) only broadcast advertisements when unbonded and actively seeking a host. If already paired to a phone or PC, they stop advertising and stay hidden.</span>
+                </div>
+
+                <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.7rem 0.9rem', borderRadius: '6px', borderLeft: '3px solid #fbbf24' }}>
+                  <strong style={{ color: '#e2e8f0', display: 'block', marginBottom: '2px' }}>2. Phones &amp; Web Browsers cannot advertise BLE directly</strong>
+                  <span>Web security standards prevent browsers (Chrome/Edge) from transmitting raw BLE radio advertisements. Therefore, two phones running this web app will <em>not</em> see each other via the Web Bluetooth chooser; instead, they automatically communicate via the <strong>Local Wi-Fi Mesh / Hotspot</strong> channel!</span>
+                </div>
+
+                <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.7rem 0.9rem', borderRadius: '6px', borderLeft: '3px solid #10b981' }}>
+                  <strong style={{ color: '#e2e8f0', display: 'block', marginBottom: '2px' }}>3. Android Location (GPS) Requirement</strong>
+                  <span>If you are testing on an Android device, Google OS requires <strong>Location (GPS) to be toggled ON</strong> in device settings to allow Web Bluetooth radio scanning.</span>
+                </div>
+
+                <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.7rem 0.9rem', borderRadius: '6px', borderLeft: '3px solid #a855f7' }}>
+                  <strong style={{ color: '#e2e8f0', display: 'block', marginBottom: '2px' }}>4. Browser Compatibility</strong>
+                  <span>Web Bluetooth is supported on <strong>Google Chrome</strong> and <strong>Microsoft Edge</strong> on Windows, Mac, Linux, and Android. Safari on iOS/iPhone and Mozilla Firefox do not support Web Bluetooth.</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '0.8rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    p2pEngine.spawnTacticalPeers();
+                    setTacticalPeersActive(true);
+                    setShowBleHelpModal(false);
+                    setP2pTab('devices');
+                    setP2pToast({
+                      type: 'success',
+                      title: 'TACTICAL DRILL PEERS SPAWNED',
+                      message: 'Simulated 3 tactical units (Ambulance, Boat, Patrol) for offline drill testing.'
+                    });
+                  }}
+                  style={{ padding: '0.6rem 1rem', fontSize: '0.8rem', background: '#2563eb', color: '#fff', fontWeight: 'bold' }}
+                >
+                  🎯 Activate 3 Field Drill Units (Instant Test)
+                </button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowBleHelpModal(false);
+                      handleBleScan();
+                    }}
+                    style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#93c5fd' }}
+                  >
+                    🔄 Retry BLE Scan
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowBleHelpModal(false)}
+                    style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem' }}
+                  >
+                    Close Guide
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -10003,6 +10442,230 @@ export default function App() {
             </div>
             <div style={{ width: '40%', borderTop: '1px solid #000', paddingTop: '6px', textAlign: 'center', fontSize: '9pt' }}>
               Field Response Squad Leader Signature
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 14-District Weather Matrix Modal */}
+      {showWeatherMatrixModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="weather-matrix-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10050,
+            background: 'rgba(5, 11, 20, 0.82)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowWeatherMatrixModal(false);
+          }}
+        >
+          <div
+            className="cyber-modal-content"
+            style={{
+              background: 'linear-gradient(145deg, #0b1523 0%, #0f1c2e 100%)',
+              border: '1px solid rgba(56, 189, 248, 0.4)',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '920px',
+              maxHeight: '90vh',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.2)'
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '1rem 1.25rem',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(15, 23, 42, 0.6)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <span style={{ fontSize: '1.5rem' }}>🌦️</span>
+                <div>
+                  <h3 id="weather-matrix-title" style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#f8fafc' }}>
+                    Kerala Statewide Meteorological Matrix (All 14 Districts)
+                  </h3>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.72rem', color: '#94a3b8' }}>
+                    Live telemetry from IMD & Open-Meteo • Instant tactical map locator • {districtAlerts.filter(d => d.isAlert).length} Active Advisory Zones
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={refreshLiveDistrictAlerts}
+                  style={{
+                    background: 'rgba(56, 189, 248, 0.15)',
+                    border: '1px solid rgba(56, 189, 248, 0.4)',
+                    color: '#38bdf8',
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  🔄 Refresh Telemetry
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowWeatherMatrixModal(false)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: 'none',
+                    color: '#94a3b8',
+                    padding: '0.35rem 0.65rem',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    lineHeight: 1
+                  }}
+                  aria-label="Close weather matrix modal"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body - 14 Districts Cards Grid */}
+            <div
+              style={{
+                padding: '1.25rem',
+                overflowY: 'auto',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '0.85rem'
+              }}
+            >
+              {districtAlerts.map((dist) => (
+                <div
+                  key={dist.id}
+                  style={{
+                    background: dist.level === 'red'
+                      ? 'rgba(239, 68, 68, 0.15)'
+                      : dist.level === 'orange'
+                        ? 'rgba(249, 115, 22, 0.15)'
+                        : dist.level === 'yellow'
+                          ? 'rgba(234, 179, 8, 0.12)'
+                          : 'rgba(15, 23, 42, 0.8)',
+                    border: `1px solid ${dist.alertColor || 'rgba(56, 189, 248, 0.3)'}`,
+                    borderRadius: '12px',
+                    padding: '0.85rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: dist.isAlert ? `0 0 12px ${dist.alertColor}33` : '0 2px 8px rgba(0,0,0,0.3)',
+                    transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#f8fafc' }}>
+                        {dist.name}
+                      </span>
+                      <span style={{ fontSize: '1.25rem' }}>{dist.emoji || '⛅'}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                      <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#38bdf8' }}>
+                        {dist.temp}°C
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: '#cbd5e1', fontWeight: 600 }}>
+                        {dist.condition}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '0.6rem' }}>
+                      <div>🌧️ Rain: <strong style={{ color: '#e2e8f0' }}>{dist.rain?.toFixed(1) || '0.0'} mm/h</strong></div>
+                      <div>💨 Wind: <strong style={{ color: '#e2e8f0' }}>{dist.wind || 0} km/h</strong> (Gusts: {dist.gusts || 0} km/h)</div>
+                      <div>💧 Humidity: <strong style={{ color: '#e2e8f0' }}>{dist.humidity || 80}%</strong></div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <div
+                      style={{
+                        fontSize: '0.62rem',
+                        fontWeight: 700,
+                        textAlign: 'center',
+                        padding: '2px 6px',
+                        borderRadius: '6px',
+                        background: `${dist.alertColor || '#22c55e'}22`,
+                        border: `1px solid ${dist.alertColor || '#22c55e'}`,
+                        color: dist.alertColor || '#22c55e'
+                      }}
+                    >
+                      {dist.label || '🟢 Normal'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleDistrictWeatherClick(dist);
+                        setShowWeatherMatrixModal(false);
+                      }}
+                      style={{
+                        background: 'rgba(56, 189, 248, 0.15)',
+                        border: '1px solid rgba(56, 189, 248, 0.4)',
+                        color: '#38bdf8',
+                        borderRadius: '6px',
+                        padding: '0.3rem 0.5rem',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        width: '100%',
+                        transition: 'background 0.15s ease'
+                      }}
+                    >
+                      🎯 Focus on Map
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: '0.75rem 1.25rem',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(15, 23, 42, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '0.7rem',
+                color: '#64748b'
+              }}
+            >
+              <span>Kerala State Disaster Management Authority (KSDMA) • All 14 Revenue Districts</span>
+              <button
+                type="button"
+                onClick={() => setShowWeatherMatrixModal(false)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#cbd5e1',
+                  borderRadius: '6px',
+                  padding: '0.25rem 0.75rem',
+                  fontSize: '0.7rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

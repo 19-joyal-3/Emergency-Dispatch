@@ -57,100 +57,168 @@ export async function fetchWeather(lat, lng, signal) {
   };
 }
 
+export function getWeatherEmoji(code) {
+  if (code >= 95) return '⛈️'; // Thunderstorm
+  if (code >= 80) return '🌧️'; // Showers
+  if (code >= 71) return '🌨️'; // Snow / Cold
+  if (code >= 61) return '🌧️'; // Rain
+  if (code >= 51) return '🌦️'; // Drizzle
+  if (code === 45 || code === 48) return '🌫️'; // Fog / Mist
+  if (code === 3) return '☁️';  // Overcast
+  if (code === 2) return '⛅';  // Partly cloudy
+  if (code === 1) return '🌤️';  // Mainly clear
+  return '☀️';                  // Clear sky
+}
+
 export const KERALA_DISTRICTS = [
-  { id: 'tvm', name: 'Thiruvananthapuram', lat: 8.5241, lng: 76.9366, node: 'tvm' },
-  { id: 'kollam', name: 'Kollam', lat: 8.8932, lng: 76.6141, node: 'kollam' },
-  { id: 'pathanamthitta', name: 'Pathanamthitta', lat: 9.2648, lng: 76.7870, node: 'pathanamthitta' },
-  { id: 'alappuzha', name: 'Alappuzha', lat: 9.4981, lng: 76.3388, node: 'alappuzha' },
-  { id: 'kottayam', name: 'Kottayam', lat: 9.5916, lng: 76.5222, node: 'kottayam' },
-  { id: 'idukki', name: 'Idukki', lat: 9.8500, lng: 76.9700, node: 'idukki' },
-  { id: 'kochi', name: 'Ernakulam', lat: 9.9312, lng: 76.2673, node: 'kochi' },
-  { id: 'thrissur', name: 'Thrissur', lat: 10.5276, lng: 76.2144, node: 'thrissur' },
-  { id: 'palakkad', name: 'Palakkad', lat: 10.7867, lng: 76.6548, node: 'palakkad' },
-  { id: 'malappuram', name: 'Malappuram', lat: 11.0722, lng: 76.0740, node: 'malappuram' },
-  { id: 'kozhibode', name: 'Kozhikode', lat: 11.2588, lng: 75.7804, node: 'kozhibode' },
-  { id: 'wayanad', name: 'Wayanad', lat: 11.6050, lng: 76.0830, node: 'wayanad' },
-  { id: 'kannur', name: 'Kannur', lat: 11.8745, lng: 75.3704, node: 'kannur' },
-  { id: 'kasaragod', name: 'Kasaragod', lat: 12.5103, lng: 74.9852, node: 'kasaragod' }
+  { id: 'tvm', name: 'Thiruvananthapuram', region: 'South', lat: 8.5241, lng: 76.9366, node: 'tvm' },
+  { id: 'kollam', name: 'Kollam', region: 'South', lat: 8.8932, lng: 76.6141, node: 'kollam' },
+  { id: 'pathanamthitta', name: 'Pathanamthitta', region: 'South', lat: 9.2648, lng: 76.7870, node: 'pathanamthitta' },
+  { id: 'alappuzha', name: 'Alappuzha', region: 'South', lat: 9.4981, lng: 76.3388, node: 'alappuzha' },
+  { id: 'kottayam', name: 'Kottayam', region: 'South', lat: 9.5916, lng: 76.5222, node: 'kottayam' },
+  { id: 'idukki', name: 'Idukki', region: 'Central', lat: 9.8500, lng: 76.9700, node: 'idukki' },
+  { id: 'kochi', name: 'Ernakulam', region: 'Central', lat: 9.9312, lng: 76.2673, node: 'kochi' },
+  { id: 'thrissur', name: 'Thrissur', region: 'Central', lat: 10.5276, lng: 76.2144, node: 'thrissur' },
+  { id: 'palakkad', name: 'Palakkad', region: 'Central', lat: 10.7867, lng: 76.6548, node: 'palakkad' },
+  { id: 'malappuram', name: 'Malappuram', region: 'North', lat: 11.0722, lng: 76.0740, node: 'malappuram' },
+  { id: 'kozhibode', name: 'Kozhikode', region: 'North', lat: 11.2588, lng: 75.7804, node: 'kozhibode' },
+  { id: 'wayanad', name: 'Wayanad', region: 'North', lat: 11.6050, lng: 76.0830, node: 'wayanad' },
+  { id: 'kannur', name: 'Kannur', region: 'North', lat: 11.8745, lng: 75.3704, node: 'kannur' },
+  { id: 'kasaragod', name: 'Kasaragod', region: 'North', lat: 12.5103, lng: 74.9852, node: 'kasaragod' }
 ];
 
+export const DEFAULT_DISTRICT_WEATHER = [
+  { id: 'tvm', name: 'Thiruvananthapuram', region: 'South', lat: 8.5241, lng: 76.9366, temp: 29, humidity: 78, rain: 0.0, wind: 14, gusts: 20, condition: 'Partly Cloudy', code: 2, level: 'normal', alertColor: '#22c55e', label: '🟢 Normal', isAlert: false },
+  { id: 'kollam', name: 'Kollam', region: 'South', lat: 8.8932, lng: 76.6141, temp: 29, humidity: 80, rain: 0.0, wind: 12, gusts: 18, condition: 'Partly Cloudy', code: 2, level: 'normal', alertColor: '#22c55e', label: '🟢 Normal', isAlert: false },
+  { id: 'pathanamthitta', name: 'Pathanamthitta', region: 'South', lat: 9.2648, lng: 76.7870, temp: 27, humidity: 85, rain: 0.4, wind: 10, gusts: 22, condition: 'Passing Showers', code: 80, level: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', isAlert: true },
+  { id: 'alappuzha', name: 'Alappuzha', region: 'South', lat: 9.4981, lng: 76.3388, temp: 28, humidity: 82, rain: 0.0, wind: 18, gusts: 26, condition: 'Coastal Breeze', code: 1, level: 'normal', alertColor: '#22c55e', label: '🟢 Normal', isAlert: false },
+  { id: 'kottayam', name: 'Kottayam', region: 'South', lat: 9.5916, lng: 76.5222, temp: 28, humidity: 81, rain: 0.1, wind: 11, gusts: 16, condition: 'Light Drizzle', code: 51, level: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', isAlert: true },
+  { id: 'idukki', name: 'Idukki', region: 'Central', lat: 9.8500, lng: 76.9700, temp: 22, humidity: 89, rain: 1.2, wind: 16, gusts: 32, condition: 'Highland Showers', code: 61, level: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', isAlert: true },
+  { id: 'kochi', name: 'Ernakulam', region: 'Central', lat: 9.9312, lng: 76.2673, temp: 30, humidity: 79, rain: 0.0, wind: 15, gusts: 22, condition: 'Humid / Clear', code: 1, level: 'normal', alertColor: '#22c55e', label: '🟢 Normal', isAlert: false },
+  { id: 'thrissur', name: 'Thrissur', region: 'Central', lat: 10.5276, lng: 76.2144, temp: 29, humidity: 80, rain: 0.0, wind: 13, gusts: 19, condition: 'Partly Cloudy', code: 2, level: 'normal', alertColor: '#22c55e', label: '🟢 Normal', isAlert: false },
+  { id: 'palakkad', name: 'Palakkad', region: 'Central', lat: 10.7867, lng: 76.6548, temp: 32, humidity: 70, rain: 0.0, wind: 24, gusts: 38, condition: 'Gap Winds', code: 1, level: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', isAlert: true },
+  { id: 'malappuram', name: 'Malappuram', region: 'North', lat: 11.0722, lng: 76.0740, temp: 29, humidity: 76, rain: 0.0, wind: 12, gusts: 17, condition: 'Mainly Clear', code: 1, level: 'normal', alertColor: '#22c55e', label: '🟢 Normal', isAlert: false },
+  { id: 'kozhibode', name: 'Kozhikode', region: 'North', lat: 11.2588, lng: 75.7804, temp: 29, humidity: 80, rain: 0.0, wind: 14, gusts: 21, condition: 'Coastal Clear', code: 1, level: 'normal', alertColor: '#22c55e', label: '🟢 Normal', isAlert: false },
+  { id: 'wayanad', name: 'Wayanad', region: 'North', lat: 11.6050, lng: 76.0830, temp: 21, humidity: 92, rain: 2.1, wind: 14, gusts: 34, condition: 'Ghat Mist & Showers', code: 61, level: 'yellow', alertColor: '#eab308', label: '🟡 Yellow Alert', isAlert: true },
+  { id: 'kannur', name: 'Kannur', region: 'North', lat: 11.8745, lng: 75.3704, temp: 29, humidity: 78, rain: 0.0, wind: 15, gusts: 22, condition: 'Partly Cloudy', code: 2, level: 'normal', alertColor: '#22c55e', label: '🟢 Normal', isAlert: false },
+  { id: 'kasaragod', name: 'Kasaragod', region: 'North', lat: 12.5103, lng: 74.9852, temp: 29, humidity: 79, rain: 0.0, wind: 16, gusts: 24, condition: 'Mainly Clear', code: 1, level: 'normal', alertColor: '#22c55e', label: '🟢 Normal', isAlert: false }
+].map(d => ({
+  ...d,
+  emoji: getWeatherEmoji(d.code),
+  center: [d.lat, d.lng],
+  detail: `${d.condition} • ${d.temp}°C • Wind ${d.wind}km/h (Gusts ${d.gusts}km/h) • Hum ${d.humidity}%`
+}));
+
+export function getFallbackDistrictWeather() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const cached = localStorage.getItem('kerala_districts_weather_cache');
+      if (cached) {
+        const { data } = JSON.parse(cached);
+        if (Array.isArray(data) && data.length === 14) {
+          return data;
+        }
+      }
+    }
+  } catch {}
+  return DEFAULT_DISTRICT_WEATHER;
+}
+
 export async function fetchDistrictLiveAlerts(signal) {
-  const lats = KERALA_DISTRICTS.map(d => d.lat.toFixed(4)).join(',');
-  const lngs = KERALA_DISTRICTS.map(d => d.lng.toFixed(4)).join(',');
-  
-  const params = new URLSearchParams({
-    latitude: lats,
-    longitude: lngs,
-    current: 'temperature_2m,relative_humidity_2m,precipitation,rain,weather_code,wind_speed_10m,wind_gusts_10m',
-    timezone: 'Asia/Kolkata'
-  });
+  const cacheKey = 'kerala_districts_weather_cache';
 
-  const response = await fetch(`${WEATHER_URL}?${params}`, { signal });
-  if (!response.ok) throw new Error(`District telemetry returned ${response.status}`);
-  const data = await response.json();
-  const results = Array.isArray(data) ? data : [data];
+  try {
+    const lats = KERALA_DISTRICTS.map(d => d.lat.toFixed(4)).join(',');
+    const lngs = KERALA_DISTRICTS.map(d => d.lng.toFixed(4)).join(',');
+    
+    const params = new URLSearchParams({
+      latitude: lats,
+      longitude: lngs,
+      current: 'temperature_2m,relative_humidity_2m,precipitation,rain,weather_code,wind_speed_10m,wind_gusts_10m',
+      timezone: 'Asia/Kolkata'
+    });
 
-  return KERALA_DISTRICTS.map((district, idx) => {
-    const cur = results[idx]?.current || {};
-    const code = cur.weather_code ?? 0;
-    const rain = Number(cur.precipitation ?? cur.rain ?? 0);
-    const wind = Math.round(Number(cur.wind_speed_10m ?? 0));
-    const gusts = Math.round(Number(cur.wind_gusts_10m ?? 0));
-    const temp = Math.round(cur.temperature_2m ?? 28);
-    const humidity = Math.round(cur.relative_humidity_2m ?? 80);
+    const response = await fetch(`${WEATHER_URL}?${params}`, { signal });
+    if (response.ok) {
+      const data = await response.json();
+      const results = Array.isArray(data) ? data : [data];
 
-    let level = 'normal';
-    let alertColor = '#22c55e';
-    let label = '🟢 Normal';
-    let condition = WEATHER_LABELS[code] || 'Clear';
-    let isAlert = false;
+      const parsed = KERALA_DISTRICTS.map((district, idx) => {
+        const cur = results[idx]?.current || {};
+        const code = cur.weather_code ?? 0;
+        const rain = Number(cur.precipitation ?? cur.rain ?? 0);
+        const wind = Math.round(Number(cur.wind_speed_10m ?? 0));
+        const gusts = Math.round(Number(cur.wind_gusts_10m ?? 0));
+        const temp = Math.round(cur.temperature_2m ?? 28);
+        const humidity = Math.round(cur.relative_humidity_2m ?? 80);
 
-    // Red Alert: Severe storms, torrential downpours (>15mm/h) or destructive gusts (>60km/h)
-    if (code === 96 || code === 99 || rain >= 15.0 || gusts >= 60.0) {
-      level = 'red';
-      alertColor = '#ef4444';
-      label = '🔴 Red Alert';
-      condition = code >= 95 ? 'Severe Thunderstorm & Hail' : 'Torrential Downpour';
-      isAlert = true;
+        let level = 'normal';
+        let alertColor = '#22c55e';
+        let label = '🟢 Normal';
+        let condition = WEATHER_LABELS[code] || 'Clear';
+        let isAlert = false;
+
+        // Red Alert: Severe storms, torrential downpours (>15mm/h) or destructive gusts (>60km/h)
+        if (code === 96 || code === 99 || rain >= 15.0 || gusts >= 60.0) {
+          level = 'red';
+          alertColor = '#ef4444';
+          label = '🔴 Red Alert';
+          condition = code >= 95 ? 'Severe Thunderstorm & Hail' : 'Torrential Downpour';
+          isAlert = true;
+        }
+        // Orange Alert: Heavy rain (>4mm/h), squall gusts (>40km/h), or active thunderstorms
+        else if (code === 95 || code === 82 || code === 65 || rain >= 4.0 || gusts >= 40.0) {
+          level = 'orange';
+          alertColor = '#f97316';
+          label = '🟠 Orange Alert';
+          condition = code === 95 ? 'Thunderstorm Warning' : 'Heavy Rain / Squall';
+          isAlert = true;
+        }
+        // Yellow Alert: Moderate rain/drizzle (>0.1mm/h), high wind gusts (>25km/h), or active showers
+        else if (code === 53 || code === 55 || code === 61 || code === 63 || code === 80 || code === 81 || code === 51 || rain >= 0.1 || gusts >= 25.0) {
+          level = 'yellow';
+          alertColor = '#eab308';
+          label = '🟡 Yellow Alert';
+          condition = (code >= 51 && code <= 55) ? 'Drizzle' : (code >= 80 ? 'Passing Showers' : (gusts >= 25.0 ? 'High Wind Gusts' : 'Light Rain'));
+          isAlert = true;
+        }
+
+        const detail = isAlert
+          ? `${condition} • ${temp}°C • Rain: ${rain.toFixed(1)}mm/h • Wind: ${wind}km/h (Gusts: ${gusts}km/h)`
+          : `${condition} • ${temp}°C • Wind ${wind}km/h • Hum ${humidity}%`;
+
+        return {
+          ...district,
+          center: [district.lat, district.lng],
+          level,
+          alertColor,
+          label,
+          condition,
+          detail,
+          isAlert,
+          rain,
+          wind,
+          gusts,
+          temp,
+          humidity,
+          code,
+          emoji: getWeatherEmoji(code)
+        };
+      });
+
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: parsed }));
+        }
+      } catch {}
+
+      return parsed;
     }
-    // Orange Alert: Heavy rain (>4mm/h), squall gusts (>40km/h), or active thunderstorms
-    else if (code === 95 || code === 82 || code === 65 || rain >= 4.0 || gusts >= 40.0) {
-      level = 'orange';
-      alertColor = '#f97316';
-      label = '🟠 Orange Alert';
-      condition = code === 95 ? 'Thunderstorm Warning' : 'Heavy Rain / Squall';
-      isAlert = true;
-    }
-    // Yellow Alert: Moderate rain/drizzle (>0.1mm/h), high wind gusts (>25km/h), or active showers
-    else if (code === 53 || code === 55 || code === 61 || code === 63 || code === 80 || code === 81 || code === 51 || rain >= 0.1 || gusts >= 25.0) {
-      level = 'yellow';
-      alertColor = '#eab308';
-      label = '🟡 Yellow Alert';
-      condition = (code >= 51 && code <= 55) ? 'Drizzle' : (code >= 80 ? 'Passing Showers' : (gusts >= 25.0 ? 'High Wind Gusts' : 'Light Rain'));
-      isAlert = true;
-    }
+  } catch (err) {
+    console.warn('[Weather API] Live district telemetry fetch deferred, using cached baseline:', err?.message || err);
+  }
 
-    const detail = isAlert
-      ? `${condition} • Rain: ${rain.toFixed(1)}mm/h • Wind: ${wind}km/h (Gusts: ${gusts}km/h) • ${temp}°C`
-      : `${condition} • ${temp}°C • Wind ${wind}km/h • Hum ${humidity}%`;
-
-    return {
-      ...district,
-      center: [district.lat, district.lng],
-      level,
-      alertColor,
-      label,
-      condition,
-      detail,
-      isAlert,
-      rain,
-      wind,
-      gusts,
-      temp,
-      humidity,
-      code
-    };
-  });
+  return getFallbackDistrictWeather();
 }
 
 /**

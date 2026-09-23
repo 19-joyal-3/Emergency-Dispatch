@@ -148,6 +148,34 @@ class NativeBackgroundMeshController {
     return { exempted: true, requested: false };
   }
 
+  async getDiscoveredNativeBeacons() {
+    if (this.isNative) {
+      try {
+        const res = await EmergencyMeshNative.getDiscoveredBeacons();
+        return Array.isArray(res?.beacons) ? res.beacons : [];
+      } catch (err) {
+        console.warn('[Native BLE] Could not fetch discovered beacons:', err);
+        return [];
+      }
+    }
+    return [];
+  }
+
+  async checkNativeBluetoothStatus() {
+    if (this.isNative) {
+      try {
+        const res = await EmergencyMeshNative.isBluetoothAvailable();
+        return {
+          available: Boolean(res?.available),
+          enabled: Boolean(res?.enabled)
+        };
+      } catch {
+        return { available: false, enabled: false };
+      }
+    }
+    return null;
+  }
+
   isActive() {
     return this.active;
   }

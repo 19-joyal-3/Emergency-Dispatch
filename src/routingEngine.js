@@ -1,5 +1,6 @@
 import { solveDijkstra, haversineDistance, findClosestNode } from './routing.js';
 import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi.js';
+import defaultMapData from './mapData.json' with { type: 'json' };
 
 /**
  * Checks if a route geometry intersects any active road blockages (within 450m).
@@ -160,10 +161,11 @@ export async function routeWithTomTom(start, end, apiKey, transport = 'car', blo
  * Prevents zero-distance glitches for close hamlets and maintains connectivity with no signal.
  */
 export function routeWithOfflineGraph({ start, end, mapData, blockages = [], transport = 'car' }) {
-  if (!start || !end || !mapData?.nodes) return null;
+  const activeMapData = mapData || defaultMapData;
+  if (!start || !end || !activeMapData?.nodes) return null;
 
-  const startClosest = findClosestNode(start.lat, start.lng, mapData.nodes);
-  const endClosest = findClosestNode(end.lat, end.lng, mapData.nodes);
+  const startClosest = findClosestNode(start.lat, start.lng, activeMapData.nodes);
+  const endClosest = findClosestNode(end.lat, end.lng, activeMapData.nodes);
 
   if (!startClosest?.id || !endClosest?.id) return null;
 
@@ -202,7 +204,7 @@ export function routeWithOfflineGraph({ start, end, mapData, blockages = [], tra
   }
 
   // Inter-district / Inter-city routing via local Dijkstra
-  const dijkstraRes = solveDijkstra(startClosest.id, endClosest.id, mapData.nodes, mapData.edges, blockages, transport);
+  const dijkstraRes = solveDijkstra(startClosest.id, endClosest.id, activeMapData.nodes, activeMapData.edges, blockages, transport);
   if (!dijkstraRes) return null;
 
   const fullGeom = [
@@ -211,8 +213,8 @@ export function routeWithOfflineGraph({ start, end, mapData, blockages = [], tra
     [end.lat, end.lng]
   ];
 
-  const startNodeObj = mapData.nodes[startClosest.id];
-  const endNodeObj = mapData.nodes[endClosest.id];
+  const startNodeObj = activeMapData.nodes[startClosest.id];
+  const endNodeObj = activeMapData.nodes[endClosest.id];
   const leadInDist = haversineDistance(start.lat, start.lng, startNodeObj.lat, startNodeObj.lng);
   const leadOutDist = haversineDistance(end.lat, end.lng, endNodeObj.lat, endNodeObj.lng);
   const totalDist = +(dijkstraRes.distance + leadInDist + leadOutDist).toFixed(2);
@@ -247,6 +249,7 @@ export async function calculateBestRoute({
   tomtomApiKey = '',
   signal
 }) {
+  const activeMapData = mapData || defaultMapData;
   if (signal?.aborted) return null;
   if (!start || !end || typeof start.lat !== 'number' || typeof end.lat !== 'number') {
     return null;
@@ -318,7 +321,7 @@ export async function calculateBestRoute({
   if (signal?.aborted) return null;
 
   // 2. Offline Fallback: Local Graph & Dijkstra Engine
-  const offlineRoute = routeWithOfflineGraph({ start, end, mapData, blockages, transport });
+  const offlineRoute = routeWithOfflineGraph({ start, end, mapData: activeMapData, blockages, transport });
   if (offlineRoute && !offlineRoute.isBlocked) {
     return offlineRoute;
   }
