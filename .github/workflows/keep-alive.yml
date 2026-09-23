@@ -1,0 +1,24 @@
+﻿name: Keep-Alive & Search Engine Uptime
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free tier spin-down
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Sitemap & Robots for Googlebot Uptime
+        run: |
+          echo "Pinging robots.txt..."
+          curl -s -f -A "Googlebot/2.1 (+http://www.google.com/bot.html)" https://emergency-dispatch-2.onrender.com/robots.txt
+          echo -e "\nPinging sitemap.xml..."
+          curl -s -f -A "Googlebot/2.1 (+http://www.google.com/bot.html)" https://emergency-dispatch-2.onrender.com/sitemap.xml
+          echo -e "\nPinging main app..."
+          curl -s -f https://emergency-dispatch-2.onrender.com/ > /dev/null
+          echo "Render service is warm and active."

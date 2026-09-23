@@ -3,3 +3,17 @@ services:
     name: emergency-dispatch-2
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+    headers:
+      - path: /sitemap.xml
+        name: Content-Type
+        value: application/xml; charset=utf-8
+      - path: /robots.txt
+        name: Content-Type
+        value: text/plain; charset=utf-8
+      - path: /*
+        name: X-Robots-Tag
+        value: all
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
