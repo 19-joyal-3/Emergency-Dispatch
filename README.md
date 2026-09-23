@@ -1,15 +1,29 @@
-# React + Vite
+# Resylix (Vanguard Geo) — Offline Tactical Navigation & Hazard Mesh
+
+[![Live Deployment](https://img.shields.io/badge/Live%20Platform-emergency--dispatch--2.onrender.com-success?style=for-the-badge&logo=render)](https://emergency-dispatch-2.onrender.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![PWA Ready](https://img.shields.io/badge/PWA-Offline%20Ready-orange?style=for-the-badge)](https://emergency-dispatch-2.onrender.com/)
+
+**Resylix (formerly Vanguard Geo)** is a mission-critical, zero-connectivity offline navigation, real-time vehicle-to-vehicle (V2V) hazard mesh dispatch, and disaster response platform engineered for austere, disconnected environments (such as Kerala flood and landslide zones).
+
+- **Official Live Web Application:** [https://emergency-dispatch-2.onrender.com/](https://emergency-dispatch-2.onrender.com/)
+- **Sitemap Index:** [https://emergency-dispatch-2.onrender.com/sitemap.xml](https://emergency-dispatch-2.onrender.com/sitemap.xml)
+- **Robots Directives:** [https://emergency-dispatch-2.onrender.com/robots.txt](https://emergency-dispatch-2.onrender.com/robots.txt)
+
+---
+
+## Key Features
+
+1. **Deterministic Offline Vector Routing:** Real-road Dijkstra graph routing and OSRM turn-by-turn maneuvers operating 100% offline without cellular or satellite data.
+2. **Peer-to-Peer Bluetooth LE Hazard Radar:** Multi-hop daisy-chain mesh gossip protocol relaying roadblock, landslide, and flood warnings between civilian devices and emergency responders.
+3. **Dynamic Threat Geofencing & Interception:** Early warning spatial proximity engine with photographic hazard ground truth evidence.
+4. **Resylix Tactical Terminal:** Real-time unit dispatch, QR-code waypoint handoff, offline audit logging, and automated evacuation routing.
+
+---
 
 ## Deploy to Render
 
-This frontend must be deployed as a **Render Static Site**, not a sleeping Render web service. The repository includes [`render.yaml`](render.yaml) with the required configuration:
-
-- Build command: `npm ci && npm run build`
-- Publish directory: `dist`
-
-The static CDN serves `/robots.txt` and `/sitemap.xml` directly, which keeps Google Search crawling from failing during web-service cold starts. If a Render service already exists, create or migrate it as a Static Site and attach the same custom domain before requesting indexing again.
-
-Public site: https://emergency-dispatch-2.onrender.com/
+This frontend is deployed as a **Render Static Site** at [https://emergency-dispatch-2.onrender.com/](https://emergency-dispatch-2.onrender.com/). The repository includes [`render.yaml`](render.yaml) with the required configuration:
 
 ## Install as an app
 
