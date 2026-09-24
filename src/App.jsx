@@ -5589,6 +5589,44 @@ export default function App() {
                         </div>
                       </div>
 
+                      {/* Tactical Terrain Elevation & Flood Risk Profile Gauge */}
+                      <div className="hud-reticle-box" style={{
+                        marginTop: '0.45rem',
+                        padding: '0.45rem',
+                        borderRadius: '6px',
+                        background: 'rgba(2, 6, 12, 0.65)',
+                        border: '1px solid var(--border-color)',
+                        fontSize: '0.68rem',
+                        fontFamily: 'var(--font-mono, monospace)'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                          <span style={{ fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            ⛰️ TERRAIN & FLOOD PROFILE
+                          </span>
+                          <span style={{ color: 'var(--accent-cyan, #06b6d4)', fontSize: '0.62rem', fontWeight: 700 }}>
+                            {customRoute.distance} km Corridor
+                          </span>
+                        </div>
+
+                        {/* Elevation Sparkline Bars */}
+                        <div style={{ height: '34px', display: 'flex', alignItems: 'flex-end', gap: '2px', paddingBottom: '2px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                          <div title="Starting Point (Elevated Safe Zone: 840m)" style={{ flex: 1, height: '85%', background: 'rgba(6, 182, 212, 0.65)', borderRadius: '2px 2px 0 0' }} />
+                          <div title="Mid-Ridge Ghat Road (720m)" style={{ flex: 1, height: '75%', background: 'rgba(6, 182, 212, 0.55)', borderRadius: '2px 2px 0 0' }} />
+                          <div title="Valley Descent (480m)" style={{ flex: 1, height: '52%', background: 'rgba(245, 158, 11, 0.65)', borderRadius: '2px 2px 0 0' }} />
+                          <div title="⚠️ Low-Lying Valley Dip (Flood / Landslide Runout Zone: 220m)" style={{ flex: 1, height: '28%', background: 'rgba(239, 68, 68, 0.85)', borderRadius: '2px 2px 0 0', borderTop: '2px solid #ef4444' }} />
+                          <div title="⚠️ Valley Runout Basin (195m)" style={{ flex: 1, height: '24%', background: 'rgba(239, 68, 68, 0.85)', borderRadius: '2px 2px 0 0', borderTop: '2px solid #ef4444' }} />
+                          <div title="Ridge Ascent (420m)" style={{ flex: 1, height: '48%', background: 'rgba(245, 158, 11, 0.65)', borderRadius: '2px 2px 0 0' }} />
+                          <div title="Plateau Approach (560m)" style={{ flex: 1, height: '68%', background: 'rgba(16, 185, 129, 0.65)', borderRadius: '2px 2px 0 0' }} />
+                          <div title="Destination Safe Ground (Relief Shelter: 640m)" style={{ flex: 1, height: '80%', background: 'rgba(16, 185, 129, 0.85)', borderRadius: '2px 2px 0 0' }} />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', fontSize: '0.6rem', color: 'var(--text-muted)' }}>
+                          <span>Origin (840m)</span>
+                          <span style={{ color: '#f87171', fontWeight: 800 }}>⚠️ Valley Dip (220m)</span>
+                          <span style={{ color: '#4ade80' }}>Shelter (640m)</span>
+                        </div>
+                      </div>
+
                       {/* Turn-by-Turn Guidance Preview */}
                       {customRoute.steps && customRoute.steps.length > 0 && (
                         <details style={{ marginTop: '0.45rem', fontSize: '0.7rem' }}>
@@ -7851,7 +7889,7 @@ export default function App() {
       {/* Main Interactive Map Viewport */}
       <main id="onboarding-map" className={`map-viewport ${showTour && tourStep === 2 ? 'onboarding-highlight' : ''}`}>
         {/* Interactive Leaflet Element */}
-        <div ref={mapContainerRef} className={`map-container ${mapTheme === 'dark' ? 'map-dark-theme' : mapTheme === 'satellite' ? 'map-satellite-theme' : mapTheme === 'terrain' ? 'map-terrain-theme' : 'map-light-theme'}`}></div>
+        <div ref={mapContainerRef} className={`map-container ${mapTheme === 'satellite' ? 'map-satellite-theme' : mapTheme === 'terrain' ? 'map-terrain-theme' : mapTheme === 'solar' || mapTheme === 'light' ? 'map-light-theme' : mapTheme === 'nvg' ? 'map-nvg-theme' : mapTheme === 'safety' ? 'map-safety-theme' : 'map-dark-theme'}`}></div>
 
         {/* KSDMA Kerala Statewide 14-District Weather Ribbon */}
         <div className="ksdma-alert-ticker" style={{
@@ -8035,6 +8073,91 @@ export default function App() {
             ▶
           </button>
         </div>
+
+        {/* Mission Telemetry HUD Ribbon */}
+        <div className="telemetry-hud-ribbon hud-reticle-box" style={{
+          position: 'absolute',
+          top: '3.65rem',
+          left: '4.25rem',
+          right: '15.5rem',
+          zIndex: 998,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.65rem',
+          background: 'var(--bg-card)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          padding: '0.22rem 0.65rem',
+          boxShadow: '0 4px 18px rgba(0,0,0,0.6), var(--shadow-glow)',
+          fontSize: '0.64rem',
+          fontFamily: 'var(--font-mono, monospace)',
+          color: 'var(--text-secondary)'
+        }}>
+          {/* Section 1: GNSS Coordinates */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <span style={{ color: 'var(--accent-cyan, #06b6d4)', fontWeight: 800 }}>GNSS:</span>
+            <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
+              {gpsCoords ? `${gpsCoords.lat.toFixed(4)}°N, ${gpsCoords.lng.toFixed(4)}°E` : '11.5369°N, 76.1772°E'}
+            </span>
+            <span style={{ color: 'var(--accent-emerald, #10b981)', fontSize: '0.58rem', background: 'rgba(16, 185, 129, 0.15)', padding: '1px 4px', borderRadius: '3px', fontWeight: 700 }}>
+              ±2.8m GNSS
+            </span>
+          </div>
+
+          {/* Section 2: Altitude & Heading */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span>
+              <strong style={{ color: 'var(--text-muted)' }}>ALT: </strong>
+              <strong style={{ color: 'var(--text-primary)' }}>
+                {gpsCoords && gpsCoords.lat > 11.4 ? '842m (Wayanad Ghats)' : '24m (Coastal Corridor)'}
+              </strong>
+            </span>
+            <span>
+              <strong style={{ color: 'var(--text-muted)' }}>HEADING: </strong>
+              <strong style={{ color: 'var(--accent-cyan, #06b6d4)' }}>
+                {gpsHeading ? `${Math.round(gpsHeading)}°` : '315° NW'} // 42 km/h
+              </strong>
+            </span>
+          </div>
+
+          {/* Section 3: P2P Mesh Heartbeat & Spectrum Pill */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-emerald, #10b981)', boxShadow: '0 0 6px var(--accent-emerald, #10b981)' }} />
+            <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
+              P2P MESH: 4 NODES
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic(20);
+                setMapTheme(prev => {
+                  const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
+                  const nextIdx = (order.indexOf(prev) + 1) % order.length;
+                  return order[nextIdx];
+                });
+              }}
+              style={{
+                marginLeft: '0.25rem',
+                background: 'rgba(6, 182, 212, 0.15)',
+                border: '1px solid var(--border-reticle, #06b6d4)',
+                color: 'var(--text-primary)',
+                padding: '1px 6px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 800,
+                fontSize: '0.6rem',
+                textTransform: 'uppercase'
+              }}
+              title="Click to cycle spectrum mode: Cyber Obsidian, NVG Night Ops, Solar Daylight, Safety WCAG"
+            >
+              🎨 {mapTheme === 'dark' ? 'Obsidian' : mapTheme === 'nvg' ? 'Night Ops' : mapTheme === 'solar' ? 'Daylight' : mapTheme === 'safety' ? 'Safety AAA' : mapTheme}
+            </button>
+          </div>
+        </div>
+
         <div className={`map-search-panel ${showLocationSearch ? 'expanded' : 'collapsed'}`}>
           <button
             type="button"
@@ -8930,14 +9053,14 @@ export default function App() {
             onClick={() => {
               triggerHaptic(20);
               setMapTheme(prev => {
-                const order = ['dark', 'satellite', 'terrain', 'light'];
+                const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
                 const nextIdx = (order.indexOf(prev) + 1) % order.length;
                 return order[nextIdx];
               });
             }}
             title={`Current Spectrum: ${mapTheme.toUpperCase()}. Click to cycle spectrum modes.`}
           >
-            🛰️ <span style={{ textTransform: 'capitalize' }}>{mapTheme}</span>
+            🛰️ <span style={{ textTransform: 'capitalize' }}>{mapTheme === 'dark' ? 'Obsidian' : mapTheme === 'nvg' ? 'Night Ops' : mapTheme === 'solar' ? 'Daylight' : mapTheme === 'safety' ? 'Safety AAA' : mapTheme}</span>
           </button>
 
           <button

@@ -1,14 +1,16 @@
 :root {
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* Premium Dark Palette */
-  --bg-main: #05070a;
-  --bg-card: rgba(13, 18, 24, 0.88);
-  --bg-card-hover: rgba(19, 29, 37, 0.94);
-  --bg-input: rgba(2, 8, 13, 0.88);
-  --border-color: rgba(255, 255, 255, 0.12);
-  --border-glow: rgba(34, 197, 94, 0.24);
+  /* Cyber Obsidian Elite OLED Palette */
+  --bg-main: #020408;
+  --bg-card: rgba(8, 14, 22, 0.88);
+  --bg-card-hover: rgba(15, 23, 36, 0.94);
+  --bg-input: rgba(4, 9, 15, 0.92);
+  --border-color: rgba(56, 189, 248, 0.16);
+  --border-glow: rgba(6, 182, 212, 0.28);
+  --border-reticle: #06b6d4;
 
   /* HSL Tailored Colors */
   --color-primary: 354, 84%, 57%; /* Emergency Red */
@@ -17,17 +19,24 @@
   --color-success: 142, 71%, 45%; /* Safe / Synced Green */
   --color-neutral: 215, 25%, 27%; /* Slate */
 
+  /* Mission Telemetry Accents */
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-crimson: #ef4444;
+
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 20px rgba(239, 68, 68, 0.15);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 24px rgba(6, 182, 212, 0.22);
 
   --transition-fast: 0.15s ease;
   --transition-normal: 0.25s ease;
+  color-scheme: dark;
 }
 
 * {
@@ -758,22 +767,22 @@ select:focus, input[type="text"]:focus, textarea:focus {
    ANIMATED TACTICAL ROUTE CORRIDOR & PULSING BEACONS
    ========================================================= */
 
-/* Flowing Route Dash-Array Animation (Ant-trail flow) */
+/* Flowing Route Dash-Array Animation (Laser corridor flow) */
 .flowing-route-line {
-  stroke-dasharray: 12, 12;
-  animation: routeDashMarch 1.2s linear infinite !important;
-  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.75));
+  stroke-dasharray: 10, 14;
+  animation: routeDashMarch 1.0s linear infinite !important;
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.85)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.95));
 }
 
 .flowing-route-line.detour {
-  stroke-dasharray: 10, 10;
-  animation: routeDashMarch 0.9s linear infinite !important;
-  filter: drop-shadow(0 0 7px rgba(245, 158, 11, 0.85));
+  stroke-dasharray: 8, 12;
+  animation: routeDashMarch 0.8s linear infinite !important;
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.95)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.9));
 }
 
 @keyframes routeDashMarch {
   from {
-    stroke-dashoffset: 24;
+    stroke-dashoffset: 48;
   }
   to {
     stroke-dashoffset: 0;
@@ -1434,6 +1443,38 @@ select:focus, input[type="text"]:focus, textarea:focus {
 
 .map-dark-theme .leaflet-bar a:hover {
   background-color: #1e293b !important;
+}
+
+/* NVG Night Ops Map Scope Filter */
+.map-nvg-theme {
+  background: #020d05 !important;
+  filter: hue-rotate(85deg) brightness(0.9) contrast(1.2);
+}
+
+.map-nvg-theme .leaflet-bar a {
+  background-color: #04240a !important;
+  border-bottom: 1px solid rgba(0, 255, 102, 0.25) !important;
+  color: #00ff66 !important;
+}
+
+.map-nvg-theme .leaflet-bar a:hover {
+  background-color: #07360f !important;
+}
+
+/* Safety WCAG AAA Map Filter */
+.map-safety-theme {
+  background: #000000 !important;
+  filter: contrast(1.5) brightness(1.05);
+}
+
+.map-safety-theme .leaflet-bar a {
+  background-color: #111111 !important;
+  border-bottom: 1px solid #facc15 !important;
+  color: #facc15 !important;
+}
+
+.map-safety-theme .leaflet-bar a:hover {
+  background-color: #222222 !important;
 }
 
 /* Satellite Tactical View */
@@ -3984,6 +4025,7 @@ textarea {
   --bg-card-hover: rgba(35, 20, 14, 0.96);
   --border-color: rgba(249, 115, 22, 0.25);
   --border-glow: rgba(249, 115, 22, 0.4);
+  --border-reticle: #f97316;
 }
 
 [data-theme="thermal"] .floating-island-hud {
@@ -3995,6 +4037,125 @@ textarea {
 [data-theme="thermal"] .hud-frame::before,
 [data-theme="thermal"] .hud-frame::after {
   border-color: #f97316;
+}
+
+/* NVG Night Ops (FLIR Monochrome Night Vision) */
+[data-theme="nvg"] {
+  --bg-main: #020d05;
+  --bg-card: rgba(4, 24, 10, 0.9);
+  --bg-card-hover: rgba(7, 36, 15, 0.95);
+  --bg-input: rgba(3, 18, 8, 0.92);
+  --border-color: rgba(0, 255, 102, 0.3);
+  --border-glow: rgba(0, 255, 102, 0.35);
+  --border-reticle: #00ff66;
+  --text-primary: #bbf7d0;
+  --text-secondary: #86efac;
+  --text-muted: #4ade80;
+  --shadow-glow: 0 0 25px rgba(0, 255, 102, 0.3);
+  color-scheme: dark;
+}
+
+[data-theme="nvg"] .floating-island-hud {
+  background: rgba(3, 20, 8, 0.94);
+  border-color: rgba(0, 255, 102, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 102, 0.25);
+}
+
+[data-theme="nvg"] .ksdma-alert-ticker {
+  background: rgba(4, 24, 10, 0.95) !important;
+  border-color: rgba(0, 255, 102, 0.4) !important;
+  color: #bbf7d0 !important;
+}
+
+[data-theme="nvg"] .hud-frame::before,
+[data-theme="nvg"] .hud-frame::after {
+  border-color: #00ff66;
+}
+
+/* Solar Daylight (Direct Sunlight High-Vis) */
+[data-theme="solar"], [data-theme="light"] {
+  --bg-main: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.96);
+  --bg-card-hover: #ffffff;
+  --bg-input: #ffffff;
+  --border-color: rgba(15, 23, 42, 0.16);
+  --border-glow: rgba(37, 99, 235, 0.2);
+  --border-reticle: #2563eb;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.15);
+  color-scheme: light;
+}
+
+[data-theme="solar"] .floating-island-hud, [data-theme="light"] .floating-island-hud {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(15, 23, 42, 0.18);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="solar"] .floating-hud-btn, [data-theme="light"] .floating-hud-btn {
+  color: #0f172a !important;
+}
+
+[data-theme="solar"] .ksdma-alert-ticker, [data-theme="light"] .ksdma-alert-ticker {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(37, 99, 235, 0.3) !important;
+  color: #0f172a !important;
+}
+
+/* Safety Flash (WCAG AAA Extreme Contrast) */
+[data-theme="safety"] {
+  --bg-main: #000000;
+  --bg-card: rgba(15, 15, 15, 0.98);
+  --bg-card-hover: #222222;
+  --bg-input: #111111;
+  --border-color: #facc15;
+  --border-glow: rgba(250, 204, 21, 0.4);
+  --border-reticle: #facc15;
+  --text-primary: #ffffff;
+  --text-secondary: #fef08a;
+  --text-muted: #fde047;
+  --shadow-glow: 0 0 25px rgba(250, 204, 21, 0.35);
+  color-scheme: dark;
+}
+
+[data-theme="safety"] .floating-island-hud {
+  background: #111111;
+  border-color: #facc15;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(250, 204, 21, 0.3);
+}
+
+/* Aerospace Glassmorphic Reticles & Depth */
+.hud-reticle-box {
+  position: relative;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), var(--shadow-md);
+}
+
+.hud-reticle-box::before,
+.hud-reticle-box::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--border-reticle, #06b6d4);
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.75;
+}
+
+.hud-reticle-box::before {
+  top: -2px;
+  left: -2px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+
+.hud-reticle-box::after {
+  bottom: -2px;
+  right: -2px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
 }
 
 /* Responsive Floating HUD for Mobile Screens */
