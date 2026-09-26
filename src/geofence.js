@@ -30,6 +30,8 @@ export function isPointInPolygon(point, polygon) {
   return inside;
 }
 
+export const DEFAULT_HAZARD_RADIUS_KM = 5.0;
+
 /**
  * Query all active entities (citizens, transit buses, emergency responders)
  * currently located inside a circular geofence perimeter.
@@ -37,7 +39,7 @@ export function isPointInPolygon(point, polygon) {
 export function findEntitiesInGeofence({
   centerLat,
   centerLng,
-  radiusKm = 2.5,
+  radiusKm = DEFAULT_HAZARD_RADIUS_KM,
   customers = [],
   responders = [],
   buses = []
@@ -90,7 +92,7 @@ export function checkUserHazardProximity({
   incidents = [],
   hazardZones = [],
   blockages = [],
-  thresholdKm = 2.5
+  thresholdKm = DEFAULT_HAZARD_RADIUS_KM
 }) {
   if (typeof userLat !== 'number' || typeof userLng !== 'number') {
     return { isThreatDetected: false };
@@ -186,7 +188,7 @@ export function checkUserHazardProximity({
  */
 export function formatGeofenceAlertMessage({
   incident,
-  radiusKm = 2.5,
+  radiusKm = DEFAULT_HAZARD_RADIUS_KM,
   customMessage = '',
   dispatcherName = 'SEOC Emergency Commander',
   title,

@@ -26,17 +26,17 @@ const activeUsers = [
   { id: 'user_distant_trivandrum', name: 'Citizen in Trivandrum', lat: 8.5241, lng: 76.9366 }                   // >330 km away -> MUST NOT BE ALERTED
 ];
 
-// Step A: Spatial Geofence Scan
+// Step A: Spatial Geofence Scan (5.0 km perimeter)
 const inDangerZone = findEntitiesInGeofence({
   centerLat: reportedIncident.lat,
   centerLng: reportedIncident.lng,
-  radiusKm: 2.5,
+  radiusKm: 5.0,
   customers: activeUsers,
   responders: []
 });
 
 console.log(`[SPATIAL CHECK] Total users analyzed: ${activeUsers.length}`);
-console.log(`[SPATIAL CHECK] Users within 2.5km hazard perimeter: ${inDangerZone.totalCount}`);
+console.log(`[SPATIAL CHECK] Users within 5.0km hazard perimeter: ${inDangerZone.totalCount}`);
 
 if (inDangerZone.totalCount !== 2) {
   console.error(`FAILED: Expected 2 users in danger zone, found ${inDangerZone.totalCount}`);
@@ -51,7 +51,7 @@ activeUsers.forEach(user => {
     userLng: user.lng,
     incidents: [reportedIncident],
     hazardZones: [],
-    thresholdKm: 2.5
+    thresholdKm: 5.0
   });
 
   if (check.isThreatDetected) {

@@ -3190,11 +3190,11 @@ export default function App() {
       await addIncidentLocal(newInc, isOnline);
       logMessage(`[INCIDENT] Reported ${type.toUpperCase()} emergency at coordinates: [${newInc.lat}, ${newInc.lng}]`, 'warning');
 
-      // Check all active citizens/vehicles/responders in proximity and broadcast early warning
+      // Check all active citizens/vehicles/responders in proximity and broadcast early warning (5.0 KM Perimeter)
       const entitiesInDanger = findEntitiesInGeofence({
         centerLat: newInc.lat,
         centerLng: newInc.lng,
-        radiusKm: 2.5,
+        radiusKm: 5.0,
         customers,
         responders,
         buses: []
@@ -3207,12 +3207,13 @@ export default function App() {
         message: newInc.description,
         lat: newInc.lat,
         lng: newInc.lng,
+        radiusKm: 5.0,
         proofImage: newInc.proofImage || null,
         senderCallsign: 'Ground Field Incident Report'
       });
 
       if (entitiesInDanger.totalCount > 0) {
-        logMessage(`[EARLY WARNING] Spatial scan detected ${entitiesInDanger.totalCount} civilians/responders within 2.5km hazard perimeter. Sent screen alert broadcast with ground photographic evidence.`, 'warning');
+        logMessage(`[EARLY WARNING] Spatial scan detected ${entitiesInDanger.totalCount} civilians/responders within 5.0km hazard perimeter. Sent screen alert broadcast with ground photographic evidence.`, 'warning');
       }
       
       if (audioSirenEnabled) {
@@ -3261,24 +3262,27 @@ export default function App() {
 
           if (typeof myLat === 'number' && typeof myLng === 'number' && typeof data.lat === 'number' && typeof data.lng === 'number') {
             const dist = haversineDistance(myLat, myLng, data.lat, data.lng);
-            const threatRadius = data.radiusKm || 2.5;
+            const threatRadius = data.radiusKm || 5.0;
             if (dist <= threatRadius) {
-              setActiveProximityHazard({
+              const hazardObj = {
                 hazardId: data.id,
                 hazardType: data.emergencyType || 'emergency',
-                title: `Active ${data.emergencyType?.toUpperCase() || 'HAZARD'} Ahead`,
+                title: `Active ${data.emergencyType?.toUpperCase() || 'HAZARD'} Ahead (Within 5 KM)`,
                 description: data.message || 'Incoming emergency warning in your sector.',
                 distanceKm: dist,
                 priority: data.priority || 'critical',
                 coordinates: [data.lat, data.lng],
                 proofImage: data.proofImage || null,
-                isInsidePolygon: false
-              });
+                isInsidePolygon: false,
+                autoDetourEngaged: true
+              };
+              setActiveProximityHazard(hazardObj);
               setShowHazardInterceptModal(true);
-              triggerHaptic([80, 50, 80]);
-              if (audioSirenEnabled) {
-                playEvacuationSiren(1.2);
-              }
+              triggerHaptic([150, 75, 150, 75, 300]);
+              playEvacuationSiren(2.0, 0.5);
+
+              // Automatically redirect vehicle around hazard
+              handleAutoDetourHazard(hazardObj, true);
             }
           }
         } catch (err) {
@@ -3553,7 +3557,57 @@ export default function App() {
     }
   }, [geofenceModalData, geofenceRadius]);
 
-  // Proactively check if moving user/vehicle enters or approaches within 2.5 km of active danger
+  const handleAutoDetourHazard = async (hazard, keepModalOpen = false) => {
+    try {
+      if (hazard?.coordinates) {
+        const avoidCoords = hazard.coordinates;
+        const avoidNode = findClosestNode(avoidCoords[0], avoidCoords[1], mapData.nodes);
+        const avoidName = (avoidNode && avoidNode.id && mapData.nodes[avoidNode.id]?.name) || 'Hazard Zone';
+
+        // Add automatic blockage barrier at the hazard coordinates to force router to detour
+        const detourBlockId = `auto_detour_${hazard.hazardId || Date.now()}`;
+        if (!blockages.some(b => b.id === detourBlockId)) {
+          const newBlock = {
+            id: detourBlockId,
+            lat: avoidCoords[0],
+            lng: avoidCoords[1],
+            name: `Hazard Bypass: ${avoidName} (5km Hazard Zone)`,
+            active: 1
+          };
+          await addBlockageLocal(newBlock, isOnline);
+          await reloadLocalData();
+        }
+
+        logMessage(`[AUTO-DETOUR] Automatic bypass engaged! Diverting vehicle around 5.0km hazard perimeter near ${avoidName}.`, 'warning');
+      }
+
+      setRerouteNotice('⚠️ 5 KM HAZARD DETECTED: Automatic Safe Detour Calculated & Engaged to Bypass Hazard!');
+
+      if (!keepModalOpen) {
+        if (hazard?.hazardId) {
+          setDismissedHazardIds(prev => new Set([...prev, hazard.hazardId]));
+        }
+        setActiveProximityHazard(null);
+        setShowHazardInterceptModal(false);
+      } else {
+        setActiveProximityHazard(prev => prev ? ({ ...prev, autoDetourEngaged: true }) : null);
+      }
+
+      playEvacuationSiren(2.0, 0.5);
+      triggerHaptic([150, 75, 150, 75, 300]);
+
+      setP2pToast({
+        type: 'danger',
+        title: '🧭 AUTOMATIC SAFE DETOUR ENGAGED',
+        message: '5 KM hazard detected ahead. Vehicle routing has been automatically recalculated onto safe bypass roads.'
+      });
+      setTimeout(() => setP2pToast(null), 6000);
+    } catch (err) {
+      console.error('[Detour Error]', err);
+    }
+  };
+
+  // Proactively check if moving user/vehicle enters or approaches within 5.0 km of active danger
   useEffect(() => {
     try {
       let currentLat = null, currentLng = null;
@@ -3579,18 +3633,19 @@ export default function App() {
         incidents,
         hazardZones: KERALA_HAZARD_ZONES,
         blockages,
-        thresholdKm: 2.5
+        thresholdKm: 5.0
       });
 
       if (check.isThreatDetected && check.hazard) {
         const hazardKey = `${check.hazard.hazardId}_${Math.round(check.distanceKm * 2) / 2}`;
         if (!dismissedHazardIds.has(hazardKey)) {
-          setActiveProximityHazard(check.hazard);
+          setActiveProximityHazard({ ...check.hazard, autoDetourEngaged: true });
           setShowHazardInterceptModal(true);
-          triggerHaptic([80, 50, 80]);
-          if (soundAlertsEnabled) {
-            playTacticalChime(0.4);
-          }
+          triggerHaptic([150, 75, 150, 75, 300]);
+          playEvacuationSiren(2.0, 0.5);
+
+          // Automatically re-route vehicle around hazard
+          handleAutoDetourHazard(check.hazard, true);
         }
       } else {
         setActiveProximityHazard(null);
@@ -3600,32 +3655,6 @@ export default function App() {
       console.warn('[Hazard Proximity Hook Safe Catch]', err);
     }
   }, [gpsActive, gpsCoords, customers, customerTrackingActive, incidents, blockages, dismissedHazardIds, soundAlertsEnabled]);
-
-  const handleAutoDetourHazard = (hazard) => {
-    try {
-      if (hazard?.coordinates) {
-        const avoidNode = findClosestNode(hazard.coordinates[0], hazard.coordinates[1], mapData.nodes);
-        if (avoidNode && avoidNode.id) {
-          const avoidName = mapData.nodes[avoidNode.id]?.name || avoidNode.id;
-          logMessage(`[DETOUR] Re-routing traffic around hazard zone near ${avoidName}.`, 'warning');
-        }
-      }
-      if (hazard?.hazardId) {
-        setDismissedHazardIds(prev => new Set([...prev, hazard.hazardId]));
-      }
-      setActiveProximityHazard(null);
-      setShowHazardInterceptModal(false);
-      if (soundAlertsEnabled) playTacticalChime(0.3);
-      setP2pToast({
-        type: 'success',
-        title: '🧭 DETOUR CALCULATED',
-        message: 'Tactical router has re-routed your vehicle onto safe roads around the disaster perimeter.'
-      });
-      setTimeout(() => setP2pToast(null), 5000);
-    } catch (err) {
-      console.error('[Detour Error]', err);
-    }
-  };
 
   const handleLocateNearestShelter = () => {
     try {
@@ -10251,10 +10280,10 @@ export default function App() {
                 <span className="hazard-intercept-strobe">⚠️</span>
                 <div>
                   <h2 id="hazard-intercept-title" className="hazard-intercept-title">
-                    HAZARD AHEAD: IMMEDIATE DANGER INTERCEPT
+                    HAZARD AHEAD: 5 KM DANGER INTERCEPT
                   </h2>
                   <div className="hazard-intercept-subtitle">
-                    KSDMA Tactical Proximity Radar • Live Location-Based Warning
+                    KSDMA Tactical Proximity Radar • 5 KM Warning Perimeter • Automatic Bypass Active
                   </div>
                 </div>
               </div>
@@ -10275,8 +10304,8 @@ export default function App() {
                 <Navigation size={13} style={{ color: '#ef4444' }} />
                 <span>
                   {activeProximityHazard.distanceKm === 0
-                    ? '⚠️ INSIDE ACTIVE HAZARD PERIMETER'
-                    : `🚨 ${activeProximityHazard.distanceKm.toFixed(1)} KM FROM YOUR POSITION`}
+                    ? '⚠️ INSIDE ACTIVE 5 KM HAZARD PERIMETER'
+                    : `🚨 ${activeProximityHazard.distanceKm.toFixed(1)} KM FROM YOUR POSITION (5 KM HAZARD ZONE)`}
                 </span>
               </div>
               <div className="hazard-intercept-type-pill">
@@ -10284,6 +10313,29 @@ export default function App() {
               </div>
               <div className="hazard-intercept-priority-pill">
                 {activeProximityHazard.priority?.toUpperCase() || 'CRITICAL'} PRIORITY
+              </div>
+            </div>
+
+            {/* Prominent Automatic Safe Detour Notification Banner */}
+            <div style={{
+              margin: '0.65rem 0',
+              padding: '0.65rem 0.85rem',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(6, 182, 212, 0.18))',
+              border: '2px solid #10b981',
+              borderRadius: '8px',
+              boxShadow: '0 0 18px rgba(16, 185, 129, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.65rem'
+            }}>
+              <span style={{ fontSize: '1.4rem' }}>🧭</span>
+              <div>
+                <div style={{ fontWeight: 800, color: '#34d399', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  ✅ AUTOMATIC SAFE DETOUR ENGAGED (5 KM RADIUS)
+                </div>
+                <div style={{ fontSize: '0.74rem', color: '#e2e8f0', marginTop: '2px' }}>
+                  Hazard detected within 5.0 km ahead. Your navigation path has been automatically recalculated onto safe bypass roads.
+                </div>
               </div>
             </div>
 
