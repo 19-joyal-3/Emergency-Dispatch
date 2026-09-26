@@ -432,12 +432,12 @@ export default function App() {
   const [responders, setResponders] = useState([]);
   
   // Tactical Route Planner States (Custom routing)
-  const [selectedStartNode, setSelectedStartNode] = useState('vadakkencherry'); // Default Start
-  const [selectedEndNode, setSelectedEndNode] = useState('valliyode'); // Default End
-  const [startQuery, setStartQuery] = useState('Vadakkencherry');
-  const [endQuery, setEndQuery] = useState('Valliyode');
-  const [startPlaceObj, setStartPlaceObj] = useState({ id: 'vadakkencherry', name: 'Vadakkencherry', district: 'Palakkad', lat: 10.596, lng: 76.497, type: 'town' });
-  const [endPlaceObj, setEndPlaceObj] = useState({ id: 'valliyode', name: 'Valliyode', district: 'Palakkad', lat: 10.552, lng: 76.536, type: 'village' });
+  const [selectedStartNode, setSelectedStartNode] = useState(''); // Only navigate when user asks
+  const [selectedEndNode, setSelectedEndNode] = useState(''); // Only navigate when user asks
+  const [startQuery, setStartQuery] = useState('');
+  const [endQuery, setEndQuery] = useState('');
+  const [startPlaceObj, setStartPlaceObj] = useState(null);
+  const [endPlaceObj, setEndPlaceObj] = useState(null);
   const [startSuggestions, setStartSuggestions] = useState([]);
   const [endSuggestions, setEndSuggestions] = useState([]);
   const [showStartSuggestions, setShowStartSuggestions] = useState(false);
@@ -1444,14 +1444,21 @@ export default function App() {
   };
 
   const routeToNearestHospital = () => {
-    let startLat = startPlaceObj?.lat || 10.61;
-    let startLng = startPlaceObj?.lng || 76.50;
+    let startLat = startPlaceObj?.lat;
+    let startLng = startPlaceObj?.lng;
     if (gpsActive && gpsCoords) {
       startLat = gpsCoords.lat;
       startLng = gpsCoords.lng;
+      if (!startPlaceObj) {
+        handleUseCurrentGpsAsStart();
+      }
     } else if (selectedStartNode && mapData.nodes[selectedStartNode]) {
       startLat = mapData.nodes[selectedStartNode].lat;
       startLng = mapData.nodes[selectedStartNode].lng;
+    } else if (!startLat) {
+      startLat = 10.596;
+      startLng = 76.497;
+      setDepartureNodeOrPlace('vadakkencherry');
     }
 
     let nearest = null;
@@ -4166,6 +4173,9 @@ export default function App() {
     if (!startCoord || !endCoord) {
       setCustomRoute(null);
       setRouteHazardWarnings([]);
+      if (!simulationActive && routeLayerRef.current) {
+        routeLayerRef.current.clearLayers();
+      }
       return;
     }
 
@@ -5760,15 +5770,15 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => {
-                                // Synchronously configure GPS coordinates to start at the selected departure node
+                                // Synchronously configure GPS coordinates to start at the selected departure point
+                                const depLat = startPlaceObj?.lat || mapData.nodes[selectedStartNode]?.lat || 10.596;
+                                const depLng = startPlaceObj?.lng || mapData.nodes[selectedStartNode]?.lng || 76.497;
                                 if (!gpsActive) {
-                                  const startNode = mapData.nodes[selectedStartNode] || mapData.nodes['vadakkencherry'];
-                                  setGpsCoords({ lat: startNode.lat, lng: startNode.lng });
+                                  setGpsCoords({ lat: depLat, lng: depLng });
                                   setGpsActive(true);
                                   setMockGpsMode(true);
                                 } else if (mockGpsMode) {
-                                  const startNode = mapData.nodes[selectedStartNode] || mapData.nodes['vadakkencherry'];
-                                  setGpsCoords({ lat: startNode.lat, lng: startNode.lng });
+                                  setGpsCoords({ lat: depLat, lng: depLng });
                                 }
                                 setIsNavigating(true);
                                 logMessage('[NAV] Active turn-by-turn guidance initiated.', 'success');
@@ -5936,7 +5946,21 @@ export default function App() {
                       )}
                     </div>
                   ) : (
-                    <div className="empty-state">No route found. Clear blockages.</div>
+                    <div className="empty-state" style={{ padding: '1rem 0.75rem', textAlign: 'center', color: '#94a3b8' }}>
+                      <Navigation size={20} style={{ color: 'hsl(var(--color-secondary))', marginBottom: '0.35rem', opacity: 0.8 }} />
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f1f5f9', marginBottom: '0.2rem' }}>
+                        Tactical Navigation Standby
+                      </div>
+                      <div style={{ fontSize: '0.68rem', lineHeight: 1.4 }}>
+                        {startPlaceObj && !endPlaceObj
+                          ? 'Select destination above or click a Quick Disaster Zone to calculate path.'
+                          : !startPlaceObj && endPlaceObj
+                            ? 'Select departure above or click "📍 Use GPS" to calculate path.'
+                            : startPlaceObj && endPlaceObj
+                              ? 'No open route found between selected points. Check road blockages.'
+                              : 'Select departure and destination above, or choose a Quick Disaster Zone or Hospital to navigate.'}
+                      </div>
+                    </div>
                   )}
                 </div>
               </section>
