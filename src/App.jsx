@@ -5132,13 +5132,17 @@ export default function App() {
                   <Navigation size={14} style={{ color: 'hsl(var(--color-secondary))' }} />
                 </h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {/* DEPARTURE SEARCH WITH AUTOCOMPLETE & GPS */}
-                  <div className="form-group" style={{ marginBottom: '0.6rem', position: 'relative' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', margin: 0, fontSize: '0.74rem' }}>
-                        <MapPin size={13} style={{ color: '#10b981' }} />
-                        <span>Departure Point (All Minute Hamlets & Wards)</span>
-                      </label>
+                  {/* CONNECTED ROUTE TIMELINE INPUTS */}
+                  <div className="route-timeline-container">
+                    <div className="route-timeline-track" />
+
+                    {/* DEPARTURE SEARCH WITH AUTOCOMPLETE & GPS */}
+                    <div className="form-group route-input-node" style={{ marginBottom: '0.6rem', position: 'relative', zIndex: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', margin: 0, fontSize: '0.74rem' }}>
+                          <MapPin size={13} style={{ color: '#10b981' }} />
+                          <span>Departure Point (All Minute Hamlets & Wards)</span>
+                        </label>
                       <button
                         type="button"
                         onClick={handleUseCurrentGpsAsStart}
@@ -5340,7 +5344,7 @@ export default function App() {
                   </div>
 
                   {/* DESTINATION SEARCH WITH AUTOCOMPLETE */}
-                  <div className="form-group" style={{ marginBottom: '0.6rem', position: 'relative' }}>
+                  <div className="form-group route-input-node" style={{ marginBottom: '0.6rem', position: 'relative', zIndex: 9 }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem', fontSize: '0.74rem' }}>
                       <Navigation size={13} style={{ color: '#ef4444' }} />
                       <span>Destination Point (All Minute Hamlets & Wards)</span>
@@ -5494,6 +5498,7 @@ export default function App() {
                       )}
                     </div>
                   </div>
+                </div>
 
                   {/* QUICK DISASTER CORRIDOR PRESETS */}
                   <div style={{ marginBottom: '0.6rem' }}>
@@ -5532,35 +5537,40 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-                    <label>Means of Transport</label>
-                    <div style={{ display: 'flex', gap: '0.35rem' }}>
+                  <div className="form-group" style={{ marginBottom: '0.65rem' }}>
+                    <label style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>
+                      Means of Transport
+                    </label>
+                    <div className="segmented-control" role="radiogroup" aria-label="Means of Transport">
                       <button 
                         type="button" 
-                        className={`btn ${meansOfTransport === 'car' ? 'btn-primary' : 'btn-secondary'}`}
-                        style={{ flex: 1, padding: '0.45rem 0' }}
+                        className={`segmented-btn ${meansOfTransport === 'car' ? 'active' : ''}`}
                         onClick={() => setMeansOfTransport('car')}
                         disabled={simulationActive}
+                        role="radio"
+                        aria-checked={meansOfTransport === 'car'}
                       >
-                        <Car size={13} style={{ marginRight: '0.25rem' }} /> Car
+                        <Car size={13} /> <span>Car</span>
                       </button>
                       <button 
                         type="button" 
-                        className={`btn ${meansOfTransport === 'bus' ? 'btn-primary' : 'btn-secondary'}`}
-                        style={{ flex: 1, padding: '0.45rem 0' }}
+                        className={`segmented-btn ${meansOfTransport === 'bus' ? 'active' : ''}`}
                         onClick={() => setMeansOfTransport('bus')}
                         disabled={simulationActive}
+                        role="radio"
+                        aria-checked={meansOfTransport === 'bus'}
                       >
-                        <Bus size={13} style={{ marginRight: '0.25rem' }} /> Bus
+                        <Bus size={13} /> <span>Bus</span>
                       </button>
                       <button 
                         type="button" 
-                        className={`btn ${meansOfTransport === 'walk' ? 'btn-primary' : 'btn-secondary'}`}
-                        style={{ flex: 1, padding: '0.45rem 0' }}
+                        className={`segmented-btn ${meansOfTransport === 'walk' ? 'active' : ''}`}
                         onClick={() => setMeansOfTransport('walk')}
                         disabled={simulationActive}
+                        role="radio"
+                        aria-checked={meansOfTransport === 'walk'}
                       >
-                        <Footprints size={13} style={{ marginRight: '0.25rem' }} /> Walk
+                        <Footprints size={13} /> <span>Walk</span>
                       </button>
                     </div>
                   </div>
@@ -5946,12 +5956,14 @@ export default function App() {
                       )}
                     </div>
                   ) : (
-                    <div className="empty-state" style={{ padding: '1rem 0.75rem', textAlign: 'center', color: '#94a3b8' }}>
-                      <Navigation size={20} style={{ color: 'hsl(var(--color-secondary))', marginBottom: '0.35rem', opacity: 0.8 }} />
-                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f1f5f9', marginBottom: '0.2rem' }}>
+                    <div className="route-standby-hero">
+                      <div className="route-standby-icon">
+                        <Navigation size={22} />
+                      </div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.3rem', letterSpacing: '0.02em' }}>
                         Tactical Navigation Standby
                       </div>
-                      <div style={{ fontSize: '0.68rem', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.45, maxWidth: '280px' }}>
                         {startPlaceObj && !endPlaceObj
                           ? 'Select destination above or click a Quick Disaster Zone to calculate path.'
                           : !startPlaceObj && endPlaceObj
@@ -7966,19 +7978,13 @@ export default function App() {
         <div className="ksdma-alert-ticker" style={{
           position: 'absolute',
           top: '1.25rem',
-          left: '4.25rem',
-          right: '15.5rem',
+          left: '4.8rem',
+          right: '14.8rem',
           zIndex: 999,
           display: 'flex',
           alignItems: 'center',
           gap: '0.45rem',
-          background: 'rgba(11, 19, 29, 0.94)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(56, 189, 248, 0.35)',
-          borderRadius: '10px',
-          padding: '0.3rem 0.55rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.65), 0 0 15px rgba(56, 189, 248, 0.12)',
+          padding: '0.32rem 0.6rem',
           overflow: 'hidden'
         }}>
           {/* Section 1: Statewide Status, Controls & Matrix Toggle */}
@@ -8149,21 +8155,15 @@ export default function App() {
         <div className="telemetry-hud-ribbon hud-reticle-box" style={{
           position: 'absolute',
           top: '3.65rem',
-          left: '4.25rem',
-          right: '15.5rem',
+          left: '4.8rem',
+          right: '14.8rem',
           zIndex: 998,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '0.65rem',
-          background: 'var(--bg-card)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '8px',
-          padding: '0.22rem 0.65rem',
-          boxShadow: '0 4px 18px rgba(0,0,0,0.6), var(--shadow-glow)',
-          fontSize: '0.64rem',
+          padding: '0.28rem 0.75rem',
+          fontSize: '0.68rem',
           fontFamily: 'var(--font-mono, monospace)',
           color: 'var(--text-secondary)'
         }}>
@@ -8548,169 +8548,52 @@ export default function App() {
           alignItems: 'flex-end',
           gap: '0.5rem'
         }}>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <div className="map-tools-capsule" role="toolbar" aria-label="Tactical Map HUD Controls">
             <button
               type="button"
-              className="map-settings-btn"
+              className="map-tool-btn"
               onClick={() => fitKeralaBounds()}
               title="Fit Entire Kerala Map to Screen (Recenter)"
-              style={{
-                background: 'rgba(15, 23, 42, 0.85)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(34, 197, 94, 0.4)',
-                color: '#4ade80',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                transition: 'all 0.2s',
-                fontSize: '16px',
-                outline: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.border = '1px solid rgba(34, 197, 94, 0.8)';
-                e.currentTarget.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.border = '1px solid rgba(34, 197, 94, 0.4)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
-              }}
             >
               🗺️
             </button>
             <button
               type="button"
-              className="map-settings-btn"
+              className={`map-tool-btn ${showHazardZones ? 'active-danger' : ''}`}
               onClick={() => setShowHazardZones(prev => !prev)}
               title={showHazardZones ? "Hide KSDMA Hazard Risk Zones" : "Show KSDMA Hazard Risk Zones (Landslides & Floods)"}
-              style={{
-                background: showHazardZones ? '#ef4444' : 'rgba(15, 23, 42, 0.85)',
-                backdropFilter: 'blur(8px)',
-                border: showHazardZones ? '1px solid #f87171' : '1px solid rgba(239, 68, 68, 0.4)',
-                color: '#fff',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                transition: 'all 0.2s',
-                fontSize: '16px',
-                outline: 'none'
-              }}
             >
               ⚠️
             </button>
             <button
               type="button"
-              className="map-settings-btn"
+              className={`map-tool-btn ${mapTheme === 'satellite' ? 'active-info' : ''}`}
               onClick={() => setMapTheme(prev => prev === 'satellite' ? 'dark' : 'satellite')}
               title={mapTheme === 'satellite' ? "Switch to Tactical Dark Map" : "Switch to Satellite Imagery"}
-              style={{
-                background: mapTheme === 'satellite' ? '#2563eb' : 'rgba(15, 23, 42, 0.85)',
-                backdropFilter: 'blur(8px)',
-                border: mapTheme === 'satellite' ? '1px solid #3b82f6' : '1px solid rgba(59, 130, 246, 0.4)',
-                color: '#fff',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                transition: 'all 0.2s',
-                fontSize: '16px',
-                outline: 'none'
-              }}
             >
               🛰️
             </button>
             <button
               type="button"
-              className="map-settings-btn"
+              className={`map-tool-btn ${showP2pModal || p2pScanning ? 'active-success' : ''}`}
               onClick={() => {
                 setShowP2pModal(true);
                 if (!p2pScanning) p2pEngine.startScanning(true);
               }}
               title="Zero-Connectivity Bluetooth & Wi-Fi Proximity Radar & Emergency SOS"
-              style={{
-                background: showP2pModal || p2pScanning ? '#059669' : 'rgba(15, 23, 42, 0.85)',
-                backdropFilter: 'blur(8px)',
-                border: showP2pModal || p2pScanning ? '1px solid #10b981' : '1px solid rgba(16, 185, 129, 0.4)',
-                color: '#34d399',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                transition: 'all 0.2s',
-                fontSize: '16px',
-                outline: 'none',
-                position: 'relative'
-              }}
             >
               📡
               {p2pMessages.length > 0 && (
-                <span style={{
-                  position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
-                  background: '#ef4444',
-                  color: '#fff',
-                  fontSize: '9px',
-                  fontWeight: 'bold',
-                  borderRadius: '50%',
-                  width: '16px',
-                  height: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '1px solid #0f172a'
-                }}>
+                <span className="map-tool-badge">
                   {p2pMessages.length}
                 </span>
               )}
             </button>
             <button
               type="button"
-              className="map-settings-btn"
+              className={`map-tool-btn ${showSettingsPanel ? 'active-info' : ''}`}
               onClick={() => setShowSettingsPanel(!showSettingsPanel)}
               title="Configure Map Environment HUD"
-              style={{
-                background: 'rgba(15, 23, 42, 0.85)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(168, 85, 247, 0.4)',
-                color: '#c084fc',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                transition: 'all 0.2s',
-                fontSize: '16px',
-                outline: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.border = '1px solid rgba(168, 85, 247, 0.8)';
-                e.currentTarget.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.border = '1px solid rgba(168, 85, 247, 0.4)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
-              }}
             >
               ⚙️
             </button>
@@ -8718,16 +8601,16 @@ export default function App() {
           
           {showSettingsPanel && (
             <div className="map-settings-panel" style={{
-              background: 'rgba(15, 23, 42, 0.9)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
+              background: 'rgba(8, 14, 24, 0.94)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '12px',
               padding: '0.75rem 1rem',
-              width: '220px',
+              width: '230px',
               maxHeight: 'calc(100vh - 5rem)',
               overflowY: 'auto',
               overflowX: 'hidden',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
+              boxShadow: '0 16px 36px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255, 255, 255, 0.08)',
               display: 'flex',
               flexDirection: 'column',
               gap: '0.75rem',
