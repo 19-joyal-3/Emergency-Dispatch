@@ -1257,9 +1257,9 @@ export default function App() {
         className: 'custom-terminal-icon',
         html: `
           <div style="position: relative; width: 32px; height: 32px;">
-            <div class="radar-ripple" style="color: #a855f7;"></div>
-            <div class="radar-ripple ripple-2" style="color: #c084fc;"></div>
-            <div class="radar-ripple ripple-3" style="color: #e9d5ff;"></div>
+            <div class="radar-ripple" style="color: #3b82f6;"></div>
+            <div class="radar-ripple ripple-2" style="color: #60a5fa;"></div>
+            <div class="radar-ripple ripple-3" style="color: #93c5fd;"></div>
             <div style="
               position: absolute;
               top: 0;
@@ -1271,9 +1271,9 @@ export default function App() {
               justify-content: center;
               font-size: 16px;
               background: rgba(15, 23, 42, 0.9);
-              border: 2px solid #a855f7;
+              border: 2px solid #3b82f6;
               border-radius: 50%;
-              box-shadow: 0 0 10px #a855f7;
+              box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
               z-index: 2;
             ">
               💻
@@ -1291,7 +1291,7 @@ export default function App() {
           .addTo(mapRef.current)
           .bindPopup(`
             <div style="color: #f3f4f6; font-family: sans-serif; min-width: 160px;">
-              <h4 style="margin: 0 0 4px; color: #a855f7; text-transform: uppercase; font-size: 10px; font-weight: 800;">Active Terminal Session</h4>
+              <h4 style="margin: 0 0 4px; color: #38bdf8; text-transform: uppercase; font-size: 10px; font-weight: 800;">Active Terminal Session</h4>
               <p style="margin: 0; font-size: 10px; color: #9ca3af;">IP: <strong>${escapeHtml(log.ip)}</strong></p>
               <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">City: <strong>${escapeHtml(log.city || 'Unknown')}, ${escapeHtml(log.region || 'Region')}</strong></p>
               <p style="margin: 2px 0 0; font-size: 10px; color: #9ca3af;">ISP: <strong>${escapeHtml(log.isp || 'Network')}</strong></p>
@@ -1994,7 +1994,7 @@ export default function App() {
       // Hover feedback to make road lines feel alive
       polyline.on('mouseover', () => {
         polyline.setStyle({
-          color: isBlocked ? '#f87171' : '#c084fc',
+          color: isBlocked ? '#f87171' : '#60a5fa',
           weight: isBlocked ? 6 : 5,
           opacity: 0.95
         });
@@ -2058,7 +2058,7 @@ export default function App() {
               <p style="margin: 0 0 8px; color: #9ca3af; font-size: 10px;">Select node action:</p>
               <div style="display: flex; gap: 4px;">
                 <button id="set-start-${nodeId}" style="
-                  background: #a855f7; 
+                  background: #3b82f6; 
                   color: white; 
                   border: none; 
                   padding: 4px 6px; 
@@ -5024,9 +5024,9 @@ export default function App() {
             onClick={startOnboardingTour}
             title="Start Onboarding Tour Guide"
             style={{
-              background: 'rgba(168, 85, 247, 0.1)',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
-              color: '#c084fc',
+              background: 'rgba(59, 130, 246, 0.12)',
+              border: '1px solid rgba(59, 130, 246, 0.28)',
+              color: '#60a5fa',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -5034,17 +5034,19 @@ export default function App() {
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              transition: 'all 0.2s',
+              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
               outline: 'none',
               marginBottom: '4px'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)';
-              e.currentTarget.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.4)';
+              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.22)';
+              e.currentTarget.style.boxShadow = '0 0 12px rgba(59, 130, 246, 0.4)';
+              e.currentTarget.style.transform = 'scale(1.08)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(168, 85, 247, 0.1)';
+              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.12)';
               e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
             <HelpCircle size={18} />
@@ -5742,7 +5744,7 @@ export default function App() {
                                     <div style={{ marginTop: '0.5rem', borderLeft: '1.5px solid rgba(255,255,255,0.1)', paddingLeft: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                                       {bus.legs.map((leg, lidx) => (
                                         <div key={lidx} style={{ fontSize: '0.7.rem', color: 'var(--text-secondary)', position: 'relative' }}>
-                                          <span style={{ position: 'absolute', left: '-9.5px', top: '3px', width: '5px', height: '5px', background: '#a855f7', borderRadius: '50%' }}></span>
+                                          <span style={{ position: 'absolute', left: '-9.5px', top: '3px', width: '5px', height: '5px', background: '#3b82f6', borderRadius: '50%' }}></span>
                                           <strong>{leg.from}</strong> to <strong>{leg.to}</strong>
                                           <div style={{ color: '#fbbf24', fontSize: '0.65rem', marginTop: '0.05rem' }}>
                                             🚌 {leg.busName} | ₹{leg.fare} | {leg.time}
@@ -6600,7 +6602,7 @@ export default function App() {
                       flexDirection: 'column',
                       gap: '0.35rem'
                     }}>
-                      <div style={{ fontWeight: 'bold', color: '#c084fc', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <div style={{ fontWeight: 'bold', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <span>🤖 AI Photo Classifier</span>
                         {modelStatus === 'classifying' && <span className="pulse-dot" style={{ background: '#38bdf8' }}></span>}
                       </div>
@@ -7339,7 +7341,7 @@ export default function App() {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>Physical Location:</span>
-                        <strong style={{ color: '#a855f7' }}>Not collected</strong>
+                        <strong style={{ color: '#38bdf8' }}>Not collected</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.2rem' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>Network Carrier (ISP):</span>
@@ -7391,7 +7393,7 @@ export default function App() {
                       <div key={log.id || idx} style={{ fontSize: '0.7rem', display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '0.35rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)', alignItems: 'center' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                           <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>{log.ip}</span>
-                          <span style={{ color: '#a855f7', fontSize: '0.65rem' }}>{log.city ? `${log.city}, ${log.region}` : 'Resolved Geo'}</span>
+                          <span style={{ color: '#60a5fa', fontSize: '0.65rem' }}>{log.city ? `${log.city}, ${log.region}` : 'Resolved Geo'}</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                           <span style={{ color: 'var(--text-secondary)' }}>{log.os} • {log.browser}</span>
@@ -7506,7 +7508,7 @@ export default function App() {
               <section className="panel-card" style={{ marginBottom: '0.85rem' }}>
                 <h2 className="section-title">
                   <span>Operator Tactical Guide</span>
-                  <HelpCircle size={14} style={{ color: '#c084fc' }} />
+                  <HelpCircle size={14} style={{ color: '#38bdf8' }} />
                 </h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.72rem', color: '#cbd5e1' }}>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -8617,7 +8619,7 @@ export default function App() {
               animation: 'tourFadeIn 0.2s ease',
               color: '#cbd5e1'
             }}>
-              <h4 style={{ margin: 0, fontSize: '0.8rem', textTransform: 'uppercase', color: '#c084fc', letterSpacing: '0.05em', fontWeight: 800 }}>
+              <h4 style={{ margin: 0, fontSize: '0.8rem', textTransform: 'uppercase', color: '#38bdf8', letterSpacing: '0.05em', fontWeight: 800 }}>
                 Environment HUD
               </h4>
 
@@ -8720,7 +8722,7 @@ export default function App() {
                         padding: '4px 0', 
                         fontSize: '0.65rem', 
                         border: '1px solid rgba(255,255,255,0.05)', 
-                        background: mapTheme === style.id ? '#a855f7' : 'rgba(255,255,255,0.03)',
+                        background: mapTheme === style.id ? '#3b82f6' : 'rgba(255,255,255,0.03)',
                         color: '#fff',
                         fontWeight: 'bold',
                         cursor: 'pointer',
@@ -8804,7 +8806,7 @@ export default function App() {
                         fontSize: '0.7rem',
                         textTransform: 'capitalize',
                         border: '1px solid rgba(255,255,255,0.05)',
-                        background: weatherEffect === fx ? '#a855f7' : 'rgba(255,255,255,0.03)',
+                        background: weatherEffect === fx ? '#3b82f6' : 'rgba(255,255,255,0.03)',
                         color: '#fff',
                         fontWeight: 'bold',
                         cursor: 'pointer'
@@ -9048,7 +9050,7 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <h3 className="tour-title" style={{ margin: 0 }}>{TOUR_STEPS[tourStep].title}</h3>
-                <span style={{ fontSize: '0.72rem', color: '#c084fc', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.72rem', color: '#60a5fa', fontWeight: 600 }}>
                   {TOUR_STEPS[tourStep].subtitle}
                 </span>
               </div>
@@ -9868,7 +9870,7 @@ export default function App() {
                   <span>If you are testing on an Android device, Google OS requires <strong>Location (GPS) to be toggled ON</strong> in device settings to allow Web Bluetooth radio scanning.</span>
                 </div>
 
-                <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.7rem 0.9rem', borderRadius: '6px', borderLeft: '3px solid #a855f7' }}>
+                <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.7rem 0.9rem', borderRadius: '6px', borderLeft: '3px solid #3b82f6' }}>
                   <strong style={{ color: '#e2e8f0', display: 'block', marginBottom: '2px' }}>4. Browser Compatibility</strong>
                   <span>Web Bluetooth is supported on <strong>Google Chrome</strong> and <strong>Microsoft Edge</strong> on Windows, Mac, Linux, and Android. Safari on iOS/iPhone and Mozilla Firefox do not support Web Bluetooth.</span>
                 </div>

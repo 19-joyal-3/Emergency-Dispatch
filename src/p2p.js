@@ -19,7 +19,7 @@ export const EMERGENCY_TYPES = [
   { id: 'medical', label: 'Medical Emergency', icon: '🚑', color: '#ef4444' },
   { id: 'flood', label: 'Rising Flood / Water', icon: '🌊', color: '#06b6d4' },
   { id: 'traffic', label: 'Traffic Collision / Crash', icon: '🚗', color: '#f97316' },
-  { id: 'landslide', label: 'Landslide / Mudslide', icon: '⛰️', color: '#a855f7' },
+  { id: 'landslide', label: 'Landslide / Mudslide', icon: '⛰️', color: '#d97706' },
   { id: 'fire', label: 'Fire / Structure Collapse', icon: '🔥', color: '#f59e0b' },
   { id: 'trapped', label: 'Civilians Trapped', icon: '🆘', color: '#ec4899' }
 ];
