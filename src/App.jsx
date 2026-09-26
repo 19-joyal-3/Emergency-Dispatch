@@ -3258,6 +3258,16 @@ export default function App() {
           } else if (gpsCoords) {
             myLat = gpsCoords.lat;
             myLng = gpsCoords.lng;
+          } else if (customRoute?.geometry?.length > 0) {
+            myLat = customRoute.geometry[0][0];
+            myLng = customRoute.geometry[0][1];
+          } else if (mapRef.current) {
+            const c = mapRef.current.getCenter();
+            myLat = c.lat;
+            myLng = c.lng;
+          } else {
+            myLat = 11.5369;
+            myLng = 76.1772;
           }
 
           if (typeof myLat === 'number' && typeof myLng === 'number' && typeof data.lat === 'number' && typeof data.lng === 'number') {
@@ -3623,9 +3633,17 @@ export default function App() {
       } else if (gpsCoords) {
         currentLat = gpsCoords.lat;
         currentLng = gpsCoords.lng;
+      } else if (customRoute?.geometry?.length > 0) {
+        currentLat = customRoute.geometry[0][0];
+        currentLng = customRoute.geometry[0][1];
+      } else if (mapRef.current) {
+        const c = mapRef.current.getCenter();
+        currentLat = c.lat;
+        currentLng = c.lng;
+      } else {
+        currentLat = 11.5369;
+        currentLng = 76.1772;
       }
-
-      if (currentLat === null || currentLng === null) return;
 
       const check = checkUserHazardProximity({
         userLat: currentLat,
