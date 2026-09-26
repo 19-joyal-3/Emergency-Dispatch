@@ -719,16 +719,16 @@ select:focus, input[type="text"]:focus, textarea:focus {
 /* Map instructions floating banner */
 .instruction-banner {
   position: absolute;
-  bottom: 4.8rem;
+  bottom: 4.5rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 999;
-  background: rgba(11, 19, 29, 0.92);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  padding: 0.4rem 1rem;
+  background: rgba(9, 11, 16, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.3rem 0.85rem;
   border-radius: 9999px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.12);
-  font-size: 0.78rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  font-size: 0.74rem;
   font-weight: 500;
   pointer-events: auto;
   backdrop-filter: blur(14px);
@@ -4032,7 +4032,7 @@ textarea {
 /* Floating Island Action Capsule HUD (Executive Tactical Command Dock) */
 .floating-island-hud {
   position: absolute;
-  bottom: 1.8rem;
+  bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -4761,7 +4761,7 @@ textarea {
 
 /* Leaflet Custom Command HUD Zoom Controls */
 .leaflet-top.leaflet-left {
-  top: 4.8rem;
+  top: 4.2rem;
   left: 1.25rem;
 }
 
@@ -4798,4 +4798,91 @@ textarea {
   background: rgba(15, 23, 38, 0.95) !important;
   color: #38bdf8 !important;
 }
+
+/* =========================================================
+   DECLUTTERED CITY WAYPOINTS & PROGRESSIVE LABELS
+   ========================================================= */
+
+.custom-city-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.city-waypoint-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.city-waypoint-container:hover {
+  transform: scale(1.15);
+  z-index: 50;
+}
+
+.city-waypoint-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #93c5fd;
+  border: 1.5px solid #090b10;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.major-hub .city-waypoint-dot {
+  width: 8px;
+  height: 8px;
+  background: #38bdf8;
+  border-color: #0b0f19;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+}
+
+.city-waypoint-container:hover .city-waypoint-dot {
+  transform: scale(1.35);
+  background: #ffffff;
+  box-shadow: 0 0 10px #38bdf8;
+}
+
+.city-waypoint-label {
+  background: rgba(9, 11, 16, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Progressive disclosure: Secondary hubs hide labels at statewide zoom */
+.secondary-hub .city-waypoint-label {
+  display: none;
+  opacity: 0;
+  transform: translateY(-2px);
+}
+
+.city-waypoint-container:hover .city-waypoint-label,
+.map-container.map-zoomed-in .secondary-hub .city-waypoint-label {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Telemetry compact pill responsive rules */
+@media (max-width: 900px) {
+  .telemetry-compact-pill {
+    display: none !important;
+  }
+}
+
 

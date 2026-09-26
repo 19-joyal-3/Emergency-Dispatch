@@ -1748,6 +1748,18 @@ export default function App() {
         handleMapSingleClick(e.latlng.lat, e.latlng.lng);
       });
 
+      // Toggle zoomed-in class on container for progressive node label disclosure
+      const updateZoomClass = () => {
+        if (!mapContainerRef.current) return;
+        if (map.getZoom() >= 10) {
+          mapContainerRef.current.classList.add('map-zoomed-in');
+        } else {
+          mapContainerRef.current.classList.remove('map-zoomed-in');
+        }
+      };
+      map.on('zoomend', updateZoomClass);
+      updateZoomClass();
+
       // Right-click selects the exact map point for a new business profile.
       map.on('contextmenu', (e) => {
         handleBusinessMapLocation(e.latlng.lat, e.latlng.lng);
@@ -2017,37 +2029,29 @@ export default function App() {
     });
   };
 
-  // 4. Draw City Markers
+  // 4. Draw City Markers (Progressive Hierarchy & Waypoints)
   const drawCities = () => {
     if (!mapRef.current) return;
     
     cityMarkersRef.current.forEach(m => m.remove());
     cityMarkersRef.current = [];
 
+    const majorHubIds = new Set(['tvm', 'kochi', 'kozhikode', 'palakkad', 'kannur']);
+
     Object.keys(mapData.nodes).forEach(nodeId => {
       const node = mapData.nodes[nodeId];
       if (node.type === 'city' && node.name) {
+        const isMajor = majorHubIds.has(nodeId.toLowerCase());
         const cityIcon = L.divIcon({
           className: 'custom-city-icon',
           html: `
-            <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
-              <div style="width: 8px; height: 8px; background: white; border: 2px solid #0f172a; border-radius: 50%;"></div>
-              <div style="
-                background: rgba(15, 23, 42, 0.9);
-                border: 1px solid rgba(255,255,255,0.1);
-                color: #f3f4f6;
-                font-size: 10px;
-                font-weight: 700;
-                padding: 2px 6px;
-                border-radius: 4px;
-                margin-top: 2px;
-                white-space: nowrap;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-              ">${node.name}</div>
+            <div class="city-waypoint-container ${isMajor ? 'major-hub' : 'secondary-hub'}" title="${escapeHtml(node.name)}">
+              <div class="city-waypoint-dot"></div>
+              <div class="city-waypoint-label">${escapeHtml(node.name)}</div>
             </div>
           `,
-          iconSize: [60, 30],
-          iconAnchor: [30, 4]
+          iconSize: [80, 24],
+          iconAnchor: [40, 6]
         });
 
         const marker = L.marker([node.lat, node.lng], { icon: cityIcon, interactive: true })
@@ -8151,57 +8155,28 @@ export default function App() {
           >
             ▶
           </button>
-        </div>
 
-        {/* Mission Telemetry HUD Ribbon */}
-        <div className="telemetry-hud-ribbon hud-reticle-box" style={{
-          position: 'absolute',
-          top: '3.65rem',
-          left: '4.8rem',
-          right: '14.8rem',
-          zIndex: 998,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '0.65rem',
-          padding: '0.28rem 0.75rem',
-          fontSize: '0.68rem',
-          fontFamily: 'var(--font-mono, monospace)',
-          color: 'var(--text-secondary)'
-        }}>
-          {/* Section 1: GNSS Coordinates */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span style={{ color: 'var(--accent-cyan, #06b6d4)', fontWeight: 800 }}>GNSS:</span>
-            <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
-              {gpsCoords ? `${gpsCoords.lat.toFixed(4)}°N, ${gpsCoords.lng.toFixed(4)}°E` : '11.5369°N, 76.1772°E'}
-            </span>
-            <span style={{ color: 'var(--accent-emerald, #10b981)', fontSize: '0.58rem', background: 'rgba(16, 185, 129, 0.15)', padding: '1px 4px', borderRadius: '3px', fontWeight: 700 }}>
-              ±2.8m GNSS
-            </span>
-          </div>
-
-          {/* Section 2: Altitude & Heading */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span>
-              <strong style={{ color: 'var(--text-muted)' }}>ALT: </strong>
-              <strong style={{ color: 'var(--text-primary)' }}>
-                {gpsCoords && gpsCoords.lat > 11.4 ? '842m (Wayanad Ghats)' : '24m (Coastal Corridor)'}
-              </strong>
-            </span>
-            <span>
-              <strong style={{ color: 'var(--text-muted)' }}>HEADING: </strong>
-              <strong style={{ color: 'var(--accent-cyan, #06b6d4)' }}>
-                {gpsHeading ? `${Math.round(gpsHeading)}°` : '315° NW'} // 42 km/h
-              </strong>
-            </span>
-          </div>
-
-          {/* Section 3: P2P Mesh Heartbeat & Spectrum Pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-emerald, #10b981)', boxShadow: '0 0 6px var(--accent-emerald, #10b981)' }} />
-            <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
-              P2P MESH: 4 NODES
-            </span>
+          {/* Consolidated Tactical Telemetry Pill */}
+          <div className="telemetry-compact-pill" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            flexShrink: 0,
+            paddingLeft: '0.5rem',
+            borderLeft: '1px solid rgba(255, 255, 255, 0.15)',
+            fontSize: '0.64rem',
+            fontFamily: 'var(--font-mono, monospace)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <span style={{ color: '#38bdf8', fontWeight: 800 }}>GNSS:</span>
+              <span style={{ color: '#f8fafc', fontWeight: 700 }}>
+                {gpsCoords ? `${gpsCoords.lat.toFixed(3)}°N, ${gpsCoords.lng.toFixed(3)}°E` : '11.537°N, 76.177°E'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+              <span style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.58rem' }}>4 NODES</span>
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -8213,20 +8188,20 @@ export default function App() {
                 });
               }}
               style={{
-                marginLeft: '0.25rem',
-                background: 'rgba(6, 182, 212, 0.15)',
-                border: '1px solid var(--border-reticle, #06b6d4)',
-                color: 'var(--text-primary)',
-                padding: '1px 6px',
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                color: '#7dd3fc',
+                padding: '2px 6px',
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontWeight: 800,
-                fontSize: '0.6rem',
-                textTransform: 'uppercase'
+                fontSize: '0.58rem',
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap'
               }}
-              title="Click to cycle spectrum mode: Cyber Obsidian, NVG Night Ops, Solar Daylight, Safety WCAG"
+              title="Cycle spectrum mode: Cyber Obsidian, NVG Night Ops, Solar Daylight, Safety WCAG"
             >
-              🎨 {mapTheme === 'dark' ? 'Obsidian' : mapTheme === 'nvg' ? 'Night Ops' : mapTheme === 'solar' ? 'Daylight' : mapTheme === 'safety' ? 'Safety AAA' : mapTheme}
+              🎨 {mapTheme === 'dark' ? 'Obsidian' : mapTheme === 'nvg' ? 'Night Ops' : mapTheme === 'solar' ? 'Daylight' : mapTheme === 'safety' ? 'Safety' : mapTheme}
             </button>
           </div>
         </div>
