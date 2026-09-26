@@ -16,6 +16,7 @@ console.log('===============================================================\n')
 const testFiles = [
   { name: 'Live Zero-Connectivity P2P Radar & Mesh Engine', file: path.join(__dirname, 'p2p.test.js') },
   { name: 'Spatial Proximity Location Intercept & Photo Alert', file: path.join(__dirname, 'hazard-photo-intercept.test.js') },
+  { name: '5.0 KM Hazard Perimeter & Automatic Safe Detour Engine', file: path.join(__dirname, 'hazard-5km-autodetour.test.js') },
   { name: 'Dynamic Geofence Polygon & Proximity Warning', file: path.join(__dirname, 'geofence.test.js') },
   { name: 'Kerala AI Place Matcher & Road Network Routing', file: path.join(__dirname, 'aiPlaceMatcher.test.js') },
   { name: 'Universal Real-Road Routing Engine & Maneuvers', file: path.join(__dirname, 'routingEngine.test.js') },
