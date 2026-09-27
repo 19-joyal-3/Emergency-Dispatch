@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X, Play } from 'lucide-react';
+import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X, Play, Waves } from 'lucide-react';
 import { searchKeralaPlacesAI } from '../aiPlaceMatcher.js';
 
 export default function CommandPalette({
@@ -24,9 +24,11 @@ export default function CommandPalette({
 
   const defaultActions = [
     { id: 'recenter', label: 'Recenter Map to Kerala Bounds', icon: Compass, category: 'Map Controls', badge: 'R' },
+    { id: 'ksdma_dams', label: 'KSDMA Dam Water Levels & Rule Curves (Live Feeds)', icon: Waves, category: 'Disaster Feeds', badge: 'KSDMA' },
     { id: 'simulate', label: 'Start Route Drive Simulation', icon: Play, category: 'Navigation', badge: 'Drive' },
     { id: 'sos', label: 'Trigger SOS Emergency Beacon', icon: Shield, category: 'Emergency', badge: 'SOS' },
     { id: 'radar', label: 'Toggle Live Weather & Rain Radar', icon: CloudRain, category: 'Tactical Overlays', badge: 'Radar' },
+    { id: 'seoc_directory', label: 'KSDMA SEOC (1070) & DEOC (1077) Hotlines Directory', icon: Shield, category: 'Emergency', badge: '1070' },
     { id: 'theme', label: 'Cycle Spectrum Theme (Obsidian / NVG / Solar)', icon: Zap, category: 'Display', badge: 'T' },
     { id: 'nearest_hospital', label: 'Route to Nearest Medical College / Hospital', icon: Navigation, category: 'Emergency', badge: 'MCH' },
     { id: 'storage', label: 'Open Offline Storage & Corridor Pre-Cacher', icon: Database, category: 'Resilience', badge: 'Offline' },

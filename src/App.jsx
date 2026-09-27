@@ -73,13 +73,16 @@ import {
   ,Hospital
   ,QrCode
   ,Printer
+  ,ExternalLink
 } from 'lucide-react';
 
 import CommandPalette from './components/CommandPalette';
 import RouteElevationChart from './components/RouteElevationChart';
 import OfflineCacheManagerModal from './components/OfflineCacheManagerModal';
 import RouteSimulatorHud from './components/RouteSimulatorHud';
+import KsdmaDamMonitorModal from './components/KsdmaDamMonitorModal';
 import { createRadarTileLayer } from './services/weatherRadarService';
+import { KSDMA_RESERVOIRS, checkRouteDamAlertProximity } from './services/ksdmaLiveService';
 
 const INITIAL_RESPONDERS = [
   { id: 'resp_1', name: 'Ambulance Alpha', type: 'medical', lat: 8.5241, lng: 76.9366, status: 'idle', speed: 90 },
@@ -479,6 +482,12 @@ export default function App() {
   const [radarTimeString, setRadarTimeString] = useState('');
   const rainRadarLayerRef = useRef(null);
   const elevationMarkerRef = useRef(null);
+
+  // KSDMA Dam Water Level & Rule Curve Telemetry States
+  const [showKsdmaModal, setShowKsdmaModal] = useState(false);
+  const [showDamMarkers, setShowDamMarkers] = useState(true);
+  const damLayerRef = useRef(null);
+  const damAlertsCount = KSDMA_RESERVOIRS.filter(d => d.alertLevel !== 'Normal').length;
 
   // Manual Form States
   const [newIncidentType, setNewIncidentType] = useState('fire');
@@ -1566,6 +1575,15 @@ export default function App() {
     }
   };
 
+  // Focus KSDMA Reservoir on Tactical Map
+  const handleFocusDamOnMap = (dam) => {
+    if (!dam) return;
+    if (mapRef.current && dam.lat && dam.lng) {
+      mapRef.current.flyTo([dam.lat, dam.lng], 13, { duration: 1.2 });
+    }
+    logMessage(`[KSDMA] Focused on ${dam.name} (${dam.district} / ${dam.basin} Basin) — Alert: ${dam.alertLevel}`, 'info');
+  };
+
   // Command Palette Dispatch Action Handlers
   const handleCommandPaletteSelectPlace = (place) => {
     if (!place) return;
@@ -1602,6 +1620,10 @@ export default function App() {
           const nextIdx = (order.indexOf(prev) + 1) % order.length;
           return order[nextIdx];
         });
+        break;
+      case 'ksdma_dams':
+      case 'seoc_directory':
+        setShowKsdmaModal(true);
         break;
       case 'storage':
         setShowOfflineCacheModal(true);
@@ -1654,6 +1676,10 @@ export default function App() {
           setShowCommandPalette(false);
           return;
         }
+        if (showKsdmaModal) {
+          setShowKsdmaModal(false);
+          return;
+        }
         if (showOfflineCacheModal) {
           setShowOfflineCacheModal(false);
           return;
@@ -1700,7 +1726,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [showCommandPalette, showOfflineCacheModal, p2pSosModalOpen, showSettingsPanel]);
+  }, [showCommandPalette, showKsdmaModal, showOfflineCacheModal, p2pSosModalOpen, showSettingsPanel]);
 
   const refreshLiveDistrictAlerts = useCallback(async () => {
     setDistrictAlertsStatus('loading');
@@ -1943,6 +1969,7 @@ export default function App() {
       roadsLayerRef.current = L.layerGroup().addTo(map);
       routeLayerRef.current = L.layerGroup().addTo(map);
       hazardLayerRef.current = L.layerGroup().addTo(map);
+      damLayerRef.current = L.layerGroup().addTo(map);
 
       drawRoadNetwork();
       drawCities();
@@ -2054,6 +2081,67 @@ export default function App() {
       });
     }
   }, [showHazardZones]);
+
+  // Render KSDMA Major Reservoirs & Dam Rule Curve Markers
+  useEffect(() => {
+    if (!damLayerRef.current) return;
+    damLayerRef.current.clearLayers();
+
+    if (showDamMarkers) {
+      KSDMA_RESERVOIRS.forEach(dam => {
+        const isRed = dam.alertLevel === 'Red';
+        const isOrange = dam.alertLevel === 'Orange';
+        const isBlue = dam.alertLevel === 'Blue';
+        const beaconColor = isRed ? '#ef4444' : isOrange ? '#f97316' : isBlue ? '#38bdf8' : '#10b981';
+
+        const damIcon = L.divIcon({
+          className: 'ksdma-map-dam-marker',
+          html: `
+            <div style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              ${(isRed || isOrange) ? `<div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background: ${beaconColor}; opacity: 0.35; animation: pulse 1.5s infinite;"></div>` : ''}
+              <div style="width: 22px; height: 22px; border-radius: 50%; background: #0f172a; border: 2px solid ${beaconColor}; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px ${beaconColor}; font-size: 11px;">
+                🌊
+              </div>
+            </div>
+          `,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+
+        const marker = L.marker([dam.lat, dam.lng], { icon: damIcon });
+        
+        marker.bindPopup(`
+          <div style="font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 220px; line-height: 1.4;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px;">
+              <strong style="color: ${beaconColor}; font-size: 13px;">🌊 ${escapeHtml(dam.name)}</strong>
+              <span style="font-size: 10px; font-weight: bold; padding: 1px 5px; border-radius: 3px; background: ${beaconColor}22; color: ${beaconColor}; border: 1px solid ${beaconColor};">${dam.alertLevel} Alert</span>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; margin-bottom: 6px;">${escapeHtml(dam.malayalam)} • ${dam.agency} • ${dam.district} Dist</div>
+            <div style="background: rgba(0,0,0,0.3); border-radius: 4px; padding: 5px; margin-bottom: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                <span>Live Storage:</span>
+                <strong style="color: ${beaconColor};">${dam.storagePercent}% (${dam.storageMcm} MCM)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #cbd5e1; margin-top: 2px;">
+                <span>Current: ${dam.currentLevelMeters}m</span>
+                <span>FRL: ${dam.frlMeters}m</span>
+              </div>
+              <div style="font-size: 10px; color: #fbbf24; margin-top: 2px;">Rule Curve: ${dam.ruleCurveMeters}m</div>
+            </div>
+            <div style="font-size: 10px; color: #cbd5e1; margin-bottom: 6px;">
+              <strong style="color: #f59e0b;">Spillway:</strong> ${escapeHtml(dam.spillwayStatus)}
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 6px;">
+              <a href="tel:1077" style="flex: 1; text-align: center; background: #334155; color: #fff; padding: 4px; border-radius: 4px; font-size: 10px; text-decoration: none; font-weight: bold;">📞 DEOC 1077</a>
+              <a href="${dam.officialBulletinUrl || 'https://sdma.kerala.gov.in/dam-water-level/'}" target="_blank" rel="noopener noreferrer" style="flex: 1; text-align: center; background: #0284c7; color: #fff; padding: 4px; border-radius: 4px; font-size: 10px; text-decoration: none; font-weight: bold;">🔗 KSDMA PDF</a>
+            </div>
+          </div>
+        `, { className: 'tactical-popup' });
+
+        marker.addTo(damLayerRef.current);
+      });
+    }
+  }, [showDamMarkers]);
 
   // Dynamic Map Theme/Base-Layer Switcher
   useEffect(() => {
@@ -4411,7 +4499,24 @@ export default function App() {
       }
       setCustomRoute(result);
       const warnings = checkRouteHazardIntersection(result.geometry || []);
-      setRouteHazardWarnings(warnings);
+      const damWarnings = checkRouteDamAlertProximity(result.geometry || []);
+      const combinedWarnings = [
+        ...warnings,
+        ...damWarnings.map(dw => ({
+          zone: {
+            id: `dam_${dw.dam.id}`,
+            name: `${dw.dam.name} Downstream Basin (${dw.dam.alertLevel} Alert)`,
+            type: 'flood',
+            riskLevel: `${dw.dam.alertLevel} Alert`,
+            color: dw.dam.alertLevel === 'Red' ? '#ef4444' : dw.dam.alertLevel === 'Orange' ? '#f97316' : '#38bdf8',
+            description: `${dw.dam.spillwayStatus}. Downstream corridor: ${dw.dam.downstreamCorridor}`
+          },
+          intersects: dw.minDistanceKm <= 3.0,
+          minDistanceKm: dw.minDistanceKm,
+          dam: dw.dam
+        }))
+      ];
+      setRouteHazardWarnings(combinedWarnings);
       
       // If dispatch simulator is not active, render the tactical path
       if (!simulationActive) {
@@ -4577,7 +4682,24 @@ export default function App() {
       }
       setDispatchRoute(result);
       const warnings = checkRouteHazardIntersection(result.geometry || []);
-      setRouteHazardWarnings(warnings);
+      const damWarnings = checkRouteDamAlertProximity(result.geometry || []);
+      const combinedWarnings = [
+        ...warnings,
+        ...damWarnings.map(dw => ({
+          zone: {
+            id: `dam_${dw.dam.id}`,
+            name: `${dw.dam.name} Downstream Basin (${dw.dam.alertLevel} Alert)`,
+            type: 'flood',
+            riskLevel: `${dw.dam.alertLevel} Alert`,
+            color: dw.dam.alertLevel === 'Red' ? '#ef4444' : dw.dam.alertLevel === 'Orange' ? '#f97316' : '#38bdf8',
+            description: `${dw.dam.spillwayStatus}. Downstream corridor: ${dw.dam.downstreamCorridor}`
+          },
+          intersects: dw.minDistanceKm <= 3.0,
+          minDistanceKm: dw.minDistanceKm,
+          dam: dw.dam
+        }))
+      ];
+      setRouteHazardWarnings(combinedWarnings);
       if (!simulationActive) {
         drawRoutePolyline(result.geometry, startCoord, endCoord);
       }
@@ -7985,6 +8107,26 @@ export default function App() {
                     </button>
                   ))}
                 </div>
+
+                {/* KSDMA Live Dam Water Level Quick Launcher */}
+                <div style={{ marginTop: '0.65rem', paddingTop: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '14px' }}>🌊</span>
+                    <div>
+                      <strong style={{ fontSize: '0.74rem', color: '#f8fafc' }}>KSDMA Reservoir Levels & Rule Curves</strong>
+                      <div style={{ fontSize: '0.62rem', color: '#94a3b8' }}>24 Dams Monitored • {damAlertsCount} Active Alerts</div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowKsdmaModal(true)}
+                    className="btn btn-secondary"
+                    style={{ padding: '0.25rem 0.55rem', fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '4px', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.4)' }}
+                  >
+                    <span>View Dams</span>
+                    <ExternalLink size={10} />
+                  </button>
+                </div>
               </section>
 
               {/* Current Ambient Conditions & Real-Time Gauges */}
@@ -8941,6 +9083,19 @@ export default function App() {
               title={showRainRadar ? `Hide Live Precipitation Radar (${radarTimeString})` : "Show Real-Time Rain & Monsoon Radar"}
             >
               🌧️
+            </button>
+            <button
+              type="button"
+              className={`map-tool-btn ${showKsdmaModal ? 'active-info' : ''}`}
+              onClick={() => setShowKsdmaModal(true)}
+              title="KSDMA Reservoir Water Levels & Rule Curves (sdma.kerala.gov.in)"
+            >
+              🌊
+              {damAlertsCount > 0 && (
+                <span className="map-tool-badge" style={{ background: '#f97316' }}>
+                  {damAlertsCount}
+                </span>
+              )}
             </button>
             <button
               type="button"
@@ -11169,6 +11324,13 @@ export default function App() {
         isOpen={showOfflineCacheModal}
         onClose={() => setShowOfflineCacheModal(false)}
         onNotify={logMessage}
+      />
+
+      {/* KSDMA Reservoir & Dam Water Level Telemetry Modal */}
+      <KsdmaDamMonitorModal
+        isOpen={showKsdmaModal}
+        onClose={() => setShowKsdmaModal(false)}
+        onFocusDamOnMap={handleFocusDamOnMap}
       />
     </div>
   );
