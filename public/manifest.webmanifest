@@ -1,18 +1,70 @@
 {
-  "name": "Vanguard Geo",
-  "short_name": "Vanguard Geo",
+  "id": "/",
+  "name": "Resylix (Vanguard Geo) | Offline Emergency Dispatch",
+  "short_name": "Resylix Geo",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#050505",
-  "theme_color": "#15803d",
-  "description": "Offline-first emergency dispatch, navigation, incident tracking, and responder coordination.",
-  "categories": ["navigation", "utilities", "productivity"],
-  "icons": [{
-    "src": "/favicon.svg",
-    "sizes": "any",
-    "type": "image/svg+xml",
-    "purpose": "any maskable"
-  }]
+  "background_color": "#0b0f17",
+  "theme_color": "#0b0f17",
+  "description": "Zero-connectivity tactical emergency dispatch, offline vector navigation, KSDMA reservoir telemetry, and V2V hazard mesh platform for Kerala.",
+  "categories": ["navigation", "utilities", "productivity", "safety"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "SOS Emergency Beacon",
+      "short_name": "SOS",
+      "description": "Trigger offline proximity SOS beacon and acoustic siren",
+      "url": "/?action=sos",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Tactical Route Planner",
+      "short_name": "Route Planner",
+      "description": "Plan disaster-bypassing routes across Kerala",
+      "url": "/?tab=planner",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "KSDMA Dam Water Levels",
+      "short_name": "Dams Telemetry",
+      "description": "Monitor Kerala reservoirs and CWC rule curves",
+      "url": "/?action=dams",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Offline Corridor Pre-Cacher",
+      "short_name": "Pre-Cache",
+      "description": "Manage offline vector tiles and route storage",
+      "url": "/?action=offline",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
 }

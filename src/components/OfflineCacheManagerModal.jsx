@@ -5,7 +5,10 @@ import { getStorageMetrics, preCacheCorridor, purgeCorridorCache, PRIORITY_CORRI
 export default function OfflineCacheManagerModal({
   isOpen,
   onClose,
-  onNotify = () => {}
+  onNotify = () => {},
+  onInstallPwa,
+  canInstallPwa = false,
+  isPwaInstalled = false
 }) {
   const [metrics, setMetrics] = useState({
     usageMB: 0,
@@ -131,6 +134,55 @@ export default function OfflineCacheManagerModal({
               <CheckCircle2 size={11} /> Offline Resilient
             </span>
           </div>
+        </div>
+
+        {/* PWA Standalone Hardening Card */}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.7)',
+          border: '1px solid rgba(56, 189, 248, 0.25)',
+          borderRadius: '9px',
+          padding: '0.65rem 0.85rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '0.75rem',
+          margin: '0.65rem 0'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '18px' }}>📲</span>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f8fafc' }}>
+                Progressive Web App (PWA) Standalone Shell
+              </div>
+              <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
+                {isPwaInstalled 
+                  ? 'Running in standalone native shell with zero-connectivity precache' 
+                  : 'Install to desktop or home screen for instantaneous offline launch'}
+              </div>
+            </div>
+          </div>
+          {onInstallPwa && !isPwaInstalled && (
+            <button
+              type="button"
+              onClick={onInstallPwa}
+              className="btn btn-secondary"
+              style={{
+                fontSize: '0.68rem',
+                padding: '0.35rem 0.7rem',
+                color: '#38bdf8',
+                borderColor: 'rgba(56, 189, 248, 0.4)',
+                whiteSpace: 'nowrap',
+                fontWeight: 600
+              }}
+            >
+              Install App
+            </button>
+          )}
+          {isPwaInstalled && (
+            <span style={{ fontSize: '0.65rem', color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+              <CheckCircle2 size={12} /> Active Shell
+            </span>
+          )}
         </div>
 
         {/* Priority Corridors List */}

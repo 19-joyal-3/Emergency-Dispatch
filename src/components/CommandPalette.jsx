@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X, Play, Waves } from 'lucide-react';
+import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X, Play, Waves, Smartphone } from 'lucide-react';
 import { searchKeralaPlacesAI } from '../aiPlaceMatcher.js';
 
 export default function CommandPalette({
@@ -28,6 +28,7 @@ export default function CommandPalette({
     { id: 'simulate', label: 'Start Route Drive Simulation', icon: Play, category: 'Navigation', badge: 'Drive' },
     { id: 'sos', label: 'Trigger SOS Emergency Beacon', icon: Shield, category: 'Emergency', badge: 'SOS' },
     { id: 'radar', label: 'Toggle Live Weather & Rain Radar', icon: CloudRain, category: 'Tactical Overlays', badge: 'Radar' },
+    { id: 'install_pwa', label: 'Install Resylix PWA Standalone App (Offline Launch)', icon: Smartphone, category: 'Resilience', badge: 'Install' },
     { id: 'seoc_directory', label: 'KSDMA SEOC (1070) & DEOC (1077) Hotlines Directory', icon: Shield, category: 'Emergency', badge: '1070' },
     { id: 'theme', label: 'Cycle Spectrum Theme (Obsidian / NVG / Solar)', icon: Zap, category: 'Display', badge: 'T' },
     { id: 'nearest_hospital', label: 'Route to Nearest Medical College / Hospital', icon: Navigation, category: 'Emergency', badge: 'MCH' },

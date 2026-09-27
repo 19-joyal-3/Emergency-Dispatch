@@ -74,6 +74,7 @@ import {
   ,QrCode
   ,Printer
   ,ExternalLink
+  ,Smartphone
 } from 'lucide-react';
 
 import CommandPalette from './components/CommandPalette';
@@ -488,6 +489,11 @@ export default function App() {
   const [showDamMarkers, setShowDamMarkers] = useState(true);
   const damLayerRef = useRef(null);
   const damAlertsCount = KSDMA_RESERVOIRS.filter(d => d.alertLevel !== 'Normal').length;
+
+  // PWA Standalone Hardening & Network Status States
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [isNetworkOffline, setIsNetworkOffline] = useState(!navigator.onLine);
 
   // Manual Form States
   const [newIncidentType, setNewIncidentType] = useState('fire');
@@ -1584,6 +1590,64 @@ export default function App() {
     logMessage(`[KSDMA] Focused on ${dam.name} (${dam.district} / ${dam.basin} Basin) — Alert: ${dam.alertLevel}`, 'info');
   };
 
+  // PWA Standalone Install Listener & Network Events
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+      logMessage('[PWA] Standalone offline app install available.', 'info');
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredInstallPrompt(null);
+      setIsAppInstalled(true);
+      logMessage('[PWA] Resylix Geo installed successfully to standalone home screen!', 'success');
+    };
+
+    const handleOnline = () => {
+      setIsNetworkOffline(false);
+      logMessage('🌐 [NETWORK] Online connectivity restored.', 'info');
+    };
+
+    const handleOffline = () => {
+      setIsNetworkOffline(true);
+      logMessage('📡 [NETWORK] Zero-connectivity field mode active. All offline caches engaged.', 'warning');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    if (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true)) {
+      setIsAppInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [logMessage]);
+
+  const handleTriggerPwaInstall = async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        logMessage('[PWA] User accepted installation prompt.', 'success');
+      } else {
+        logMessage('[PWA] User deferred installation prompt.', 'info');
+      }
+      setDeferredInstallPrompt(null);
+    } else if (isAppInstalled) {
+      logMessage('[PWA] Resylix is already running in standalone app mode.', 'info');
+    } else {
+      logMessage('[PWA] To install: on iOS Safari tap Share -> "Add to Home Screen"; on Chrome/Edge tap Menu -> "Install app".', 'info');
+    }
+  };
+
   // Command Palette Dispatch Action Handlers
   const handleCommandPaletteSelectPlace = (place) => {
     if (!place) return;
@@ -1627,6 +1691,9 @@ export default function App() {
         break;
       case 'storage':
         setShowOfflineCacheModal(true);
+        break;
+      case 'install_pwa':
+        handleTriggerPwaInstall();
         break;
       case 'nearest_hospital':
         routeToNearestHospital();
@@ -5481,6 +5548,31 @@ export default function App() {
           >
             <HelpCircle size={18} />
           </button>
+          {deferredInstallPrompt && !isAppInstalled && (
+            <button 
+              type="button"
+              className="pwa-install-trigger-btn"
+              onClick={handleTriggerPwaInstall}
+              title="Install Resylix Geo Standalone PWA to Home Screen"
+              style={{
+                background: 'rgba(56, 189, 248, 0.15)',
+                border: '1px solid rgba(56, 189, 248, 0.4)',
+                color: '#38bdf8',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                transition: 'all 0.2s ease',
+                outline: 'none',
+                marginBottom: '4px'
+              }}
+            >
+              <Smartphone size={16} />
+            </button>
+          )}
           <span className={`network-dot ${isOnline ? 'online' : 'offline'}`}></span>
         </div>
       </nav>
@@ -11324,6 +11416,9 @@ export default function App() {
         isOpen={showOfflineCacheModal}
         onClose={() => setShowOfflineCacheModal(false)}
         onNotify={logMessage}
+        onInstallPwa={handleTriggerPwaInstall}
+        canInstallPwa={Boolean(deferredInstallPrompt)}
+        isPwaInstalled={isAppInstalled}
       />
 
       {/* KSDMA Reservoir & Dam Water Level Telemetry Modal */}
