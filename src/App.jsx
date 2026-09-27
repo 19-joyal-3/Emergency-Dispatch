@@ -8734,7 +8734,7 @@ export default function App() {
           position: 'absolute',
           top: '1.25rem',
           left: '4.8rem',
-          right: '14.8rem',
+          right: '1.25rem',
           zIndex: 999,
           display: 'flex',
           alignItems: 'center',
@@ -9293,7 +9293,7 @@ export default function App() {
         {/* Map Environment HUD Panel */}
         <div className="map-settings-container" style={{
           position: 'absolute',
-          top: '1.25rem',
+          top: '4.25rem',
           right: '1.25rem',
           zIndex: 1000,
           display: 'flex',

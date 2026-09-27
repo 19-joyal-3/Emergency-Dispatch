@@ -4386,7 +4386,7 @@ textarea {
 /* Responsive Kerala Statewide Weather Ribbon on Tablet & Mobile */
 @media (max-width: 1024px) {
   .ksdma-alert-ticker {
-    right: 14rem !important;
+    right: 1.25rem !important;
   }
 }
 
