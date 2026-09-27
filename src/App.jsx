@@ -1582,6 +1582,14 @@ export default function App() {
       case 'recenter':
         fitKeralaBounds();
         break;
+      case 'simulate':
+        if (customRoute && customRoute.geometry) {
+          startCustomSimulation(meansOfTransport);
+        } else {
+          setActiveTab('planner');
+          logMessage('[NAV-TACTICAL] Select departure & destination in planner to start drive simulation.', 'warning');
+        }
+        break;
       case 'sos':
         setP2pSosModalOpen(true);
         break;

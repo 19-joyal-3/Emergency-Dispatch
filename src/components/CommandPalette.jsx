@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X } from 'lucide-react';
+import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X, Play } from 'lucide-react';
 import { searchKeralaPlacesAI } from '../aiPlaceMatcher.js';
 
 export default function CommandPalette({
@@ -24,6 +24,7 @@ export default function CommandPalette({
 
   const defaultActions = [
     { id: 'recenter', label: 'Recenter Map to Kerala Bounds', icon: Compass, category: 'Map Controls', badge: 'R' },
+    { id: 'simulate', label: 'Start Route Drive Simulation', icon: Play, category: 'Navigation', badge: 'Drive' },
     { id: 'sos', label: 'Trigger SOS Emergency Beacon', icon: Shield, category: 'Emergency', badge: 'SOS' },
     { id: 'radar', label: 'Toggle Live Weather & Rain Radar', icon: CloudRain, category: 'Tactical Overlays', badge: 'Radar' },
     { id: 'theme', label: 'Cycle Spectrum Theme (Obsidian / NVG / Solar)', icon: Zap, category: 'Display', badge: 'T' },
