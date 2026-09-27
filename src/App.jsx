@@ -1699,6 +1699,9 @@ export default function App() {
       case 'download_report':
         downloadExecutiveReport();
         break;
+      case 'open_presentation':
+        window.open('/RESYLIX_PRESENTATION_DECK.html', '_blank');
+        break;
       case 'simulate':
         if (customRoute && customRoute.geometry) {
           startCustomSimulation(meansOfTransport);
@@ -8973,6 +8976,18 @@ export default function App() {
             title="Download & View Full System Capabilities & Future Scope Whitepaper"
           >
             📄 Report
+          </button>
+
+          <span className="telemetry-hud-divider">|</span>
+
+          {/* Presentation Slides & Speaker Notes Button */}
+          <button
+            type="button"
+            className="telemetry-hud-btn slides-btn"
+            onClick={() => window.open('/RESYLIX_PRESENTATION_DECK.html', '_blank')}
+            title="Open Interactive Presentation Slides & Speaker Defense Notes"
+          >
+            🖥️ Slides
           </button>
         </div>
 

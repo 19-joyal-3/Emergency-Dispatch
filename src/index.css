@@ -4978,6 +4978,18 @@ textarea {
   color: #ffffff;
 }
 
+.telemetry-hud-btn.slides-btn {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.45);
+  color: #d8b4fe;
+}
+
+.telemetry-hud-btn.slides-btn:hover {
+  background: rgba(168, 85, 247, 0.3);
+  border-color: #c084fc;
+  color: #ffffff;
+}
+
 /* Responsive Adaptation for Tablets and Mobile */
 @media (max-width: 1024px) {
   .tactical-gnss-telemetry-badge {
