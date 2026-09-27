@@ -20,6 +20,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { estimateKeralaAltitude } from '../services/elevationService';
+import { tacticalVoiceNav } from '../services/tacticalVoiceNavigationService';
 
 /**
  * ==============================================================================
@@ -60,7 +61,13 @@ export default function RouteSimulatorHud({
   endName = 'Destination'
 }) {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceLang, setVoiceLang] = useState('en'); // 'en' | 'ml'
   const lastSpokenManeuverRef = useRef('');
+
+  useEffect(() => {
+    tacticalVoiceNav.setEnabled(voiceEnabled);
+    tacticalVoiceNav.setLanguage(voiceLang);
+  }, [voiceEnabled, voiceLang]);
 
   const totalDistance = route?.distance || 0;
   const progressPercent = totalDistance > 0 ? Math.min(100, Math.max(0, (progress / totalDistance) * 100)) : 0;
@@ -139,26 +146,14 @@ export default function RouteSimulatorHud({
   useEffect(() => {
     if (!voiceEnabled || !active || !activeManeuver) return;
 
-    // Trigger voice cue when approaching next turn (<= 250m) or at arrival
+    // Trigger voice cue when approaching next turn (<= 350m) or at arrival
     const distMeters = Math.round(distanceToNextTurnKm * 1000);
     const key = `${activeManeuver.stepIndex}_${distMeters < 300 ? 'close' : 'far'}`;
 
     if (distMeters <= 350 && distMeters > 0 && lastSpokenManeuverRef.current !== key) {
       lastSpokenManeuverRef.current = key;
-      if ('speechSynthesis' in window) {
-        try {
-          window.speechSynthesis.cancel();
-          const phrase = nextUpcomingManeuver 
-            ? `In ${distMeters < 100 ? 'one hundred' : distMeters} meters, ${nextUpcomingManeuver.instruction}`
-            : activeManeuver.instruction;
-          const utterance = new SpeechSynthesisUtterance(phrase);
-          utterance.rate = 1.05;
-          utterance.pitch = 1.0;
-          window.speechSynthesis.speak(utterance);
-        } catch {
-          // Ignore speech failures in headless/sandboxed browsers
-        }
-      }
+      const phrase = nextUpcomingManeuver ? nextUpcomingManeuver.instruction : activeManeuver.instruction;
+      tacticalVoiceNav.announceManeuver(phrase, distMeters);
     }
   }, [voiceEnabled, active, activeManeuver, distanceToNextTurnKm, nextUpcomingManeuver]);
 
@@ -218,6 +213,19 @@ export default function RouteSimulatorHud({
           >
             {voiceEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
           </button>
+
+          {/* Voice Language Toggle (English / Malayalam) */}
+          {voiceEnabled && (
+            <button
+              type="button"
+              className="hud-icon-btn active"
+              onClick={() => setVoiceLang(voiceLang === 'en' ? 'ml' : 'en')}
+              title={voiceLang === 'en' ? 'Switch to Malayalam (മലയാളം)' : 'Switch to English'}
+              style={{ fontSize: '0.62rem', fontWeight: 700, padding: '0 6px', minWidth: '28px' }}
+            >
+              {voiceLang === 'en' ? 'EN' : 'മല'}
+            </button>
+          )}
 
           {/* Auto-Pan follow toggle */}
           <button

@@ -82,8 +82,12 @@ import RouteElevationChart from './components/RouteElevationChart';
 import OfflineCacheManagerModal from './components/OfflineCacheManagerModal';
 import RouteSimulatorHud from './components/RouteSimulatorHud';
 import KsdmaDamMonitorModal from './components/KsdmaDamMonitorModal';
+import KsdmaWeatherWarningModal from './components/KsdmaWeatherWarningModal';
 import { createRadarTileLayer } from './services/weatherRadarService';
 import { KSDMA_RESERVOIRS, checkRouteDamAlertProximity } from './services/ksdmaLiveService';
+import { getKsdmaDistrictWarnings, checkRouteWeatherInterception, KSDMA_ALERT_TYPES } from './services/ksdmaWeatherWarningService';
+import { tacticalVoiceNav } from './services/tacticalVoiceNavigationService';
+import { KERALA_STATE_BOUNDARY, KERALA_LIFELINE_HIGHWAYS, KERALA_MAJOR_RIVERS } from './services/offlineVectorFallbackService';
 
 const INITIAL_RESPONDERS = [
   { id: 'resp_1', name: 'Ambulance Alpha', type: 'medical', lat: 8.5241, lng: 76.9366, status: 'idle', speed: 90 },
@@ -238,7 +242,6 @@ export default function App() {
 
   const getTileUrl = (theme) => {
     if (getPmtilesUrl(theme)) return null;
-    if (!navigator.onLine) return null;
     if (theme === 'satellite') {
       const customSatellite = localStorage.getItem('vanguard_custom_satellite_url') || import.meta.env.VITE_SATELLITE_TILE_URL;
       return customSatellite || 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
@@ -490,6 +493,14 @@ export default function App() {
   const damLayerRef = useRef(null);
   const damAlertsCount = KSDMA_RESERVOIRS.filter(d => d.alertLevel !== 'Normal').length;
 
+  // KSDMA Multi-District Weather Warning Matrix & Offline Vector Basemap States
+  const [showKsdmaWeatherModal, setShowKsdmaWeatherModal] = useState(false);
+  const [showDistrictAlertLayer, setShowDistrictAlertLayer] = useState(true);
+  const [showOfflineVectorLayer, setShowOfflineVectorLayer] = useState(true);
+  const [voiceNavLanguage, setVoiceNavLanguage] = useState('en'); // 'en' | 'ml'
+  const districtAlertsLayerRef = useRef(null);
+  const offlineVectorLayerRef = useRef(null);
+
   // PWA Standalone Hardening & Network Status States
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
@@ -507,6 +518,20 @@ export default function App() {
   const [modelStatus, setModelStatus] = useState('loading'); // 'loading', 'ready', 'classifying', 'failed'
   const [aiVerificationResult, setAiVerificationResult] = useState(null);
   const [overrideAiVerification, setOverrideAiVerification] = useState(false);
+
+  // Deep Link URL Action Handler (PWA shortcuts & command triggers)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const action = params.get('action');
+      if (action === 'dams') setShowKsdmaModal(true);
+      if (action === 'weather') setShowKsdmaWeatherModal(true);
+      if (action === 'offline') setShowOfflineCacheModal(true);
+      if (action === 'sos') setP2pSosModalOpen(true);
+      const tab = params.get('tab');
+      if (tab) setActiveTab(tab);
+    } catch (_e) {}
+  }, []);
 
   // Load TensorFlow.js and MobileNet scripts dynamically
   const loadModelScripts = () => {
@@ -1685,6 +1710,24 @@ export default function App() {
           return order[nextIdx];
         });
         break;
+      case 'ksdma_weather':
+        setShowKsdmaWeatherModal(true);
+        break;
+      case 'toggle_weather_layer':
+        setShowDistrictAlertLayer(prev => !prev);
+        logMessage(`[KSDMA] District weather alert layer toggled.`, 'info');
+        break;
+      case 'toggle_offline_vector':
+        setShowOfflineVectorLayer(prev => !prev);
+        logMessage(`[OFFLINE] Zero-network tactical vector basemap toggled.`, 'info');
+        break;
+      case 'toggle_voice_lang': {
+        const nextLang = voiceNavLanguage === 'en' ? 'ml' : 'en';
+        setVoiceNavLanguage(nextLang);
+        tacticalVoiceNav.setLanguage(nextLang);
+        logMessage(`[VOICE NAV] Language switched to ${nextLang === 'ml' ? 'Malayalam (മലയാളം)' : 'English'}.`, 'success');
+        break;
+      }
       case 'ksdma_dams':
       case 'seoc_directory':
         setShowKsdmaModal(true);
@@ -1743,6 +1786,10 @@ export default function App() {
           setShowCommandPalette(false);
           return;
         }
+        if (showKsdmaWeatherModal) {
+          setShowKsdmaWeatherModal(false);
+          return;
+        }
         if (showKsdmaModal) {
           setShowKsdmaModal(false);
           return;
@@ -1793,7 +1840,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [showCommandPalette, showKsdmaModal, showOfflineCacheModal, p2pSosModalOpen, showSettingsPanel]);
+  }, [showCommandPalette, showKsdmaWeatherModal, showKsdmaModal, showOfflineCacheModal, p2pSosModalOpen, showSettingsPanel]);
 
   const refreshLiveDistrictAlerts = useCallback(async () => {
     setDistrictAlertsStatus('loading');
@@ -2037,6 +2084,8 @@ export default function App() {
       routeLayerRef.current = L.layerGroup().addTo(map);
       hazardLayerRef.current = L.layerGroup().addTo(map);
       damLayerRef.current = L.layerGroup().addTo(map);
+      districtAlertsLayerRef.current = L.layerGroup().addTo(map);
+      offlineVectorLayerRef.current = L.layerGroup().addTo(map);
 
       drawRoadNetwork();
       drawCities();
@@ -2209,6 +2258,87 @@ export default function App() {
       });
     }
   }, [showDamMarkers]);
+
+  // Render KSDMA 14-District Weather Warning Polygons
+  useEffect(() => {
+    if (!districtAlertsLayerRef.current) return;
+    districtAlertsLayerRef.current.clearLayers();
+
+    if (showDistrictAlertLayer) {
+      const districts = getKsdmaDistrictWarnings();
+      districts.forEach(d => {
+        const alertMeta = KSDMA_ALERT_TYPES[d.alert] || KSDMA_ALERT_TYPES.GREEN;
+        const color = alertMeta.color;
+
+        const polygon = L.polygon(d.polygon, {
+          color: color,
+          weight: d.alert === 'RED' ? 3 : d.alert === 'ORANGE' ? 2.5 : 1.5,
+          fillColor: color,
+          fillOpacity: d.alert === 'RED' ? 0.28 : d.alert === 'ORANGE' ? 0.20 : 0.12,
+          dashArray: d.alert === 'RED' ? '5, 5' : null
+        });
+
+        polygon.bindTooltip(`
+          <div style="font-size: 11px; padding: 2px;">
+            <strong style="color: ${color};">🌧️ ${escapeHtml(d.name)} (${escapeHtml(d.malayalam)})</strong>
+            <div style="color: ${color}; font-weight: bold; margin-top: 2px;">${escapeHtml(alertMeta.label)}</div>
+            <div style="color: #cbd5e1; font-size: 10px; margin-top: 1px;">Rain: ${d.rainfallMm} mm / 24h</div>
+            <div style="color: #94a3b8; font-size: 10px; margin-top: 1px;">${escapeHtml(d.primaryThreat)}</div>
+          </div>
+        `, { sticky: true, className: 'tactical-tooltip' });
+
+        polygon.on('click', () => {
+          setShowKsdmaWeatherModal(true);
+        });
+
+        polygon.addTo(districtAlertsLayerRef.current);
+      });
+    }
+  }, [showDistrictAlertLayer]);
+
+  // Render Standalone Offline Kerala Tactical Vector Basemap (Zero-Network)
+  useEffect(() => {
+    if (!offlineVectorLayerRef.current) return;
+    offlineVectorLayerRef.current.clearLayers();
+
+    if (showOfflineVectorLayer) {
+      // 1. Kerala State Boundary
+      const borderLayer = L.geoJSON(KERALA_STATE_BOUNDARY, {
+        style: {
+          color: '#38bdf8',
+          weight: 1.8,
+          dashArray: '6, 6',
+          fillColor: '#0369a1',
+          fillOpacity: 0.04
+        }
+      });
+      borderLayer.addTo(offlineVectorLayerRef.current);
+
+      // 2. Lifeline Highways
+      KERALA_LIFELINE_HIGHWAYS.forEach(h => {
+        const poly = L.polyline(h.coordinates, {
+          color: h.color,
+          weight: h.weight,
+          dashArray: h.dashArray,
+          opacity: 0.85
+        });
+        poly.bindTooltip(`<div style="font-size: 10px; font-weight: bold; color: ${h.color};">🛣️ ${escapeHtml(h.name)}</div>`, { sticky: true });
+        poly.addTo(offlineVectorLayerRef.current);
+      });
+
+      // 3. Disaster River Basins
+      KERALA_MAJOR_RIVERS.forEach(r => {
+        const poly = L.polyline(r.coordinates, {
+          color: r.color,
+          weight: r.weight,
+          opacity: 0.75,
+          dashArray: '3, 4'
+        });
+        poly.bindTooltip(`<div style="font-size: 10px; font-weight: bold; color: #38bdf8;">🌊 ${escapeHtml(r.name)}</div>`, { sticky: true });
+        poly.addTo(offlineVectorLayerRef.current);
+      });
+    }
+  }, [showOfflineVectorLayer]);
 
   // Dynamic Map Theme/Base-Layer Switcher
   useEffect(() => {
@@ -4567,6 +4697,7 @@ export default function App() {
       setCustomRoute(result);
       const warnings = checkRouteHazardIntersection(result.geometry || []);
       const damWarnings = checkRouteDamAlertProximity(result.geometry || []);
+      const weatherWarnings = checkRouteWeatherInterception(result.geometry || []);
       const combinedWarnings = [
         ...warnings,
         ...damWarnings.map(dw => ({
@@ -4581,9 +4712,30 @@ export default function App() {
           intersects: dw.minDistanceKm <= 3.0,
           minDistanceKm: dw.minDistanceKm,
           dam: dw.dam
+        })),
+        ...weatherWarnings.map(ww => ({
+          zone: {
+            id: `weather_${ww.districtId}`,
+            name: `${ww.districtName} (${ww.malayalam}) - ${ww.alertLevel} Alert`,
+            type: 'weather',
+            riskLevel: `${ww.alertLevel} Alert`,
+            color: ww.alertLevel === 'RED' ? '#ef4444' : '#f97316',
+            description: `${ww.threat}. Rainfall forecast: ${ww.rainfallForecast} mm / 24h. ${ww.advisory}`
+          },
+          intersects: ww.isDirectlyInside,
+          minDistanceKm: ww.distanceKm,
+          weatherAlert: ww
         }))
       ];
       setRouteHazardWarnings(combinedWarnings);
+
+      // Trigger spoken voice warning for critical weather threats
+      if (weatherWarnings.length > 0) {
+        const topWeatherAlert = weatherWarnings[0];
+        if (topWeatherAlert && (topWeatherAlert.alertLevel === 'RED' || topWeatherAlert.alertLevel === 'ORANGE')) {
+          tacticalVoiceNav.announceWeatherDistrictAlert(topWeatherAlert.districtName, topWeatherAlert.alertLevel, topWeatherAlert.threat);
+        }
+      }
       
       // If dispatch simulator is not active, render the tactical path
       if (!simulationActive) {
@@ -4750,6 +4902,7 @@ export default function App() {
       setDispatchRoute(result);
       const warnings = checkRouteHazardIntersection(result.geometry || []);
       const damWarnings = checkRouteDamAlertProximity(result.geometry || []);
+      const weatherWarnings = checkRouteWeatherInterception(result.geometry || []);
       const combinedWarnings = [
         ...warnings,
         ...damWarnings.map(dw => ({
@@ -4764,9 +4917,30 @@ export default function App() {
           intersects: dw.minDistanceKm <= 3.0,
           minDistanceKm: dw.minDistanceKm,
           dam: dw.dam
+        })),
+        ...weatherWarnings.map(ww => ({
+          zone: {
+            id: `weather_${ww.districtId}`,
+            name: `${ww.districtName} (${ww.malayalam}) - ${ww.alertLevel} Alert`,
+            type: 'weather',
+            riskLevel: `${ww.alertLevel} Alert`,
+            color: ww.alertLevel === 'RED' ? '#ef4444' : '#f97316',
+            description: `${ww.threat}. Rainfall forecast: ${ww.rainfallForecast} mm / 24h. ${ww.advisory}`
+          },
+          intersects: ww.isDirectlyInside,
+          minDistanceKm: ww.distanceKm,
+          weatherAlert: ww
         }))
       ];
       setRouteHazardWarnings(combinedWarnings);
+
+      // Trigger spoken voice warning for critical weather threats
+      if (weatherWarnings.length > 0) {
+        const topWeatherAlert = weatherWarnings[0];
+        if (topWeatherAlert && (topWeatherAlert.alertLevel === 'RED' || topWeatherAlert.alertLevel === 'ORANGE')) {
+          tacticalVoiceNav.announceWeatherDistrictAlert(topWeatherAlert.districtName, topWeatherAlert.alertLevel, topWeatherAlert.threat);
+        }
+      }
       if (!simulationActive) {
         drawRoutePolyline(result.geometry, startCoord, endCoord);
       }
@@ -9191,6 +9365,28 @@ export default function App() {
             </button>
             <button
               type="button"
+              className={`map-tool-btn ${showKsdmaWeatherModal ? 'active-info' : ''}`}
+              onClick={() => setShowKsdmaWeatherModal(true)}
+              title="KSDMA & IMD 14-District Weather Warning Matrix (Red/Orange/Yellow Alerts)"
+            >
+              ⚠️
+              <span className="map-tool-badge" style={{ background: '#ef4444' }}>
+                14
+              </span>
+            </button>
+            <button
+              type="button"
+              className={`map-tool-btn ${showOfflineVectorLayer ? 'active-info' : ''}`}
+              onClick={() => {
+                setShowOfflineVectorLayer(prev => !prev);
+                logMessage(`[OFFLINE] Tactical vector basemap ${!showOfflineVectorLayer ? 'ENABLED' : 'DISABLED'}.`, 'info');
+              }}
+              title={showOfflineVectorLayer ? "Disable Zero-Network Offline Vector Basemap" : "Enable Zero-Network Offline Vector Basemap"}
+            >
+              🗺️
+            </button>
+            <button
+              type="button"
               className="map-tool-btn"
               onClick={() => setShowOfflineCacheModal(true)}
               title="Open Offline Storage & Corridor Pre-Cacher"
@@ -11426,6 +11622,19 @@ export default function App() {
         isOpen={showKsdmaModal}
         onClose={() => setShowKsdmaModal(false)}
         onFocusDamOnMap={handleFocusDamOnMap}
+      />
+
+      {/* KSDMA & IMD 14-District Weather Warning Matrix Modal */}
+      <KsdmaWeatherWarningModal
+        isOpen={showKsdmaWeatherModal}
+        onClose={() => setShowKsdmaWeatherModal(false)}
+        activeRouteWeatherAlerts={checkRouteWeatherInterception(customRoute?.geometry || dispatchRoute?.geometry || [])}
+        onFocusDistrictOnMap={(district) => {
+          if (mapRef.current && district.centroid) {
+            mapRef.current.flyTo(district.centroid, 11, { duration: 1.2 });
+            logMessage(`[MAP] Focused on ${district.name} (${district.alert} Alert).`, 'info');
+          }
+        }}
       />
     </div>
   );

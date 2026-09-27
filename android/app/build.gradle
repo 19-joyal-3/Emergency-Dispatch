@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.yourorganization.emergencydispatch"
+    namespace = "com.vanguardgeo.emergencydispatch"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.vanguardgeo.emergencydispatch"

@@ -24,10 +24,14 @@ export default function CommandPalette({
 
   const defaultActions = [
     { id: 'recenter', label: 'Recenter Map to Kerala Bounds', icon: Compass, category: 'Map Controls', badge: 'R' },
+    { id: 'ksdma_weather', label: 'KSDMA & IMD 14-District Weather Warning Matrix', icon: CloudRain, category: 'Disaster Feeds', badge: 'Alerts' },
     { id: 'ksdma_dams', label: 'KSDMA Dam Water Levels & Rule Curves (Live Feeds)', icon: Waves, category: 'Disaster Feeds', badge: 'KSDMA' },
     { id: 'simulate', label: 'Start Route Drive Simulation', icon: Play, category: 'Navigation', badge: 'Drive' },
+    { id: 'toggle_voice_lang', label: 'Toggle Voice Navigation Language (English / Malayalam)', icon: Zap, category: 'Navigation', badge: 'Voice' },
     { id: 'sos', label: 'Trigger SOS Emergency Beacon', icon: Shield, category: 'Emergency', badge: 'SOS' },
     { id: 'radar', label: 'Toggle Live Weather & Rain Radar', icon: CloudRain, category: 'Tactical Overlays', badge: 'Radar' },
+    { id: 'toggle_weather_layer', label: 'Toggle District Hazard Warning Polygons Layer', icon: Shield, category: 'Tactical Overlays', badge: 'Zones' },
+    { id: 'toggle_offline_vector', label: 'Toggle Offline Tactical Vector Basemap (Zero-Network)', icon: Compass, category: 'Resilience', badge: 'Vector' },
     { id: 'install_pwa', label: 'Install Resylix PWA Standalone App (Offline Launch)', icon: Smartphone, category: 'Resilience', badge: 'Install' },
     { id: 'seoc_directory', label: 'KSDMA SEOC (1070) & DEOC (1077) Hotlines Directory', icon: Shield, category: 'Emergency', badge: '1070' },
     { id: 'theme', label: 'Cycle Spectrum Theme (Obsidian / NVG / Solar)', icon: Zap, category: 'Display', badge: 'T' },
