@@ -304,9 +304,9 @@ export default function KsdmaDamMonitorModal({
                 {KERALA_DEOC_DIRECTORY.map(deoc => (
                   <div key={deoc.id} className="ksdma-deoc-box">
                     <div className="flex justify-between items-start mb-1">
-                      <div>
+                      <div className="flex flex-col">
                         <strong className="text-white text-xs">{deoc.name}</strong>
-                        <span className="text-[11px] text-zinc-400 ml-1.5">{deoc.malayalam}</span>
+                        <span className="text-[10px] text-zinc-400">{deoc.malayalam}</span>
                       </div>
                       <span className="ksdma-badge-mini">DEOC 1077</span>
                     </div>
