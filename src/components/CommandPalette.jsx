@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X, Play, Waves, Smartphone } from 'lucide-react';
+import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X, Play, Waves, Smartphone, FileText } from 'lucide-react';
 import { searchKeralaPlacesAI } from '../aiPlaceMatcher.js';
 
 export default function CommandPalette({
@@ -24,6 +24,7 @@ export default function CommandPalette({
 
   const defaultActions = [
     { id: 'recenter', label: 'Recenter Map to Kerala Bounds', icon: Compass, category: 'Map Controls', badge: 'R' },
+    { id: 'download_report', label: 'Download Resylix Capabilities & Future Scope Whitepaper', icon: FileText, category: 'Documentation', badge: 'PDF' },
     { id: 'ksdma_weather', label: 'KSDMA & IMD 14-District Weather Warning Matrix', icon: CloudRain, category: 'Disaster Feeds', badge: 'Alerts' },
     { id: 'ksdma_dams', label: 'KSDMA Dam Water Levels & Rule Curves (Live Feeds)', icon: Waves, category: 'Disaster Feeds', badge: 'KSDMA' },
     { id: 'simulate', label: 'Start Route Drive Simulation', icon: Play, category: 'Navigation', badge: 'Drive' },

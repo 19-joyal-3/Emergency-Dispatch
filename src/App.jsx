@@ -12,7 +12,7 @@ import { isSupabaseConfigured, supabase } from './supabase';
 import { isValhallaConfigured, requestValhallaRoute } from './valhallaApi';
 import { calculateBestRoute, routeWithOfflineGraph, isGeometryBlocked } from './routingEngine';
 import confetti from 'canvas-confetti';
-import { playTacticalChime, playEvacuationSiren } from './audio';
+import { playTacticalChime, playEvacuationSiren, triggerHaptic } from './audio';
 import { searchDeoc } from './deoc';
 import { KERALA_HAZARD_ZONES, checkRouteHazardIntersection } from './hazards';
 import { generateRouteQr, generateIncidentQr, parseQrHash } from './qr';
@@ -1673,6 +1673,13 @@ export default function App() {
     }
   };
 
+  // Download / View Master Capabilities & Future Scope Whitepaper
+  const downloadExecutiveReport = () => {
+    triggerHaptic(30);
+    window.open('/RESYLIX_MASTER_CAPABILITIES_AND_FUTURE_SCOPE.html', '_blank');
+    logMessage('[REPORT] Opened Resylix Master Capabilities & Future Scope Whitepaper.', 'success');
+  };
+
   // Command Palette Dispatch Action Handlers
   const handleCommandPaletteSelectPlace = (place) => {
     if (!place) return;
@@ -1688,6 +1695,9 @@ export default function App() {
     switch (actionId) {
       case 'recenter':
         fitKeralaBounds();
+        break;
+      case 'download_report':
+        downloadExecutiveReport();
         break;
       case 'simulate':
         if (customRoute && customRoute.geometry) {
@@ -8904,55 +8914,66 @@ export default function App() {
           >
             ▶
           </button>
+        </div>
 
-          {/* Consolidated Tactical Telemetry Pill */}
-          <div className="telemetry-compact-pill" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.45rem',
-            flexShrink: 0,
-            paddingLeft: '0.5rem',
-            borderLeft: '1px solid rgba(255, 255, 255, 0.15)',
-            fontSize: '0.64rem',
-            fontFamily: 'var(--font-mono, monospace)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <span style={{ color: '#38bdf8', fontWeight: 800 }}>GNSS:</span>
-              <span style={{ color: '#f8fafc', fontWeight: 700 }}>
-                {gpsCoords ? `${gpsCoords.lat.toFixed(3)}°N, ${gpsCoords.lng.toFixed(3)}°E` : '11.537°N, 76.177°E'}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
-              <span style={{ color: '#94a3b8', fontWeight: 700, fontSize: '0.58rem' }}>4 NODES</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic(20);
-                setMapTheme(prev => {
-                  const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
-                  const nextIdx = (order.indexOf(prev) + 1) % order.length;
-                  return order[nextIdx];
-                });
-              }}
-              style={{
-                background: 'rgba(56, 189, 248, 0.12)',
-                border: '1px solid rgba(56, 189, 248, 0.35)',
-                color: '#7dd3fc',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 800,
-                fontSize: '0.58rem',
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap'
-              }}
-              title="Cycle spectrum mode: Cyber Obsidian, NVG Night Ops, Solar Daylight, Safety WCAG"
-            >
-              🎨 {mapTheme === 'dark' ? 'Obsidian' : mapTheme === 'nvg' ? 'Night Ops' : mapTheme === 'solar' ? 'Daylight' : mapTheme === 'safety' ? 'Safety' : mapTheme}
-            </button>
+        {/* Tactical GNSS & System Telemetry HUD Capsule (Permanent, High Contrast, Opposite to Toggle Buttons) */}
+        <div className="tactical-gnss-telemetry-badge" role="region" aria-label="Tactical GNSS & System Telemetry">
+          {/* GNSS Coordinates */}
+          <div className="telemetry-hud-item" title="Live GNSS positioning coordinates">
+            <span className="telemetry-hud-label">GNSS:</span>
+            <span className="telemetry-hud-val">
+              {gpsCoords ? `${gpsCoords.lat.toFixed(3)}°N, ${gpsCoords.lng.toFixed(3)}°E` : '11.537°N, 76.177°E'}
+            </span>
           </div>
+
+          <span className="telemetry-hud-divider">|</span>
+
+          {/* Mesh Nodes */}
+          <div className="telemetry-hud-item" title="Active Mesh Radio Nodes in Proximity">
+            <span className="telemetry-hud-dot live" />
+            <span className="telemetry-hud-muted">4 NODES</span>
+          </div>
+
+          <span className="telemetry-hud-divider">|</span>
+
+          {/* Live Tiles & Road Data Readiness */}
+          <div className="telemetry-hud-item" title="Map Tile Cache & Routing Data Status">
+            <span className={`telemetry-hud-dot ${isOnline ? 'live' : 'offline'}`} />
+            <span style={{ color: isOnline ? '#34d399' : '#fbbf24', fontWeight: 700 }}>
+              {isOnline ? 'Live tiles • local roads ready' : 'Offline • local road data ready'}
+            </span>
+          </div>
+
+          <span className="telemetry-hud-divider">|</span>
+
+          {/* Theme Quick Cycler */}
+          <button
+            type="button"
+            className="telemetry-hud-btn"
+            onClick={() => {
+              triggerHaptic(20);
+              setMapTheme(prev => {
+                const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
+                const nextIdx = (order.indexOf(prev) + 1) % order.length;
+                return order[nextIdx];
+              });
+            }}
+            title="Cycle spectrum mode: Cyber Obsidian, NVG Night Ops, Solar Daylight, Safety WCAG"
+          >
+            🎨 {mapTheme === 'dark' ? 'Obsidian' : mapTheme === 'nvg' ? 'Night Ops' : mapTheme === 'solar' ? 'Daylight' : mapTheme === 'safety' ? 'Safety' : mapTheme}
+          </button>
+
+          <span className="telemetry-hud-divider">|</span>
+
+          {/* Whitepaper Report Download Button */}
+          <button
+            type="button"
+            className="telemetry-hud-btn report-btn"
+            onClick={downloadExecutiveReport}
+            title="Download & View Full System Capabilities & Future Scope Whitepaper"
+          >
+            📄 Report
+          </button>
         </div>
 
         <div className={`map-search-panel ${showLocationSearch ? 'expanded' : 'collapsed'}`}>
@@ -8990,11 +9011,6 @@ export default function App() {
               ))}
             </div>
           )}
-        </div>
-        <div className="map-data-status" title="Map data availability">
-          <span className={`dot ${isOnline ? 'online' : 'offline'}`}></span>
-          {isOnline ? 'Live tiles • local roads ready' : 'Offline • local road data ready'}
-          {mapDataStatus !== 'ready' && ` • ${mapDataStatus}`}
         </div>
         
         {/* Google Maps Style Navigation HUD Overlay */}

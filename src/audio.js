@@ -80,3 +80,14 @@ export function playEvacuationSiren(durationSeconds = 1.8, volume = 0.25) {
     console.warn('[AUDIO] Failed to play evacuation siren:', err);
   }
 }
+
+/**
+ * Trigger subtle tactical haptic vibration
+ */
+export function triggerHaptic(pattern = 20) {
+  try {
+    if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
+      navigator.vibrate(pattern);
+    }
+  } catch {}
+}
