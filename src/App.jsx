@@ -74,6 +74,11 @@ import {
   ,Printer
 } from 'lucide-react';
 
+import CommandPalette from './components/CommandPalette';
+import RouteElevationChart from './components/RouteElevationChart';
+import OfflineCacheManagerModal from './components/OfflineCacheManagerModal';
+import { createRadarTileLayer } from './services/weatherRadarService';
+
 const INITIAL_RESPONDERS = [
   { id: 'resp_1', name: 'Ambulance Alpha', type: 'medical', lat: 8.5241, lng: 76.9366, status: 'idle', speed: 90 },
   { id: 'resp_2', name: 'Fire Engine Beta', type: 'fire_engine', lat: 9.9312, lng: 76.2673, status: 'idle', speed: 80 },
@@ -463,6 +468,15 @@ export default function App() {
   const [qrModalData, setQrModalData] = useState(null); // { title, subtitle, qrDataUrl }
   const [printableMission, setPrintableMission] = useState(null);
   const [audioSirenEnabled, setAudioSirenEnabled] = useState(true);
+
+  // Command Palette, Offline Corridor Cacher & Live Weather Radar States
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showOfflineCacheModal, setShowOfflineCacheModal] = useState(false);
+  const [showRainRadar, setShowRainRadar] = useState(false);
+  const [radarLoading, setRadarLoading] = useState(false);
+  const [radarTimeString, setRadarTimeString] = useState('');
+  const rainRadarLayerRef = useRef(null);
+  const elevationMarkerRef = useRef(null);
 
   // Manual Form States
   const [newIncidentType, setNewIncidentType] = useState('fire');
@@ -1489,6 +1503,186 @@ export default function App() {
       }
     }
   };
+
+  // Live Weather Radar Tile Layer Toggle
+  const toggleRainRadar = async () => {
+    if (showRainRadar) {
+      if (rainRadarLayerRef.current && mapRef.current) {
+        mapRef.current.removeLayer(rainRadarLayerRef.current);
+        rainRadarLayerRef.current = null;
+      }
+      setShowRainRadar(false);
+      logMessage('[RADAR] Weather precipitation radar layer disabled.', 'info');
+    } else {
+      setRadarLoading(true);
+      try {
+        const { layer, timeString } = await createRadarTileLayer(L);
+        if (mapRef.current) {
+          layer.addTo(mapRef.current);
+          rainRadarLayerRef.current = layer;
+          setShowRainRadar(true);
+          setRadarTimeString(timeString);
+          logMessage(`[RADAR] Live monsoon precipitation radar activated (${timeString}).`, 'success');
+        }
+      } catch (err) {
+        logMessage(`[RADAR] Failed to load weather radar: ${err.message}`, 'error');
+      } finally {
+        setRadarLoading(false);
+      }
+    }
+  };
+
+  // Elevation Profile Map Scrubber Handlers
+  const handleElevationHoverPoint = (sample) => {
+    if (!mapRef.current || !sample) return;
+    if (!elevationMarkerRef.current) {
+      const scrubIcon = L.divIcon({
+        className: 'elevation-scrub-marker',
+        html: `<div style="width: 14px; height: 14px; border-radius: 50%; background: #38bdf8; border: 2px solid #ffffff; box-shadow: 0 0 10px #38bdf8;"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      });
+      elevationMarkerRef.current = L.marker([sample.lat, sample.lng], { icon: scrubIcon, zIndexOffset: 3000 })
+        .addTo(mapRef.current);
+    } else {
+      elevationMarkerRef.current.setLatLng([sample.lat, sample.lng]);
+    }
+  };
+
+  const handleElevationLeavePoint = () => {
+    if (elevationMarkerRef.current && mapRef.current) {
+      elevationMarkerRef.current.remove();
+      elevationMarkerRef.current = null;
+    }
+  };
+
+  // Command Palette Dispatch Action Handlers
+  const handleCommandPaletteSelectPlace = (place) => {
+    if (!place) return;
+    handleSelectDestinationPlace(place);
+    setActiveTab('planner');
+    if (mapRef.current && place.lat && place.lng) {
+      mapRef.current.flyTo([place.lat, place.lng], 12, { duration: 1.2 });
+    }
+    logMessage(`[DISPATCH] Selected ${place.name} via Command Palette`, 'info');
+  };
+
+  const handleCommandPaletteExecuteAction = (actionId) => {
+    switch (actionId) {
+      case 'recenter':
+        fitKeralaBounds();
+        break;
+      case 'sos':
+        setP2pSosModalOpen(true);
+        break;
+      case 'radar':
+        toggleRainRadar();
+        break;
+      case 'theme':
+        setMapTheme(prev => {
+          const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
+          const nextIdx = (order.indexOf(prev) + 1) % order.length;
+          return order[nextIdx];
+        });
+        break;
+      case 'storage':
+        setShowOfflineCacheModal(true);
+        break;
+      case 'nearest_hospital':
+        routeToNearestHospital();
+        break;
+      case 'tab_planner':
+        setActiveTab('planner');
+        break;
+      case 'tab_map':
+        setActiveTab('map');
+        break;
+      case 'tab_transit':
+        setActiveTab('transit');
+        break;
+      case 'tab_people':
+        setActiveTab('people');
+        break;
+      case 'tab_alerts':
+        setActiveTab('alerts');
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Global Keyboard Shortcuts Listener
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      const isInput = activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable;
+
+      // 1. Command Palette Trigger: Ctrl+K or Cmd+K or / (when not in input)
+      if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setShowCommandPalette(prev => !prev);
+        return;
+      }
+
+      if (!isInput && e.key === '/') {
+        e.preventDefault();
+        setShowCommandPalette(true);
+        return;
+      }
+
+      // 2. Escape closes modals & Command Palette
+      if (e.key === 'Escape') {
+        if (showCommandPalette) {
+          setShowCommandPalette(false);
+          return;
+        }
+        if (showOfflineCacheModal) {
+          setShowOfflineCacheModal(false);
+          return;
+        }
+        if (p2pSosModalOpen) {
+          setP2pSosModalOpen(false);
+          return;
+        }
+        if (showSettingsPanel) {
+          setShowSettingsPanel(false);
+          return;
+        }
+      }
+
+      if (isInput) return;
+
+      // 3. Single key dispatch shortcuts
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        fitKeralaBounds();
+        logMessage('[MAP] Recaptured Kerala statewide bounds.', 'info');
+      } else if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        setMapTheme(prev => {
+          const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
+          const nextIdx = (order.indexOf(prev) + 1) % order.length;
+          return order[nextIdx];
+        });
+      } else if (e.key === '1') {
+        setActiveTab('map');
+      } else if (e.key === '2') {
+        setActiveTab('planner');
+      } else if (e.key === '3') {
+        setActiveTab('transit');
+      } else if (e.key === '4') {
+        setActiveTab('people');
+      } else if (e.key === '5') {
+        setActiveTab('alerts');
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setShowCommandPalette(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [showCommandPalette, showOfflineCacheModal, p2pSosModalOpen, showSettingsPanel]);
 
   const refreshLiveDistrictAlerts = useCallback(async () => {
     setDistrictAlertsStatus('loading');
@@ -5770,6 +5964,17 @@ export default function App() {
                         </div>
                       )}
 
+                      {/* Topographic Elevation & Incline Gradient Chart */}
+                      {customRoute.geometry && customRoute.geometry.length > 1 && (
+                        <div style={{ marginTop: '0.65rem' }}>
+                          <RouteElevationChart
+                            geometry={customRoute.geometry}
+                            onHoverPoint={handleElevationHoverPoint}
+                            onLeavePoint={handleElevationLeavePoint}
+                          />
+                        </div>
+                      )}
+
                       {!simulationActive ? (
                         <>
                           <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
@@ -8568,6 +8773,30 @@ export default function App() {
             </button>
             <button
               type="button"
+              className={`map-tool-btn ${showRainRadar ? 'active-info' : ''}`}
+              onClick={toggleRainRadar}
+              title={showRainRadar ? `Hide Live Precipitation Radar (${radarTimeString})` : "Show Real-Time Rain & Monsoon Radar"}
+            >
+              🌧️
+            </button>
+            <button
+              type="button"
+              className="map-tool-btn"
+              onClick={() => setShowOfflineCacheModal(true)}
+              title="Open Offline Storage & Corridor Pre-Cacher"
+            >
+              💾
+            </button>
+            <button
+              type="button"
+              className="map-tool-btn"
+              onClick={() => setShowCommandPalette(true)}
+              title="Open Tactical Command Palette (Ctrl+K or /)"
+            >
+              ⌨️
+            </button>
+            <button
+              type="button"
               className={`map-tool-btn ${showSettingsPanel ? 'active-info' : ''}`}
               onClick={() => setShowSettingsPanel(!showSettingsPanel)}
               title="Configure Map Environment HUD"
@@ -9011,6 +9240,18 @@ export default function App() {
             title="Launch Targeted Evacuation Geofence Broadcaster"
           >
             ⚡ <span>Evac Alert</span>
+          </button>
+
+          <button
+            type="button"
+            className="floating-hud-btn"
+            onClick={() => {
+              triggerHaptic(20);
+              setShowCommandPalette(true);
+            }}
+            title="Open Tactical Command Palette (Ctrl+K or /)"
+          >
+            ⌨️ <span>Palette</span>
           </button>
         </div>
       </main>
@@ -10750,6 +10991,22 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Tactical Command Palette Modal (Ctrl+K or /) */}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onSelectPlace={handleCommandPaletteSelectPlace}
+        onExecuteAction={handleCommandPaletteExecuteAction}
+        onNavigateTab={setActiveTab}
+      />
+
+      {/* Offline Storage & Priority Corridor Pre-Cacher Modal */}
+      <OfflineCacheManagerModal
+        isOpen={showOfflineCacheModal}
+        onClose={() => setShowOfflineCacheModal(false)}
+        onNotify={logMessage}
+      />
     </div>
   );
 }
