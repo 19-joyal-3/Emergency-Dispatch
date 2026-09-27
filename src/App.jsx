@@ -37,6 +37,7 @@ import {
   Droplets,
   Trash2,
   Play,
+  Pause,
   Square,
   Compass,
   Locate,
@@ -77,6 +78,7 @@ import {
 import CommandPalette from './components/CommandPalette';
 import RouteElevationChart from './components/RouteElevationChart';
 import OfflineCacheManagerModal from './components/OfflineCacheManagerModal';
+import RouteSimulatorHud from './components/RouteSimulatorHud';
 import { createRadarTileLayer } from './services/weatherRadarService';
 
 const INITIAL_RESPONDERS = [
@@ -1169,6 +1171,14 @@ export default function App() {
   const [simulationActive, setSimulationActive] = useState(false);
   const [simTransport, setSimTransport] = useState('car'); // car, bus, walk
   const [simulationProgress, setSimulationProgress] = useState(0); // km traveled
+  const [simIsPlaying, setSimIsPlaying] = useState(true);
+  const [simSpeedMultiplier, setSimSpeedMultiplier] = useState(5);
+  const [simAutoPan, setSimAutoPan] = useState(true);
+  const [simVehicleCoords, setSimVehicleCoords] = useState(null);
+  const [simVehicleHeading, setSimVehicleHeading] = useState(0);
+  const simIsPlayingRef = useRef(true);
+  const simSpeedMultiplierRef = useRef(5);
+  const simAutoPanRef = useRef(true);
   const [currentBusStopName, setCurrentBusStopName] = useState('');
   const [rerouteNotice, setRerouteNotice] = useState('');
   const simTimerRef = useRef(null);
@@ -4746,52 +4756,89 @@ export default function App() {
     const startName = startPlaceObj?.name || mapData.nodes[startNodeOverride]?.name || 'Origin';
     const endName = endPlaceObj?.name || mapData.nodes[endNodeOverride]?.name || 'Destination';
 
+    if (simTimerRef.current) {
+      clearInterval(simTimerRef.current);
+      simTimerRef.current = null;
+    }
+
     activeSimulationRouteRef.current = route;
     setSimulationActive(true);
     setSimTransport(mode);
     setSimulationProgress(0);
+    setSimIsPlaying(true);
+    simIsPlayingRef.current = true;
+    setSimSpeedMultiplier(5);
+    simSpeedMultiplierRef.current = 5;
+    setSimAutoPan(true);
+    simAutoPanRef.current = true;
+    setSimVehicleCoords({ lat: startCoord[0], lng: startCoord[1] });
+    setSimVehicleHeading(0);
     setCurrentBusStopName('');
     
-    // Choose simulation emoji based on transport mode
+    // Choose simulation emoji & baseline speed based on transport mode
     let emoji = '🚗';
-    let speed = 90; // km/h
+    let baseSpeed = 75; // km/h
     
-    if (mode === 'walk') {
+    if (mode === 'ambulance') {
+      emoji = '🚑';
+      baseSpeed = 95;
+    } else if (mode === 'walk') {
       emoji = '🚶';
-      speed = 15; // speed up walking for visual demo (15 km/h)
+      baseSpeed = 15;
     } else if (mode === 'bus') {
       emoji = '🚌';
-      speed = 60; // km/h
+      baseSpeed = 60;
     }
 
-    logMessage(`[SIMULATION] Starting journey from ${startName} to ${endName} via ${mode.toUpperCase()}...`, 'system');
+    logMessage(`[SIMULATION] Tactical drive replay engaged: ${startName} ➔ ${endName} (${mode.toUpperCase()})`, 'system');
 
-    // Create a temporary simulation marker
+    if (customSimulationMarkerRef.current) {
+      customSimulationMarkerRef.current.remove();
+      customSimulationMarkerRef.current = null;
+    }
+
+    // Create high-visibility tactical vehicle marker
     const simIcon = L.divIcon({
       className: 'custom-simulation-marker',
-      html: `<div style="font-size: 26px; transform-origin: center; filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.85));">${emoji}</div>`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
+      html: `
+        <div class="tactical-vehicle-beacon-wrap">
+          <div class="tactical-beacon-pulse"></div>
+          <div class="tactical-beacon-core">
+            <div class="tactical-beacon-symbol" style="transform: rotate(0deg); line-height: 1;">${emoji}</div>
+          </div>
+        </div>
+      `,
+      iconSize: [38, 38],
+      iconAnchor: [19, 19]
     });
 
     customSimulationMarkerRef.current = L.marker([startCoord[0], startCoord[1]], { icon: simIcon, zIndexOffset: 2000 })
       .addTo(mapRef.current);
 
-    const speedKms = speed / 3600;
-    const tickRateMs = 80;
-    const simSpeedMultiplier = 35; // 35x speed
-    const distancePerTick = speedKms * (tickRateMs / 1000) * simSpeedMultiplier;
+    if (mapRef.current) {
+      mapRef.current.panTo([startCoord[0], startCoord[1]], { animate: true, duration: 0.3 });
+    }
 
+    const tickRateMs = 80;
     let currentProgress = 0;
     let intermediateStops = Array.isArray(route.nodes) ? route.nodes.slice(1, -1) : [];
 
     simTimerRef.current = setInterval(() => {
+      if (!simIsPlayingRef.current) return;
+
+      const multiplier = simSpeedMultiplierRef.current || 5;
+      const speedKms = baseSpeed / 3600;
+      const distancePerTick = speedKms * (tickRateMs / 1000) * multiplier;
+
       currentProgress += distancePerTick;
 
       if (currentProgress >= route.distance) {
-        // Arrived!
+        // Arrived at destination!
         clearInterval(simTimerRef.current);
+        simTimerRef.current = null;
         setSimulationActive(false);
+        setSimIsPlaying(false);
+        simIsPlayingRef.current = false;
         setSimulationProgress(route.distance);
         setCurrentBusStopName('');
 
@@ -4813,34 +4860,34 @@ export default function App() {
         const pos = getPositionAtDistance(route.geometry, currentProgress);
         
         if (pos) {
+          setSimVehicleCoords({ lat: pos.lat, lng: pos.lng });
+          setSimVehicleHeading(pos.heading || 0);
+
           if (customSimulationMarkerRef.current) {
             customSimulationMarkerRef.current.setLatLng([pos.lat, pos.lng]);
-            
-            // Apply rotation matching heading
             const markerDom = customSimulationMarkerRef.current.getElement();
             if (markerDom) {
-              const inner = markerDom.querySelector('div');
-              if (inner) {
-                inner.style.transform = `rotate(${pos.heading}deg)`;
+              const symbol = markerDom.querySelector('.tactical-beacon-symbol');
+              if (symbol) {
+                symbol.style.transform = `rotate(${pos.heading || 0}deg)`;
               }
             }
           }
 
-          // Check if bus is passing through an intermediate bus stop/town
+          if (simAutoPanRef.current && mapRef.current) {
+            mapRef.current.panTo([pos.lat, pos.lng], { animate: true, duration: 0.1, easeLinearity: 0.5 });
+          }
+
+          // Intermediate transit checks
           if (mode === 'bus') {
-            // Find closest intermediate node
             intermediateStops.forEach((stopId, idx) => {
               const stopNode = mapData.nodes[stopId];
               if (!stopNode) return;
               const distToStop = haversineDistance(pos.lat, pos.lng, stopNode.lat, stopNode.lng);
 
-              // If closer than 400m, show stopping banner!
               if (distToStop < 0.4 && stopNode.name) {
                 setCurrentBusStopName(stopNode.name);
-                // Remove stop from queue so we don't trigger repeatedly
                 intermediateStops.splice(idx, 1);
-                
-                // Slow down/pause animation briefly to simulate passengers boarding
                 logMessage(`[TRANSIT] Bus arrived at: ${stopNode.name} (boarding passengers)`, 'info');
               }
             });
@@ -4850,12 +4897,67 @@ export default function App() {
     }, tickRateMs);
   };
 
+  const handleSimulatorSeek = (targetKm) => {
+    const route = activeSimulationRouteRef.current || customRoute || dispatchRoute;
+    if (!route || !route.geometry) return;
+    const clampedKm = Math.max(0, Math.min(route.distance, targetKm));
+    setSimulationProgress(clampedKm);
+
+    const pos = getPositionAtDistance(route.geometry, clampedKm);
+    if (pos) {
+      setSimVehicleCoords({ lat: pos.lat, lng: pos.lng });
+      setSimVehicleHeading(pos.heading || 0);
+
+      if (customSimulationMarkerRef.current) {
+        customSimulationMarkerRef.current.setLatLng([pos.lat, pos.lng]);
+        const markerDom = customSimulationMarkerRef.current.getElement();
+        if (markerDom) {
+          const symbol = markerDom.querySelector('.tactical-beacon-symbol');
+          if (symbol) symbol.style.transform = `rotate(${pos.heading || 0}deg)`;
+        }
+      }
+
+      if (simAutoPanRef.current && mapRef.current) {
+        mapRef.current.panTo([pos.lat, pos.lng], { animate: true, duration: 0.2 });
+      }
+    }
+  };
+
+  const handleSimulatorTogglePlay = () => {
+    setSimIsPlaying(prev => {
+      const next = !prev;
+      simIsPlayingRef.current = next;
+      return next;
+    });
+  };
+
+  const handleSimulatorChangeSpeed = (spd) => {
+    setSimSpeedMultiplier(spd);
+    simSpeedMultiplierRef.current = spd;
+  };
+
+  const handleSimulatorStep = (deltaKm) => {
+    const route = activeSimulationRouteRef.current || customRoute || dispatchRoute;
+    if (!route) return;
+    const targetKm = Math.max(0, Math.min(route.distance, simulationProgress + deltaKm));
+    handleSimulatorSeek(targetKm);
+  };
+
+  const handleSimulatorReplay = () => {
+    handleSimulatorSeek(0);
+    setSimIsPlaying(true);
+    simIsPlayingRef.current = true;
+  };
+
   const stopCustomSimulation = () => {
     const activeRoute = activeSimulationRouteRef.current;
     if (simTimerRef.current) {
       clearInterval(simTimerRef.current);
+      simTimerRef.current = null;
     }
     setSimulationActive(false);
+    setSimIsPlaying(false);
+    simIsPlayingRef.current = false;
     setCurrentBusStopName('');
     setRerouteNotice('');
     if (activeRoute?.nodes?.[0]) {
@@ -5982,10 +6084,10 @@ export default function App() {
                               type="button" 
                               onClick={() => startCustomSimulation(meansOfTransport)} 
                               className="btn btn-secondary" 
-                              style={{ flex: 1, borderColor: 'hsl(var(--color-secondary))' }}
+                              style={{ flex: 1, borderColor: '#3b82f6', color: '#60a5fa' }}
                               disabled={meansOfTransport === 'bus' && matchingBusLines.length === 0}
                             >
-                              <Play size={12} /> Simulate Travel
+                              <Play size={12} /> 🎮 Simulate Drive
                             </button>
                             
                             <button
@@ -6135,33 +6237,59 @@ export default function App() {
                           </div>
                         </>
                       ) : (
-                        <div style={{ marginTop: '0.5rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', color: '#10b981', marginBottom: '0.25rem' }}>
-                            <span>Simulating Route...</span>
-                            <span>{customRoute?.distance > 0 ? Math.min(100, Math.round((simulationProgress / customRoute.distance) * 100)) : 0}%</span>
+                        <div style={{ marginTop: '0.65rem', padding: '0.65rem 0.75rem', background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)', borderRadius: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', fontWeight: 'bold', color: '#60a5fa', marginBottom: '0.35rem' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: simIsPlaying ? '#10b981' : '#f59e0b', display: 'inline-block' }}></span>
+                              {simIsPlaying ? '🎮 Tactical Drive Active' : '⏸️ Drive Paused'}
+                            </span>
+                            <span style={{ fontSize: '0.68rem', background: 'rgba(59, 130, 246, 0.2)', padding: '1px 6px', borderRadius: '4px', color: '#93c5fd' }}>
+                              {simSpeedMultiplier}x Speed
+                            </span>
                           </div>
-                          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+
+                          <div style={{ width: '100%', height: '5px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden', margin: '0.4rem 0' }}>
                             <div style={{ 
                               width: `${customRoute?.distance > 0 ? Math.min(100, (simulationProgress / customRoute.distance) * 100) : 0}%`, 
                               height: '100%', 
-                              background: '#10b981'
+                              background: 'linear-gradient(90deg, #3b82f6, #38bdf8)'
                             }}></div>
                           </div>
-                          <button 
-                            type="button" 
-                            onClick={stopCustomSimulation} 
-                            className="btn btn-primary" 
-                            style={{ marginTop: '0.5rem' }}
-                          >
-                            <Square size={10} /> Abort Journey
-                          </button>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+                            <span>{simulationProgress.toFixed(1)} km</span>
+                            <span>{customRoute?.distance > 0 ? Math.min(100, Math.round((simulationProgress / customRoute.distance) * 100)) : 0}% Traveled</span>
+                            <span>{customRoute?.distance} km</span>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            <button 
+                              type="button" 
+                              onClick={handleSimulatorTogglePlay} 
+                              className="btn btn-secondary" 
+                              style={{ flex: 1, fontSize: '0.72rem', padding: '0.35rem' }}
+                            >
+                              {simIsPlaying ? <Pause size={11} /> : <Play size={11} />}
+                              <span>{simIsPlaying ? 'Pause' : 'Resume'}</span>
+                            </button>
+
+                            <button 
+                              type="button" 
+                              onClick={stopCustomSimulation} 
+                              className="btn btn-primary" 
+                              style={{ flex: 1, fontSize: '0.72rem', padding: '0.35rem', background: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
+                            >
+                              <Square size={11} /> Abort Drive
+                            </button>
+                          </div>
+
                           <button
                             type="button"
                             onClick={triggerRerouteDemo}
                             className="btn btn-secondary"
-                            style={{ marginTop: '0.4rem', width: '100%', borderColor: '#f59e0b', color: '#fbbf24' }}
+                            style={{ marginTop: '0.4rem', width: '100%', borderColor: '#f59e0b', color: '#fbbf24', fontSize: '0.72rem', padding: '0.35rem' }}
                           >
-                            <AlertTriangle size={10} /> Test alternate route
+                            <AlertTriangle size={11} /> Test Hazard Reroute
                           </button>
                         </div>
                       )}
@@ -8515,9 +8643,36 @@ export default function App() {
             </div>
           </>
         )}
-  
 
-        {/* Hover / Dispatch Controls Overlay */}
+        {/* Tactical Route Simulator & Drive Replay HUD Overlay */}
+        {simulationActive && (activeSimulationRouteRef.current || customRoute || dispatchRoute) && (
+          <RouteSimulatorHud
+            active={simulationActive}
+            route={activeSimulationRouteRef.current || customRoute || dispatchRoute}
+            progress={simulationProgress}
+            onSeek={handleSimulatorSeek}
+            isPlaying={simIsPlaying}
+            onTogglePlay={handleSimulatorTogglePlay}
+            speedMultiplier={simSpeedMultiplier}
+            onChangeSpeed={handleSimulatorChangeSpeed}
+            onStep={handleSimulatorStep}
+            onReplay={handleSimulatorReplay}
+            onStop={stopCustomSimulation}
+            autoPan={simAutoPan}
+            onToggleAutoPan={() => {
+              setSimAutoPan(prev => {
+                const next = !prev;
+                simAutoPanRef.current = next;
+                return next;
+              });
+            }}
+            transportMode={simTransport}
+            vehicleHeading={simVehicleHeading}
+            vehicleCoords={simVehicleCoords}
+            startName={startPlaceObj?.name || (mapData.nodes[selectedStartNode]?.name) || 'Origin'}
+            endName={endPlaceObj?.name || (mapData.nodes[selectedEndNode]?.name) || 'Destination'}
+          />
+        )}
         <div className="map-overlay-panel">
           {/* Dispatch controls card */}
           {selectedIncident && (
