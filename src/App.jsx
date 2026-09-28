@@ -83,6 +83,7 @@ import OfflineCacheManagerModal from './components/OfflineCacheManagerModal';
 import RouteSimulatorHud from './components/RouteSimulatorHud';
 import KsdmaDamMonitorModal from './components/KsdmaDamMonitorModal';
 import KsdmaWeatherWarningModal from './components/KsdmaWeatherWarningModal';
+import PwaInstallGuideModal from './components/PwaInstallGuideModal';
 import { createRadarTileLayer } from './services/weatherRadarService';
 import { KSDMA_RESERVOIRS, checkRouteDamAlertProximity } from './services/ksdmaLiveService';
 import { getKsdmaDistrictWarnings, checkRouteWeatherInterception, KSDMA_ALERT_TYPES } from './services/ksdmaWeatherWarningService';
@@ -505,6 +506,14 @@ export default function App() {
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [isNetworkOffline, setIsNetworkOffline] = useState(!navigator.onLine);
+  const [showPwaInstallModal, setShowPwaInstallModal] = useState(false);
+  const [showMobileInstallBanner, setShowMobileInstallBanner] = useState(() => {
+    try {
+      return !sessionStorage.getItem('resylix_pwa_banner_dismissed');
+    } catch {
+      return true;
+    }
+  });
 
   // Manual Form States
   const [newIncidentType, setNewIncidentType] = useState('fire');
@@ -1657,19 +1666,24 @@ export default function App() {
   }, [logMessage]);
 
   const handleTriggerPwaInstall = async () => {
+    triggerHaptic(25);
     if (deferredInstallPrompt) {
-      deferredInstallPrompt.prompt();
-      const choice = await deferredInstallPrompt.userChoice;
-      if (choice.outcome === 'accepted') {
-        logMessage('[PWA] User accepted installation prompt.', 'success');
-      } else {
-        logMessage('[PWA] User deferred installation prompt.', 'info');
+      try {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          logMessage('[PWA] User accepted installation prompt.', 'success');
+          setIsAppInstalled(true);
+        } else {
+          logMessage('[PWA] User deferred installation prompt.', 'info');
+        }
+      } catch (err) {
+        console.warn('[PWA] Native prompt error:', err);
+        setShowPwaInstallModal(true);
       }
       setDeferredInstallPrompt(null);
-    } else if (isAppInstalled) {
-      logMessage('[PWA] Resylix is already running in standalone app mode.', 'info');
     } else {
-      logMessage('[PWA] To install: on iOS Safari tap Share -> "Add to Home Screen"; on Chrome/Edge tap Menu -> "Install app".', 'info');
+      setShowPwaInstallModal(true);
     }
   };
 
@@ -5700,6 +5714,18 @@ export default function App() {
             {p2pMessages.length > 0 && <span className="tab-badge" style={{ background: '#ef4444' }}>{p2pMessages.length}</span>}
             <span className="tab-label">P2P Radar</span>
           </button>
+          {/* PWA Install Tab Button (Mobile & Desktop) */}
+          <button
+            type="button"
+            className="tab-btn"
+            onClick={handleTriggerPwaInstall}
+            title={isAppInstalled ? 'Resylix is running in standalone mode' : 'Install Resylix Offline App to Phone'}
+            style={{ position: 'relative', color: isAppInstalled ? '#34d399' : '#38bdf8' }}
+          >
+            <Smartphone size={18} />
+            {isAppInstalled && <span className="tab-badge" style={{ background: '#10b981' }}>✓</span>}
+            <span className="tab-label">{isAppInstalled ? 'Installed' : 'Install App'}</span>
+          </button>
         </div>
         <div className="toolbar-footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', paddingBottom: '10px' }}>
           <button 
@@ -5735,7 +5761,7 @@ export default function App() {
           >
             <HelpCircle size={18} />
           </button>
-          {deferredInstallPrompt && !isAppInstalled && (
+          {!isAppInstalled && (
             <button 
               type="button"
               className="pwa-install-trigger-btn"
@@ -8989,7 +9015,52 @@ export default function App() {
           >
             🖥️ Slides
           </button>
+
+          <span className="telemetry-hud-divider">|</span>
+
+          {/* PWA Mobile & Desktop Install Button */}
+          <button
+            type="button"
+            className="telemetry-hud-btn pwa-hud-btn"
+            onClick={handleTriggerPwaInstall}
+            title={isAppInstalled ? 'Resylix Geo is running in standalone mode' : 'Install Resylix Offline App to Phone or Desktop'}
+          >
+            {isAppInstalled ? '✅ App Ready' : '📲 Install App'}
+          </button>
         </div>
+
+        {/* Mobile Smart PWA Install Banner (Dismissible) */}
+        {showMobileInstallBanner && !isAppInstalled && (
+          <div className="mobile-smart-install-banner" role="banner" aria-label="Install App Banner">
+            <div className="banner-content" onClick={handleTriggerPwaInstall}>
+              <span className="banner-icon">📲</span>
+              <div className="banner-text">
+                <div className="banner-title">Install Resylix Mobile App</div>
+                <div className="banner-sub">Zero-network Kerala maps, dams & audio navigation</div>
+              </div>
+            </div>
+            <div className="banner-buttons">
+              <button
+                type="button"
+                className="banner-action-btn"
+                onClick={handleTriggerPwaInstall}
+              >
+                Install
+              </button>
+              <button
+                type="button"
+                className="banner-dismiss-btn"
+                onClick={() => {
+                  setShowMobileInstallBanner(false);
+                  try { sessionStorage.setItem('resylix_pwa_banner_dismissed', '1'); } catch {}
+                }}
+                aria-label="Dismiss banner"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className={`map-search-panel ${showLocationSearch ? 'expanded' : 'collapsed'}`}>
           <button
@@ -11644,8 +11715,18 @@ export default function App() {
         onClose={() => setShowOfflineCacheModal(false)}
         onNotify={logMessage}
         onInstallPwa={handleTriggerPwaInstall}
-        canInstallPwa={Boolean(deferredInstallPrompt)}
+        canInstallPwa={!isAppInstalled}
         isPwaInstalled={isAppInstalled}
+      />
+
+      {/* PWA Mobile & Desktop Standalone Installation Guide Modal */}
+      <PwaInstallGuideModal
+        isOpen={showPwaInstallModal}
+        onClose={() => setShowPwaInstallModal(false)}
+        canPrompt={Boolean(deferredInstallPrompt)}
+        onTriggerPrompt={handleTriggerPwaInstall}
+        isInstalled={isAppInstalled}
+        onNotify={logMessage}
       />
 
       {/* KSDMA Reservoir & Dam Water Level Telemetry Modal */}
