@@ -8949,26 +8949,25 @@ export default function App() {
           overflow: 'hidden'
         }}>
           {/* Section 1: Statewide Status, Controls & Matrix Toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.68rem', fontWeight: 800, color: '#f8fafc', flexShrink: 0, paddingRight: '0.45rem', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.7rem', fontWeight: 600, color: '#f8fafc', flexShrink: 0, paddingRight: '0.5rem', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
             <span style={{
-              background: 'rgba(56, 189, 248, 0.22)',
-              border: '1px solid #38bdf8',
-              color: '#38bdf8',
-              padding: '1px 6px',
-              borderRadius: '4px',
-              fontSize: '0.6rem',
-              fontWeight: 800,
-              letterSpacing: '0.04em'
+              background: 'rgba(59, 130, 246, 0.12)',
+              border: '1px solid rgba(59, 130, 246, 0.25)',
+              color: '#60a5fa',
+              padding: '2px 8px',
+              borderRadius: '9999px',
+              fontSize: '0.65rem',
+              fontWeight: 600,
+              letterSpacing: '-0.01em'
             }}>
-              🌦️ WEATHER (14)
+              🌦️ Weather (14)
             </span>
             <span style={{
               display: 'inline-block',
-              width: '8px',
-              height: '8px',
+              width: '7px',
+              height: '7px',
               borderRadius: '50%',
-              background: districtAlertsStatus === 'live' ? '#22c55e' : districtAlertsStatus === 'loading' ? '#eab308' : '#38bdf8',
-              boxShadow: districtAlertsStatus === 'live' ? '0 0 8px #22c55e' : 'none'
+              background: districtAlertsStatus === 'live' ? '#10b981' : districtAlertsStatus === 'loading' ? '#f59e0b' : '#3b82f6'
             }} />
             <button
               type="button"
@@ -8977,7 +8976,7 @@ export default function App() {
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#38bdf8',
+                color: '#94a3b8',
                 cursor: 'pointer',
                 fontSize: '0.75rem',
                 padding: '0 2px',
@@ -8992,20 +8991,20 @@ export default function App() {
               onClick={() => setShowWeatherMatrixModal(true)}
               title="Open full 14-district weather matrix table"
               style={{
-                background: 'rgba(56, 189, 248, 0.12)',
-                border: '1px solid rgba(56, 189, 248, 0.35)',
-                color: '#7dd3fc',
-                fontSize: '0.58rem',
-                fontWeight: 700,
-                padding: '2px 6px',
-                borderRadius: '5px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#cbd5e1',
+                fontSize: '0.64rem',
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: '9999px',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '3px'
               }}
             >
-              📋 All 14 Grid
+              📋 All 14
             </button>
           </div>
 
@@ -9112,78 +9111,20 @@ export default function App() {
           </button>
         </div>
 
-        {/* Tactical GNSS & System Telemetry HUD Capsule (Permanent, High Contrast, Opposite to Toggle Buttons) */}
-        <div className="tactical-gnss-telemetry-badge" role="region" aria-label="Tactical GNSS & System Telemetry">
-          {/* GNSS Coordinates */}
-          <div className="telemetry-hud-item" title="Live GNSS positioning coordinates">
-            <span className="telemetry-hud-label">GNSS:</span>
-            <span className="telemetry-hud-val">
-              {gpsCoords ? `${gpsCoords.lat.toFixed(3)}°N, ${gpsCoords.lng.toFixed(3)}°E` : '11.537°N, 76.177°E'}
-            </span>
-          </div>
-
-          <span className="telemetry-hud-divider">|</span>
-
-          {/* Mesh Nodes */}
-          <div className="telemetry-hud-item" title="Active Mesh Radio Nodes in Proximity">
-            <span className="telemetry-hud-dot live" />
-            <span className="telemetry-hud-muted">4 NODES</span>
-          </div>
-
-          <span className="telemetry-hud-divider">|</span>
-
-          {/* Live Tiles & Road Data Readiness */}
-          <div className="telemetry-hud-item" title="Map Tile Cache & Routing Data Status">
+        {/* Modern Apple / Linear Style Floating Top Capsule */}
+        <div className="tactical-gnss-telemetry-badge" role="region" aria-label="System Status & Quick Actions">
+          {/* Status Indicator Pill */}
+          <div 
+            className="telemetry-hud-item" 
+            title={`GNSS: ${gpsCoords ? `${gpsCoords.lat.toFixed(4)}°N, ${gpsCoords.lng.toFixed(4)}°E` : '11.537°N, 76.177°E'} • Mesh Radio: 4 Nodes Ready • Offline Cache: 100% Synced`}
+          >
             <span className={`telemetry-hud-dot ${isOnline ? 'live' : 'offline'}`} />
-            <span style={{ color: isOnline ? '#34d399' : '#fbbf24', fontWeight: 700 }}>
-              {isOnline ? 'Live tiles • local roads ready' : 'Offline • local road data ready'}
+            <span className="telemetry-hud-status-text">
+              {isOnline ? 'Online' : 'Offline Ready'}
             </span>
           </div>
 
-          <span className="telemetry-hud-divider">|</span>
-
-          {/* Theme Quick Cycler */}
-          <button
-            type="button"
-            className="telemetry-hud-btn"
-            onClick={() => {
-              triggerHaptic(20);
-              setMapTheme(prev => {
-                const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
-                const nextIdx = (order.indexOf(prev) + 1) % order.length;
-                return order[nextIdx];
-              });
-            }}
-            title="Cycle spectrum mode: Cyber Obsidian, NVG Night Ops, Solar Daylight, Safety WCAG"
-          >
-            🎨 {mapTheme === 'dark' ? 'Obsidian' : mapTheme === 'nvg' ? 'Night Ops' : mapTheme === 'solar' ? 'Daylight' : mapTheme === 'safety' ? 'Safety' : mapTheme}
-          </button>
-
-          <span className="telemetry-hud-divider">|</span>
-
-          {/* Whitepaper Report Download Button */}
-          <button
-            type="button"
-            className="telemetry-hud-btn report-btn"
-            onClick={downloadExecutiveReport}
-            title="Download & View Full System Capabilities & Future Scope Whitepaper"
-          >
-            📄 Report
-          </button>
-
-          <span className="telemetry-hud-divider">|</span>
-
-          {/* Presentation Slides & Speaker Notes Button */}
-          <button
-            type="button"
-            className="telemetry-hud-btn slides-btn"
-            onClick={() => window.open('/RESYLIX_PRESENTATION_DECK.html', '_blank')}
-            title="Open Interactive Presentation Slides & Speaker Defense Notes"
-          >
-            🖥️ Slides
-          </button>
-
-          <span className="telemetry-hud-divider">|</span>
+          <div className="telemetry-hud-sep" />
 
           {/* 1-Click Live Presentation Demo Scenarios Button */}
           <button
@@ -9198,7 +9139,42 @@ export default function App() {
             ⚡ Scenarios
           </button>
 
-          <span className="telemetry-hud-divider">|</span>
+          {/* Presentation Slides Button */}
+          <button
+            type="button"
+            className="telemetry-hud-btn slides-btn"
+            onClick={() => window.open('/RESYLIX_PRESENTATION_DECK.html', '_blank')}
+            title="Open Interactive Presentation Slides & Defense Notes"
+          >
+            🖥️ Slides
+          </button>
+
+          {/* Whitepaper Report Download Button */}
+          <button
+            type="button"
+            className="telemetry-hud-btn report-btn"
+            onClick={downloadExecutiveReport}
+            title="Download & View Full System Whitepaper Report"
+          >
+            📄 Report
+          </button>
+
+          {/* Theme Cycler */}
+          <button
+            type="button"
+            className="telemetry-hud-btn theme-btn"
+            onClick={() => {
+              triggerHaptic(20);
+              setMapTheme(prev => {
+                const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
+                const nextIdx = (order.indexOf(prev) + 1) % order.length;
+                return order[nextIdx];
+              });
+            }}
+            title="Cycle map display theme"
+          >
+            🎨 {mapTheme === 'dark' ? 'Slate' : mapTheme === 'nvg' ? 'Night' : mapTheme === 'solar' ? 'Light' : mapTheme === 'safety' ? 'Safety' : mapTheme}
+          </button>
 
           {/* PWA Mobile & Desktop Install Button */}
           <button
@@ -9207,21 +9183,21 @@ export default function App() {
             onClick={handleTriggerPwaInstall}
             title={isAppInstalled ? 'Resylix Geo is running in standalone mode' : 'Install Resylix Offline App to Phone or Desktop'}
           >
-            {isAppInstalled ? '✅ App Ready' : '📲 Install App'}
+            {isAppInstalled ? '✅ App' : '📲 Install'}
           </button>
 
           {/* Active Demo Scenario Indicator Pill */}
           {activeDemoScenario && (
             <div className="active-demo-scenario-pill">
               <span className="pulse-dot" />
-              <span className="pill-title">DEMO: {activeDemoScenario.title}</span>
+              <span className="pill-title">{activeDemoScenario.title}</span>
               <button
                 type="button"
                 className="pill-reset-btn"
                 onClick={handleResetDemoScenario}
                 title="Reset scenario to standby"
               >
-                ✕ Reset
+                ✕
               </button>
             </div>
           )}
@@ -10082,7 +10058,7 @@ export default function App() {
             }}
             title="Broadcast Immediate Zero-Connectivity Emergency SOS Beacon"
           >
-            🚨 <span>SOS BEACON</span>
+            🚨 <span>SOS Beacon</span>
           </button>
 
           <div className="floating-hud-divider" />
@@ -10127,9 +10103,9 @@ export default function App() {
                 return order[nextIdx];
               });
             }}
-            title={`Current Spectrum: ${mapTheme.toUpperCase()}. Click to cycle spectrum modes.`}
+            title={`Current Theme: ${mapTheme}. Click to cycle map modes.`}
           >
-            🛰️ <span style={{ textTransform: 'capitalize' }}>{mapTheme === 'dark' ? 'Obsidian' : mapTheme === 'nvg' ? 'Night Ops' : mapTheme === 'solar' ? 'Daylight' : mapTheme === 'safety' ? 'Safety AAA' : mapTheme}</span>
+            🎨 <span style={{ textTransform: 'capitalize' }}>{mapTheme === 'dark' ? 'Slate' : mapTheme === 'nvg' ? 'Night Ops' : mapTheme === 'solar' ? 'Daylight' : mapTheme === 'safety' ? 'High Contrast' : mapTheme}</span>
           </button>
 
           <button
