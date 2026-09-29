@@ -81,7 +81,9 @@ export async function createRadarTileLayer(L) {
     tileSize: 256,
     opacity: 0.65,
     zIndex: 450,
+    maxNativeZoom: 7,
     maxZoom: 18,
+    minZoom: 1,
     attribution: 'RainViewer Radar'
   });
 

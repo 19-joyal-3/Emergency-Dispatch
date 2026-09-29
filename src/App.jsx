@@ -2081,7 +2081,9 @@ export default function App() {
       if (pmtilesUrl) {
         pmtilesRef.current = new PMTiles(pmtilesUrl);
         tileLayerRef.current = leafletRasterLayer(pmtilesRef.current, {
-          attribution: getTileAttribution(mapTheme)
+          attribution: getTileAttribution(mapTheme),
+          maxNativeZoom: 9,
+          maxZoom: 18
         }).addTo(map);
       } else if (offlineTileUrl) {
         tileLayerRef.current = L.tileLayer(offlineTileUrl, {
@@ -2379,7 +2381,9 @@ export default function App() {
       }
       pmtilesRef.current = new PMTiles(pmtilesUrl);
       tileLayerRef.current = leafletRasterLayer(pmtilesRef.current, {
-        attribution: getTileAttribution(mapTheme)
+        attribution: getTileAttribution(mapTheme),
+        maxNativeZoom: 9,
+        maxZoom: 18
       }).addTo(mapRef.current);
       mapRef.current.getContainer().style.background = '';
     } else if (tileUrl) {
@@ -2423,6 +2427,7 @@ export default function App() {
             `https://api.tomtom.com/maps/orbis/traffic/flow/raster/tile/{z}/{x}/{y}?apiVersion=2&key=${encodeURIComponent(cleanKey)}`,
             {
               maxZoom: 22,
+              maxNativeZoom: 18,
               opacity: 0.85,
               zIndex: 650,
               attribution: 'Live Traffic Flow &copy; TomTom Orbis'
@@ -2434,6 +2439,7 @@ export default function App() {
             `https://api.tomtom.com/maps/orbis/traffic/incidents/raster/tile/{z}/{x}/{y}?apiVersion=2&key=${encodeURIComponent(cleanKey)}`,
             {
               maxZoom: 22,
+              maxNativeZoom: 18,
               opacity: 0.90,
               zIndex: 651,
               attribution: 'Live Incidents &copy; TomTom Orbis'
@@ -2445,7 +2451,8 @@ export default function App() {
             `https://{s}.api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${encodeURIComponent(cleanKey)}`,
             {
               subdomains: ['a', 'b', 'c', 'd'],
-              maxZoom: 19,
+              maxZoom: 22,
+              maxNativeZoom: 18,
               opacity: 0.85,
               zIndex: 650,
               attribution: 'Live Traffic &copy; TomTom'
