@@ -23,6 +23,7 @@ export default function CommandPalette({
   }, [isOpen]);
 
   const defaultActions = [
+    { id: 'demo_scenarios', label: 'Launch 1-Click Live Presentation Demo Scenarios', icon: Zap, category: 'Presentation', badge: 'Demo' },
     { id: 'recenter', label: 'Recenter Map to Kerala Bounds', icon: Compass, category: 'Map Controls', badge: 'R' },
     { id: 'open_presentation', label: 'Open Presentation Slide Deck & Speaker Defense Notes', icon: Presentation, category: 'Documentation', badge: 'Slides' },
     { id: 'download_report', label: 'Download Resylix Capabilities & Future Scope Whitepaper', icon: FileText, category: 'Documentation', badge: 'PDF' },

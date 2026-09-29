@@ -84,6 +84,7 @@ import RouteSimulatorHud from './components/RouteSimulatorHud';
 import KsdmaDamMonitorModal from './components/KsdmaDamMonitorModal';
 import KsdmaWeatherWarningModal from './components/KsdmaWeatherWarningModal';
 import PwaInstallGuideModal from './components/PwaInstallGuideModal';
+import DemoScenariosModal from './components/DemoScenariosModal';
 import { createRadarTileLayer } from './services/weatherRadarService';
 import { KSDMA_RESERVOIRS, checkRouteDamAlertProximity } from './services/ksdmaLiveService';
 import { getKsdmaDistrictWarnings, checkRouteWeatherInterception, KSDMA_ALERT_TYPES } from './services/ksdmaWeatherWarningService';
@@ -507,6 +508,8 @@ export default function App() {
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [isNetworkOffline, setIsNetworkOffline] = useState(!navigator.onLine);
   const [showPwaInstallModal, setShowPwaInstallModal] = useState(false);
+  const [showDemoScenariosModal, setShowDemoScenariosModal] = useState(false);
+  const [activeDemoScenario, setActiveDemoScenario] = useState(null);
   const [showMobileInstallBanner, setShowMobileInstallBanner] = useState(() => {
     try {
       return !sessionStorage.getItem('resylix_pwa_banner_dismissed');
@@ -1707,6 +1710,9 @@ export default function App() {
 
   const handleCommandPaletteExecuteAction = (actionId) => {
     switch (actionId) {
+      case 'demo_scenarios':
+        setShowDemoScenariosModal(true);
+        break;
       case 'recenter':
         fitKeralaBounds();
         break;
@@ -5379,6 +5385,160 @@ export default function App() {
     logMessage('[SIMULATION] Travel simulation cancelled by operator.', 'warning');
   };
 
+  // 1-Click Live Presentation Demo Scenario Handlers
+  const handleLaunchDemoScenario = async (scenario) => {
+    if (!scenario) return;
+    setActiveDemoScenario(scenario);
+    setShowDemoScenariosModal(false);
+    triggerHaptic(30);
+
+    // Scenario 2: Banasurasagar Dam Telemetry & Downstream Flood Basin
+    if (scenario.openDamModal) {
+      setShowKsdmaModal(true);
+      if (scenario.focusCoords && mapRef.current) {
+        mapRef.current.flyTo(scenario.focusCoords, scenario.focusZoom || 12, { duration: 1.5 });
+      }
+      tacticalVoiceNav.speak({
+        textEn: scenario.voiceTextEn,
+        textMl: scenario.voiceTextMl,
+        priority: 2,
+        preChime: true
+      });
+      logMessage(`[DEMO SCENARIO] Launched: ${scenario.title}`, 'warning');
+      return;
+    }
+
+    // Scenarios 1 & 3: Route Detour & Real-Road Drive Simulation
+    if (scenario.route) {
+      stopCustomSimulation();
+      setActiveTab('planner');
+
+      // Clear any prior demo blockages
+      try {
+        const priorBlockages = await db.blockages.toArray();
+        for (const b of priorBlockages) {
+          if (b.id && b.id.startsWith('demo_block_')) {
+            await removeBlockageLocal(b.id, isOnline);
+          }
+        }
+      } catch (_e) {}
+
+      // Add scenario blockage if specified
+      if (scenario.route.blockage) {
+        const demoBlock = {
+          id: `demo_block_${scenario.id}`,
+          lat: scenario.route.blockage.lat,
+          lng: scenario.route.blockage.lng,
+          name: scenario.route.blockage.name,
+          active: 1
+        };
+        await addBlockageLocal(demoBlock, isOnline);
+        await reloadLocalData();
+      }
+
+      // Configure start & destination places
+      const startPlace = {
+        id: `demo_start_${scenario.id}`,
+        name: scenario.route.start.name,
+        district: scenario.route.start.district || 'Kerala',
+        lat: scenario.route.start.lat,
+        lng: scenario.route.start.lng,
+        type: 'town',
+        desc: scenario.route.start.name
+      };
+
+      const endPlace = {
+        id: `demo_end_${scenario.id}`,
+        name: scenario.route.end.name,
+        district: scenario.route.end.district || 'Kerala',
+        lat: scenario.route.end.lat,
+        lng: scenario.route.end.lng,
+        type: 'town',
+        desc: scenario.route.end.name
+      };
+
+      handleSelectDeparturePlace(startPlace);
+      handleSelectDestinationPlace(endPlace);
+
+      if (mapRef.current) {
+        mapRef.current.flyTo([scenario.route.start.lat, scenario.route.start.lng], 13, { duration: 1.2 });
+      }
+
+      // Voice alert in dual English & Malayalam
+      tacticalVoiceNav.speak({
+        textEn: scenario.voiceTextEn,
+        textMl: scenario.voiceTextMl,
+        priority: 1,
+        preChime: true
+      });
+
+      logMessage(`[DEMO SCENARIO] Active: ${scenario.title} - Calculating real-road detour bypass...`, 'warning');
+
+      // Kick off route solving and auto-start simulation
+      setTimeout(async () => {
+        try {
+          const currentBlocks = await db.blockages.toArray();
+          const routeRes = await calculateBestRoute({
+            start: startPlace,
+            end: endPlace,
+            mapData,
+            transport: 'car',
+            blockages: currentBlocks,
+            tomtomApiKey,
+            signal: new AbortController().signal
+          }) || routeWithOfflineGraph({
+            start: startPlace,
+            end: endPlace,
+            mapData,
+            blockages: currentBlocks,
+            transport: 'car'
+          });
+
+          if (routeRes && routeRes.geometry?.length > 1) {
+            setCustomRoute(routeRes);
+            drawRoutePolyline(routeRes.geometry, startPlace, endPlace);
+            startCustomSimulation('car', routeRes);
+            logMessage(`[DEMO SCENARIO] Simulation underway (${routeRes.distance?.toFixed(1)} km corridor)`, 'success');
+          }
+        } catch (err) {
+          console.warn('[DEMO SCENARIO] Error auto-starting simulation:', err);
+        }
+      }, 700);
+    }
+  };
+
+  const handleResetDemoScenario = async () => {
+    stopCustomSimulation();
+    setActiveDemoScenario(null);
+    setShowDemoScenariosModal(false);
+    triggerHaptic(20);
+
+    // Remove any demo blockages
+    try {
+      const allBlockages = await db.blockages.toArray();
+      for (const b of allBlockages) {
+        if (b.id && b.id.startsWith('demo_block_')) {
+          await removeBlockageLocal(b.id, isOnline);
+        }
+      }
+      await reloadLocalData();
+    } catch (_e) {}
+
+    // Reset planner state
+    setSelectedStartNode(null);
+    setSelectedEndNode(null);
+    setStartPlaceObj(null);
+    setEndPlaceObj(null);
+    setStartQuery('');
+    setEndQuery('');
+    setCustomRoute(null);
+    if (routeLayerRef.current) {
+      routeLayerRef.current.clearLayers();
+    }
+    fitKeralaBounds();
+    logMessage('[DEMO SCENARIO] System reset to standby state.', 'info');
+  };
+
   // Auto-Find Closest Responder
   const handleAutoDispatch = () => {
     if (!selectedIncident || responders.length === 0) return;
@@ -9025,6 +9185,21 @@ export default function App() {
 
           <span className="telemetry-hud-divider">|</span>
 
+          {/* 1-Click Live Presentation Demo Scenarios Button */}
+          <button
+            type="button"
+            className="telemetry-hud-btn scenarios-btn"
+            onClick={() => {
+              triggerHaptic(20);
+              setShowDemoScenariosModal(true);
+            }}
+            title="Launch 1-Click Live Disaster Scenarios (Wayanad, Banasurasagar, Kuttanad)"
+          >
+            ⚡ Scenarios
+          </button>
+
+          <span className="telemetry-hud-divider">|</span>
+
           {/* PWA Mobile & Desktop Install Button */}
           <button
             type="button"
@@ -9034,6 +9209,22 @@ export default function App() {
           >
             {isAppInstalled ? '✅ App Ready' : '📲 Install App'}
           </button>
+
+          {/* Active Demo Scenario Indicator Pill */}
+          {activeDemoScenario && (
+            <div className="active-demo-scenario-pill">
+              <span className="pulse-dot" />
+              <span className="pill-title">DEMO: {activeDemoScenario.title}</span>
+              <button
+                type="button"
+                className="pill-reset-btn"
+                onClick={handleResetDemoScenario}
+                title="Reset scenario to standby"
+              >
+                ✕ Reset
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Mobile Smart PWA Install Banner (Dismissible) */}
@@ -11754,6 +11945,15 @@ export default function App() {
             logMessage(`[MAP] Focused on ${district.name} (${district.alert} Alert).`, 'info');
           }
         }}
+      />
+
+      {/* 1-Click Live Presentation Demo Scenarios Modal */}
+      <DemoScenariosModal
+        isOpen={showDemoScenariosModal}
+        onClose={() => setShowDemoScenariosModal(false)}
+        onLaunchScenario={handleLaunchDemoScenario}
+        onResetScenario={handleResetDemoScenario}
+        activeScenarioId={activeDemoScenario?.id}
       />
     </div>
   );

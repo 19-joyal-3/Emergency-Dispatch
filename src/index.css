@@ -5003,6 +5003,80 @@ textarea {
   color: #ffffff;
 }
 
+.telemetry-hud-btn.scenarios-btn {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(249, 115, 22, 0.22));
+  border-color: rgba(234, 179, 8, 0.6);
+  color: #fde047;
+  font-weight: 800;
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.25);
+}
+
+.telemetry-hud-btn.scenarios-btn:hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.45), rgba(249, 115, 22, 0.45));
+  border-color: #facc15;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(234, 179, 8, 0.55);
+}
+
+/* Active Demo Scenario Indicator Pill */
+.active-demo-scenario-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(234, 179, 8, 0.65);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 10px rgba(234, 179, 8, 0.35);
+  margin-left: 6px;
+  animation: pulse-scenario-border 2s infinite ease-in-out;
+}
+
+@keyframes pulse-scenario-border {
+  0%, 100% { border-color: rgba(234, 179, 8, 0.65); box-shadow: 0 0 8px rgba(234, 179, 8, 0.3); }
+  50% { border-color: rgba(249, 115, 22, 0.9); box-shadow: 0 0 16px rgba(249, 115, 22, 0.55); }
+}
+
+.active-demo-scenario-pill .pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #facc15;
+  box-shadow: 0 0 8px #facc15;
+  animation: pulse-dot-anim 1.2s infinite;
+}
+
+@keyframes pulse-dot-anim {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.4); }
+}
+
+.active-demo-scenario-pill .pill-title {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #fde047;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.active-demo-scenario-pill .pill-reset-btn {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.active-demo-scenario-pill .pill-reset-btn:hover {
+  background: rgba(239, 68, 68, 0.4);
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
 /* Mobile Smart PWA Install Banner */
 .mobile-smart-install-banner {
   display: none;
