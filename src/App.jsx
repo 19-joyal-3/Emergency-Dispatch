@@ -9446,27 +9446,38 @@ export default function App() {
             {/* Directions Chip */}
             <button
               type="button"
-              className={`maps-chip directions-chip ${activeTab === 'planner' ? 'active' : ''}`}
+              role="switch"
+              aria-checked={activeTab === 'planner'}
+              className={`maps-chip directions-chip switch-chip ${activeTab === 'planner' ? 'active' : ''}`}
               onClick={() => setActiveTab(prev => prev === 'planner' ? null : 'planner')}
               title="Tactical Route Planner"
+              aria-label="Directions toggle"
             >
               <Navigation size={15} />
               <span>Directions</span>
+              <span className={`chip-toggle-switch ${activeTab === 'planner' ? 'on' : ''}`} aria-hidden="true">
+                <span className="chip-toggle-thumb" />
+              </span>
             </button>
 
             {/* Map Layers Button */}
             <button
               type="button"
-              className={`maps-chip layers-chip ${showLayersMenu ? 'active' : ''}`}
+              role="switch"
+              aria-checked={showLayersMenu}
+              className={`maps-chip layers-chip switch-chip ${showLayersMenu ? 'active' : ''}`}
               onClick={() => {
                 triggerHaptic(15);
                 setShowLayersMenu(prev => !prev);
               }}
               title="Map Layers, POIs & Weather Overlays"
-              aria-label="Map layers"
+              aria-label="Map layers toggle"
             >
               <Layers size={14} />
               <span>Layers</span>
+              <span className={`chip-toggle-switch ${showLayersMenu ? 'on' : ''}`} aria-hidden="true">
+                <span className="chip-toggle-thumb" />
+              </span>
             </button>
 
             {/* Map Theme Cycler */}
@@ -9740,13 +9751,18 @@ export default function App() {
           {/* Layers Button (Apple / Google Maps Style) */}
           <button
             type="button"
-            className={`maps-layers-chip ${showLayersMenu ? 'active' : ''}`}
+            role="switch"
+            aria-checked={showLayersMenu}
+            className={`maps-layers-chip switch-chip ${showLayersMenu ? 'active' : ''}`}
             onClick={() => setShowLayersMenu(prev => !prev)}
             title="Map Layers & Disaster Overlays"
-            aria-label="Map layers"
+            aria-label="Map layers toggle"
           >
             <Layers size={14} />
             <span>Layers</span>
+            <span className={`chip-toggle-switch ${showLayersMenu ? 'on' : ''}`} aria-hidden="true">
+              <span className="chip-toggle-thumb" />
+            </span>
           </button>
 
           <button
@@ -9781,42 +9797,50 @@ export default function App() {
               <div className="maps-layers-list">
                 <button 
                   type="button" 
+                  role="switch"
+                  aria-checked={mapTheme === 'terrain'}
                   className={`maps-layer-row ${mapTheme === 'terrain' ? 'active' : ''}`}
                   onClick={() => setMapTheme(prev => prev === 'terrain' ? 'dark' : 'terrain')}
                 >
                   <span className="layer-label">🏔️ Topographic Terrain View</span>
-                  <span className={`layer-badge-toggle ${mapTheme === 'terrain' ? 'on' : ''}`}>
-                    {mapTheme === 'terrain' ? 'ON' : 'OFF'}
+                  <span className={`modern-toggle-switch ${mapTheme === 'terrain' ? 'on' : ''}`} aria-hidden="true">
+                    <span className="toggle-thumb" />
                   </span>
                 </button>
                 <button 
                   type="button" 
+                  role="switch"
+                  aria-checked={mapTheme === 'satellite'}
                   className={`maps-layer-row ${mapTheme === 'satellite' ? 'active' : ''}`}
                   onClick={() => setMapTheme(prev => prev === 'satellite' ? 'terrain' : 'satellite')}
                 >
                   <span className="layer-label">🛰️ Satellite Imagery</span>
-                  <span className={`layer-badge-toggle ${mapTheme === 'satellite' ? 'on' : ''}`}>
-                    {mapTheme === 'satellite' ? 'ON' : 'OFF'}
+                  <span className={`modern-toggle-switch ${mapTheme === 'satellite' ? 'on' : ''}`} aria-hidden="true">
+                    <span className="toggle-thumb" />
                   </span>
                 </button>
                 <button 
                   type="button" 
+                  role="switch"
+                  aria-checked={showHazardZones}
                   className={`maps-layer-row ${showHazardZones ? 'active' : ''}`}
                   onClick={() => setShowHazardZones(prev => !prev)}
                 >
                   <span className="layer-label">⚠️ Hazard Risk Zones</span>
-                  <span className={`layer-badge-toggle ${showHazardZones ? 'on' : ''}`}>
-                    {showHazardZones ? 'ON' : 'OFF'}
+                  <span className={`modern-toggle-switch ${showHazardZones ? 'on' : ''}`} aria-hidden="true">
+                    <span className="toggle-thumb" />
                   </span>
                 </button>
                 <button 
                   type="button" 
+                  role="switch"
+                  aria-checked={showPoiLayer}
                   className={`maps-layer-row ${showPoiLayer ? 'active' : ''}`}
                   onClick={() => setShowPoiLayer(prev => !prev)}
                 >
                   <span className="layer-label">📍 Verified Kerala POIs ({(keralaPois || []).length})</span>
-                  <span className={`layer-badge-toggle ${showPoiLayer ? 'on' : ''}`}>
-                    {showPoiLayer ? 'ON' : 'OFF'}
+                  <span className={`modern-toggle-switch ${showPoiLayer ? 'on' : ''}`} aria-hidden="true">
+                    <span className="toggle-thumb" />
                   </span>
                 </button>
                 {showPoiLayer && (
@@ -9840,24 +9864,32 @@ export default function App() {
                 )}
                 <button 
                   type="button" 
+                  role="switch"
+                  aria-checked={showRainRadar}
                   className={`maps-layer-row ${showRainRadar ? 'active' : ''}`}
                   onClick={toggleRainRadar}
                 >
                   <span className="layer-label">🌧️ Live Monsoon Rain Radar</span>
-                  <span className={`layer-badge-toggle ${showRainRadar ? 'on' : ''}`}>
-                    {showRainRadar ? 'ON' : 'OFF'}
+                  <span className={`modern-toggle-switch ${showRainRadar ? 'on' : ''}`} aria-hidden="true">
+                    <span className="toggle-thumb" />
                   </span>
                 </button>
                 <button 
                   type="button" 
+                  role="switch"
+                  aria-checked={showOfflineVectorLayer}
                   className={`maps-layer-row ${showOfflineVectorLayer ? 'active' : ''}`}
                   onClick={() => setShowOfflineVectorLayer(prev => !prev)}
                 >
                   <span className="layer-label">🗺️ Offline Vector Basemap</span>
-                  <span className={`layer-badge-toggle ${showOfflineVectorLayer ? 'on' : ''}`}>
-                    {showOfflineVectorLayer ? 'ON' : 'OFF'}
+                  <span className={`modern-toggle-switch ${showOfflineVectorLayer ? 'on' : ''}`} aria-hidden="true">
+                    <span className="toggle-thumb" />
                   </span>
                 </button>
+
+                <div className="maps-layers-section-divider" />
+                <div className="maps-layers-section-title">QUICK UTILITIES</div>
+
                 <button 
                   type="button" 
                   className="maps-layer-row"
@@ -9868,7 +9900,11 @@ export default function App() {
                   title="KSDMA Reservoir Water Levels & Warnings"
                 >
                   <span className="layer-label">🌊 KSDMA Dam Reservoirs</span>
-                  {damAlertsCount > 0 && <span className="layer-count-badge warning">{damAlertsCount}</span>}
+                  {damAlertsCount > 0 ? (
+                    <span className="layer-count-badge warning">{damAlertsCount}</span>
+                  ) : (
+                    <span className="layer-row-arrow">›</span>
+                  )}
                 </button>
                 <button 
                   type="button" 
@@ -9891,6 +9927,7 @@ export default function App() {
                   }}
                 >
                   <span className="layer-label">🧭 Fit Kerala Bounds</span>
+                  <span className="layer-row-arrow">›</span>
                 </button>
                 <button 
                   type="button" 
@@ -9901,6 +9938,7 @@ export default function App() {
                   }}
                 >
                   <span className="layer-label">💾 Offline Storage Manager</span>
+                  <span className="layer-row-arrow">›</span>
                 </button>
                 <button 
                   type="button" 
@@ -9911,6 +9949,7 @@ export default function App() {
                   }}
                 >
                   <span className="layer-label">⚙️ Environment Audio & Siren</span>
+                  <span className="layer-row-arrow">›</span>
                 </button>
               </div>
             </div>
