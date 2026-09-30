@@ -6003,36 +6003,6 @@ export default function App() {
             type="button"
             className="maps-drawer-tool-btn"
             onClick={() => {
-              setShowDemoScenariosModal(true);
-              setShowSlideMenu(false);
-            }}
-          >
-            <span>⚡</span> 1-Click Live Scenarios
-          </button>
-          <button
-            type="button"
-            className="maps-drawer-tool-btn"
-            onClick={() => {
-              window.open('/RESYLIX_PRESENTATION_DECK.html', '_blank');
-              setShowSlideMenu(false);
-            }}
-          >
-            <span>🖥️</span> Interactive Slides Deck
-          </button>
-          <button
-            type="button"
-            className="maps-drawer-tool-btn"
-            onClick={() => {
-              downloadExecutiveReport();
-              setShowSlideMenu(false);
-            }}
-          >
-            <span>📄</span> Executive Whitepaper PDF
-          </button>
-          <button
-            type="button"
-            className="maps-drawer-tool-btn"
-            onClick={() => {
               startOnboardingTour();
               setShowSlideMenu(false);
             }}
@@ -9065,18 +9035,6 @@ export default function App() {
             <span>Directions</span>
           </button>
 
-          {/* 1-Click Live Presentation Demo Scenarios Button */}
-          <button
-            type="button"
-            className="maps-chip telemetry-hud-btn scenarios-btn demo-chip"
-            onClick={() => {
-              triggerHaptic(20);
-              setShowDemoScenariosModal(true);
-            }}
-            title="Launch 1-Click Live Disaster Scenarios (Wayanad, Banasurasagar, Kuttanad)"
-          >
-            ⚡ Demo
-          </button>
 
           {/* Map Theme Cycler */}
           <button
