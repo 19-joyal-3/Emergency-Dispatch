@@ -89,6 +89,8 @@ import KsdmaWeatherWarningModal from './components/KsdmaWeatherWarningModal';
 import PwaInstallGuideModal from './components/PwaInstallGuideModal';
 import DemoScenariosModal from './components/DemoScenariosModal';
 import KeralaPoiDirectoryModal from './components/KeralaPoiDirectoryModal';
+import ReportHazardModal from './components/ReportHazardModal';
+import ProximityScanModal from './components/ProximityScanModal';
 import { createRadarTileLayer } from './services/weatherRadarService';
 import { KSDMA_RESERVOIRS, checkRouteDamAlertProximity } from './services/ksdmaLiveService';
 import { getKsdmaDistrictWarnings, checkRouteWeatherInterception, KSDMA_ALERT_TYPES } from './services/ksdmaWeatherWarningService';
@@ -250,6 +252,10 @@ export default function App() {
   const [showPoiLayer, setShowPoiLayer] = useState(true);
   const [activePoiCategory, setActivePoiCategory] = useState('all');
   const [showPoiDirectoryModal, setShowPoiDirectoryModal] = useState(false);
+  const [showReportHazardModal, setShowReportHazardModal] = useState(false);
+  const [showProximityScanModal, setShowProximityScanModal] = useState(false);
+  const [proximityScanCenter, setProximityScanCenter] = useState(null);
+  const proximityCircleRef = useRef(null);
   const poiMarkersRef = useRef(new Map());
   const liveTrafficLayerRef = useRef(null);
   const [tomtomApiKey, setTomtomApiKey] = useState(() => {
@@ -1815,6 +1821,77 @@ export default function App() {
     logMessage('[REPORT] Opened Resylix Master Capabilities & Future Scope Whitepaper.', 'success');
   };
 
+  // 1-Click 5.0 KM Proximity Scan
+  const handleTriggerProximityScan = (coords, name = 'Target Location') => {
+    const targetCoords = coords && typeof coords.lat === 'number'
+      ? coords
+      : (gpsCoords || { lat: 11.5369, lng: 76.1772 });
+    const targetName = name || (gpsCoords ? 'Field GPS Location' : 'Wayanad Meppadi Hotspot');
+
+    setProximityScanCenter({ lat: targetCoords.lat, lng: targetCoords.lng, name: targetName });
+    setShowProximityScanModal(true);
+    triggerHaptic(20);
+    if (mapRef.current) {
+      mapRef.current.flyTo([targetCoords.lat, targetCoords.lng], 13, { duration: 1.2 });
+    }
+    logMessage(`[PROXIMITY SCAN] 5.0 km tactical radius activated around ${targetName}`, 'info');
+  };
+
+  // Field Road Blockage / Landslide Hazard Reporter
+  const handleReportHazardSubmit = async (hazardData) => {
+    const newBlock = {
+      id: `hazard_${Date.now()}`,
+      name: hazardData.name,
+      lat: hazardData.coords.lat,
+      lng: hazardData.coords.lng,
+      type: hazardData.type,
+      severity: hazardData.severity,
+      notes: hazardData.notes,
+      active: 1
+    };
+
+    try {
+      await addBlockageLocal(newBlock, isOnline);
+      triggerHaptic(50);
+      playTacticalChime();
+      logMessage(`[FIELD HAZARD] Placed ${hazardData.label} barrier on ${hazardData.name}`, 'warning');
+      await reloadLocalData();
+      if (mapRef.current) {
+        mapRef.current.flyTo([hazardData.coords.lat, hazardData.coords.lng], 15, { duration: 1.2 });
+      }
+      tacticalVoiceNav.speak(`Alert: Field hazard reported at ${hazardData.name}. Road barrier active, rerouting traffic.`);
+    } catch (err) {
+      logMessage(`Failed to place hazard: ${err.message}`, 'error');
+    }
+  };
+
+  // Printable Evacuation Manifest PDF Export
+  const handleExportEvacuationManifest = () => {
+    const activeSector = activeDemoScenario ? `${activeDemoScenario.title} Sector`
+      : (selectedIncident ? `${selectedIncident.type?.toUpperCase()} Incident (${selectedIncident.description || 'Sector'})`
+      : 'Statewide Kerala Sectors (Wayanad, Idukki, Coastal)');
+    const refId = `EVAC-KL-${Date.now().toString(36).toUpperCase()}`;
+    const nearestHospitals = (keralaPois || []).filter(p => p.category === 'hospital').slice(0, 4).map(h => `${h.name} (${h.district})`).join('; ');
+
+    setPrintableMission({
+      type: 'Statewide Sector Evacuation & Emergency Clearance Manifest',
+      referenceId: refId,
+      origin: activeSector,
+      destination: 'Designated Safe Evacuation Hubs, Relief Camps & Trauma Centers',
+      distance: customRoute?.distance ? `${customRoute.distance} km` : 'Multi-district emergency corridor',
+      estTime: customRoute?.travelTimeMinutes ? `${customRoute.travelTimeMinutes} mins` : 'Immediate mobilization',
+      transport: meansOfTransport ? meansOfTransport.toUpperCase() : 'AMBULANCE / RESCUE CONVOY / 4X4',
+      emergencyType: selectedIncident ? `${selectedIncident.type?.toUpperCase()} Active Crisis` : 'Disaster Evacuation & Lifeline Clearance Protocol',
+      responder: selectedResponder ? `${selectedResponder.name} (${selectedResponder.type || 'Field Unit'})` : 'Kerala Fire & Rescue, SDRF, NDRF, Coastal Police',
+      hazards: `Active Road Closures: ${blockages.length} barriers logged | KSDMA Weather & Dam alerts active | Landslide & Flood risk monitoring enabled`,
+      description: `SITREP & LOGISTICS: Resylix offline routing grid active. Sector clearance authorized under the Disaster Management Act 2005. Verified Trauma Centers: ${nearestHospitals}. Emergency Helplines: SEOC (1070), DEOC (1077), Police (112), Fire & Rescue (101), Ambulance (108). All units maintain radio contact on emergency VHF/P2P mesh.`,
+      timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' })
+    });
+    triggerHaptic(20);
+    logMessage(`[MANIFEST] Generated official Evacuation Manifest ${refId}. Launching print/PDF...`, 'success');
+    setTimeout(() => window.print(), 300);
+  };
+
   // Command Palette Dispatch Action Handlers
   const handleCommandPaletteSelectPlace = (place) => {
     if (!place) return;
@@ -1830,6 +1907,18 @@ export default function App() {
     switch (actionId) {
       case 'demo_scenarios':
         setShowDemoScenariosModal(true);
+        break;
+      case 'proximity_scan':
+        handleTriggerProximityScan(gpsCoords, 'Current Location');
+        break;
+      case 'report_hazard':
+        setShowReportHazardModal(true);
+        break;
+      case 'evacuation_manifest':
+        handleExportEvacuationManifest();
+        break;
+      case 'poi_directory':
+        setShowPoiDirectoryModal(true);
         break;
       case 'recenter':
         fitKeralaBounds();
@@ -1961,6 +2050,14 @@ export default function App() {
         }
         if (showPoiDirectoryModal) {
           setShowPoiDirectoryModal(false);
+          return;
+        }
+        if (showProximityScanModal) {
+          setShowProximityScanModal(false);
+          return;
+        }
+        if (showReportHazardModal) {
+          setShowReportHazardModal(false);
           return;
         }
         if (p2pSosModalOpen) {
@@ -4289,6 +4386,36 @@ export default function App() {
     }
   }, [geofenceModalData, geofenceRadius]);
 
+  // Render Dynamic 5.0 KM Proximity Scan Circle on Leaflet Map
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (proximityCircleRef.current) {
+      proximityCircleRef.current.remove();
+      proximityCircleRef.current = null;
+    }
+
+    if (proximityScanCenter && typeof proximityScanCenter.lat === 'number' && typeof proximityScanCenter.lng === 'number') {
+      const circle = L.circle([proximityScanCenter.lat, proximityScanCenter.lng], {
+        radius: 5000,
+        color: '#38bdf8',
+        fillColor: '#0284c7',
+        fillOpacity: 0.14,
+        weight: 2,
+        dashArray: '6, 6'
+      }).addTo(mapRef.current);
+
+      circle.bindTooltip(`
+        <div style="font-size: 11px; padding: 2px;">
+          <strong style="color: #38bdf8;">🎯 5.0 KM PROXIMITY SCAN ZONE</strong>
+          <div style="color: #e2e8f0; font-size: 10px; margin-top: 2px;">Center: ${proximityScanCenter.name || 'Target Location'}</div>
+        </div>
+      `, { sticky: true, className: 'tactical-tooltip' });
+
+      proximityCircleRef.current = circle;
+    }
+  }, [proximityScanCenter]);
+
   const handleAutoDetourHazard = async (hazard, keepModalOpen = false) => {
     try {
       if (hazard?.coordinates) {
@@ -6268,6 +6395,36 @@ export default function App() {
             }}
           >
             <span>🏥</span> Kerala Facilities Directory (210)
+          </button>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
+            onClick={() => {
+              handleTriggerProximityScan(gpsCoords, 'Current Field GPS');
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>🎯</span> 5.0 KM Tactical Proximity Scan
+          </button>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
+            onClick={() => {
+              setShowReportHazardModal(true);
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>🚧</span> Report Field Road Hazard
+          </button>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
+            onClick={() => {
+              handleExportEvacuationManifest();
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>📄</span> Export Evacuation Manifest (PDF)
           </button>
           <button
             type="button"
@@ -9529,6 +9686,51 @@ export default function App() {
               </button>
             </div>
 
+            {/* 1-Click 5.0 KM Tactical Proximity Scan */}
+            <button
+              type="button"
+              className="maps-chip"
+              onClick={() => {
+                triggerHaptic(15);
+                handleTriggerProximityScan(
+                  gpsCoords || (selectedIncident ? { lat: selectedIncident.lat, lng: selectedIncident.lng } : null),
+                  gpsCoords ? 'Current Field Location' : (selectedIncident ? `${selectedIncident.type?.toUpperCase()} Scene` : 'Wayanad Meppadi Hotspot')
+                );
+              }}
+              title="Tactical 5.0 KM Proximity Scan (Nearest Hospitals, Fuel & Shelters)"
+              style={{ color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.3)' }}
+            >
+              <span>🎯 5km Scan</span>
+            </button>
+
+            {/* Field Hazard / Road Blockage Reporter */}
+            <button
+              type="button"
+              className="maps-chip"
+              onClick={() => {
+                triggerHaptic(15);
+                setShowReportHazardModal(true);
+              }}
+              title="Report Field Road Blockage, Landslide or Flood Hazard"
+              style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+            >
+              <span>🚧 Hazard</span>
+            </button>
+
+            {/* Official Evacuation Manifest Print / PDF */}
+            <button
+              type="button"
+              className="maps-chip"
+              onClick={() => {
+                triggerHaptic(15);
+                handleExportEvacuationManifest();
+              }}
+              title="Export Official Evacuation Manifest & Tactical SITREP (PDF)"
+              style={{ color: '#cbd5e1' }}
+            >
+              <span>📄 Manifest</span>
+            </button>
+
             {/* Map Theme Cycler */}
             <button
               type="button"
@@ -9774,25 +9976,8 @@ export default function App() {
           )}
         </div>
 
-        {/* Top-Right Discreet Controls: Layers, Weather & SOS Quick Action */}
+        {/* Top-Right Discreet Controls: Weather & SOS Quick Action */}
         <div className="maps-top-right-bar">
-          {/* Layers Button (Apple / Google Maps Style) */}
-          <button
-            type="button"
-            role="switch"
-            aria-checked={showLayersMenu}
-            className={`maps-layers-chip switch-chip ${showLayersMenu ? 'active' : ''}`}
-            onClick={() => setShowLayersMenu(prev => !prev)}
-            title="Map Layers & Disaster Overlays"
-            aria-label="Map layers toggle"
-          >
-            <Layers size={14} />
-            <span>Layers</span>
-            <span className={`chip-toggle-switch ${showLayersMenu ? 'on' : ''}`} aria-hidden="true">
-              <span className="chip-toggle-thumb" />
-            </span>
-          </button>
-
           <button
             type="button"
             className="maps-weather-chip"
@@ -10154,6 +10339,26 @@ export default function App() {
                   <button onClick={handleAutoDispatch} className="btn btn-secondary">
                     Auto-Find Closest Responder
                   </button>
+                  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.25rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerProximityScan({ lat: selectedIncident.lat, lng: selectedIncident.lng }, `${selectedIncident.type?.toUpperCase()} Scene (${selectedIncident.description || 'Sector'})`)}
+                      className="btn btn-secondary"
+                      style={{ flex: 1, fontSize: '0.72rem', padding: '0.35rem 0.5rem', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.3)' }}
+                      title="Scan 5.0 km for nearest hospitals, fuel & shelters"
+                    >
+                      🎯 5km Proximity Scan
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowReportHazardModal(true)}
+                      className="btn btn-secondary"
+                      style={{ flex: 1, fontSize: '0.72rem', padding: '0.35rem 0.5rem', color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                      title="Report road barrier or landslide hazard at scene"
+                    >
+                      🚧 Report Hazard
+                    </button>
+                  </div>
                   <button 
                     onClick={() => deleteIncident(selectedIncident.id)} 
                     className="btn btn-primary"
@@ -12485,6 +12690,7 @@ export default function App() {
         activePoiCategory={activePoiCategory}
         onSelectCategory={(catId) => setActivePoiCategory(catId)}
         userCoords={gpsCoords}
+        onTriggerProximityScan={(coords, name) => handleTriggerProximityScan(coords || gpsCoords, name || 'Current Field GPS')}
         onShowOnMap={(poi) => {
           setShowPoiDirectoryModal(false);
           setShowPoiLayer(true);
@@ -12508,6 +12714,46 @@ export default function App() {
           }
           logMessage(`[FACILITY] Routing directly to ${poi.name} (${poi.district})`, 'info');
         }}
+      />
+
+      {/* 5.0 KM Tactical Proximity Scan Modal */}
+      <ProximityScanModal
+        isOpen={showProximityScanModal}
+        onClose={() => setShowProximityScanModal(false)}
+        centerCoords={proximityScanCenter || gpsCoords || { lat: 11.5369, lng: 76.1772 }}
+        centerName={proximityScanCenter?.name || 'Active Incident Sector'}
+        keralaPois={keralaPois}
+        onShowOnMap={(poi) => {
+          setShowProximityScanModal(false);
+          setShowPoiLayer(true);
+          if (mapRef.current) {
+            mapRef.current.flyTo([poi.lat, poi.lng], 16, { duration: 1.2 });
+            setTimeout(() => {
+              const marker = poiMarkersRef.current.get(poi.id);
+              if (marker) marker.openPopup();
+            }, 1300);
+          }
+          logMessage(`[PROXIMITY] Focused on ${poi.name} (${poi.district})`, 'info');
+        }}
+        onRouteTo={(poi) => {
+          setShowProximityScanModal(false);
+          setShowPoiLayer(true);
+          setCustomDestName(poi.name);
+          setCustomDestCoords({ lat: poi.lat, lng: poi.lng });
+          setActiveTab('planner');
+          if (mapRef.current) {
+            mapRef.current.flyTo([poi.lat, poi.lng], 14, { duration: 1 });
+          }
+          logMessage(`[PROXIMITY] Route calculated to ${poi.name} (${poi.district})`, 'info');
+        }}
+      />
+
+      {/* Field Road Blockage / Landslide Quick-Report Tool */}
+      <ReportHazardModal
+        isOpen={showReportHazardModal}
+        onClose={() => setShowReportHazardModal(false)}
+        onSubmit={handleReportHazardSubmit}
+        currentCoords={gpsCoords || (selectedIncident ? { lat: selectedIncident.lat, lng: selectedIncident.lng } : null)}
       />
     </div>
   );

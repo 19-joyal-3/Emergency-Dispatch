@@ -1,6 +1,23 @@
 import React, { useState, useMemo } from 'react';
 import { haversineDistance } from '../routing';
 
+const KERALA_DISTRICTS_LIST = [
+  'Thiruvananthapuram',
+  'Kollam',
+  'Pathanamthitta',
+  'Alappuzha',
+  'Kottayam',
+  'Idukki',
+  'Ernakulam',
+  'Thrissur',
+  'Palakkad',
+  'Malappuram',
+  'Kozhikode',
+  'Wayanad',
+  'Kannur',
+  'Kasaragod'
+];
+
 export default function KeralaPoiDirectoryModal({
   isOpen,
   onClose,
@@ -12,16 +29,49 @@ export default function KeralaPoiDirectoryModal({
   onSelectCategory,
   userCoords,
   onShowOnMap,
-  onRouteTo
+  onRouteTo,
+  onTriggerProximityScan
 }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('all');
+  const [only24x7, setOnly24x7] = useState(false);
 
-  // Filter facilities by active category and search text
+  // Compute facility count per district
+  const districtCounts = useMemo(() => {
+    const counts = {};
+    (keralaPois || []).forEach(p => {
+      if (p.district) {
+        counts[p.district] = (counts[p.district] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [keralaPois]);
+
+  // Count 24/7 facilities
+  const total24x7Count = useMemo(() => {
+    return (keralaPois || []).filter(p => p.is24x7).length;
+  }, [keralaPois]);
+
+  // Filter facilities by active category, district, 24/7 status, and search text
   const filteredPois = useMemo(() => {
     let list = keralaPois || [];
+
+    // Category filter
     if (activePoiCategory && activePoiCategory !== 'all') {
       list = list.filter(p => p.category === activePoiCategory);
     }
+
+    // District filter
+    if (selectedDistrict && selectedDistrict !== 'all') {
+      list = list.filter(p => p.district === selectedDistrict);
+    }
+
+    // 24/7 filter
+    if (only24x7) {
+      list = list.filter(p => p.is24x7);
+    }
+
+    // Search query filter
     const q = (searchQuery || '').trim().toLowerCase();
     if (q) {
       list = list.filter(p => {
@@ -32,8 +82,9 @@ export default function KeralaPoiDirectoryModal({
         return name.includes(q) || dist.includes(q) || addr.includes(q) || cat.includes(q);
       });
     }
+
     return list;
-  }, [keralaPois, activePoiCategory, searchQuery]);
+  }, [keralaPois, activePoiCategory, selectedDistrict, only24x7, searchQuery]);
 
   if (!isOpen) return null;
 
@@ -111,6 +162,60 @@ export default function KeralaPoiDirectoryModal({
           })}
         </div>
 
+        {/* Tactical Filters Sub-Bar: 14-District Selector + 24/7 Switch */}
+        <div className="poi-modal-filters-subbar">
+          {/* District Selector */}
+          <div className="poi-filter-group district-filter">
+            <span className="filter-label">📍 District:</span>
+            <select
+              value={selectedDistrict}
+              onChange={(e) => setSelectedDistrict(e.target.value)}
+              className="poi-district-select"
+              aria-label="Filter by Kerala District"
+            >
+              <option value="all">All 14 Districts ({keralaPois.length})</option>
+              {KERALA_DISTRICTS_LIST.map(dist => (
+                <option key={`opt-dist-${dist}`} value={dist}>
+                  {dist} ({districtCounts[dist] || 0})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 24/7 Emergency Facilities Only Toggle */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={only24x7}
+            className={`poi-247-filter-toggle ${only24x7 ? 'active' : ''}`}
+            onClick={() => setOnly24x7(prev => !prev)}
+            title="Filter to 24/7 emergency facilities (trauma care, emergency pumps, all-night pharmacies)"
+          >
+            <span className="pulse-indicator">🟢</span>
+            <span className="toggle-text">24/7 Emergency Only ({total24x7Count})</span>
+            <span className={`mini-toggle-pill ${only24x7 ? 'on' : ''}`}>
+              <span className="mini-toggle-knob" />
+            </span>
+          </button>
+
+          {/* 1-Click 5.0 KM Proximity Scan */}
+          {onTriggerProximityScan && (
+            <button
+              type="button"
+              className="poi-247-filter-toggle"
+              onClick={() => {
+                onClose();
+                onTriggerProximityScan();
+              }}
+              style={{ borderColor: 'rgba(56, 189, 248, 0.4)', color: '#38bdf8' }}
+              title="Launch 5.0 km tactical radius proximity scan around current location"
+            >
+              <span>🎯</span>
+              <span className="toggle-text">5.0 km Tactical Scan</span>
+            </button>
+          )}
+        </div>
+
         {/* Search & Results Sub-Bar */}
         <div className="poi-modal-search-bar">
           <div className="poi-modal-search-box">
@@ -120,8 +225,7 @@ export default function KeralaPoiDirectoryModal({
               className="poi-modal-search-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by facility name, town, or district (e.g. Medical College, Taj, IOCL)..."
-              autoFocus
+              placeholder="Search by facility name, town, or specialty (e.g. Medical College, Taj, IOCL, Trauma Care)..."
             />
             {searchQuery && (
               <button
@@ -136,6 +240,8 @@ export default function KeralaPoiDirectoryModal({
           </div>
           <div className="poi-modal-stats-badge">
             Showing <strong>{filteredPois.length}</strong> of {keralaPois.length} facilities
+            {selectedDistrict !== 'all' && <span> in {selectedDistrict}</span>}
+            {only24x7 && <span> (24/7 Only)</span>}
           </div>
         </div>
 
@@ -206,7 +312,7 @@ export default function KeralaPoiDirectoryModal({
                       onClick={() => onShowOnMap(poi)}
                       title="Center map on this facility"
                     >
-                      🗺️ Show on Map
+                      🗺️ Show
                     </button>
                     <button
                       type="button"
@@ -214,8 +320,22 @@ export default function KeralaPoiDirectoryModal({
                       onClick={() => onRouteTo(poi)}
                       title="Plan emergency route to this destination"
                     >
-                      🧭 Route Directly
+                      🧭 Route
                     </button>
+                    {onTriggerProximityScan && (
+                      <button
+                        type="button"
+                        className="poi-action-btn"
+                        onClick={() => {
+                          onClose();
+                          onTriggerProximityScan({ lat: poi.lat, lng: poi.lng }, poi.name);
+                        }}
+                        style={{ background: 'rgba(56, 189, 248, 0.15)', borderColor: 'rgba(56, 189, 248, 0.35)', color: '#38bdf8' }}
+                        title="Scan 5.0 km radius around this facility for nearest emergency amenities"
+                      >
+                        🎯 5km Scan
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -223,17 +343,19 @@ export default function KeralaPoiDirectoryModal({
           ) : (
             <div className="poi-dir-empty-state">
               <span style={{ fontSize: '2.5rem' }}>🔍</span>
-              <h4>No facilities match your search</h4>
-              <p>Try searching for a different town, district, or switch category filter.</p>
+              <h4>No facilities match your active filters</h4>
+              <p>Try resetting the district filter, disabling "24/7 Only", or searching for a different term.</p>
               <button
                 type="button"
                 className="poi-modal-reset-btn"
                 onClick={() => {
                   setSearchQuery('');
+                  setSelectedDistrict('all');
+                  setOnly24x7(false);
                   onSelectCategory('all');
                 }}
               >
-                Reset Category & Search
+                Reset All Filters
               </button>
             </div>
           )}
