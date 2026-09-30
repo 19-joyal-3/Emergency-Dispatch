@@ -525,6 +525,13 @@ export default function App() {
     }
   });
 
+  // Interactive Google / Apple Maps Search Bar States
+  const [mainSearchQuery, setMainSearchQuery] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [selectedSearchIndex, setSelectedSearchIndex] = useState(0);
+  const mainSearchInputRef = useRef(null);
+  const searchDropdownRef = useRef(null);
+
   // Manual Form States
   const [newIncidentType, setNewIncidentType] = useState('fire');
   const [newIncidentDesc, setNewIncidentDesc] = useState('');
@@ -1807,7 +1814,7 @@ export default function App() {
       const activeTag = document.activeElement?.tagName?.toLowerCase();
       const isInput = activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable;
 
-      // 1. Command Palette Trigger: Ctrl+K or Cmd+K or / (when not in input)
+      // 1. Search Bar & Command Palette Trigger: Ctrl+K or Cmd+K or / (when not in input)
       if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         setShowCommandPalette(prev => !prev);
@@ -1816,12 +1823,22 @@ export default function App() {
 
       if (!isInput && e.key === '/') {
         e.preventDefault();
-        setShowCommandPalette(true);
+        if (mainSearchInputRef.current) {
+          mainSearchInputRef.current.focus();
+          setShowSearchDropdown(true);
+        } else {
+          setShowCommandPalette(true);
+        }
         return;
       }
 
-      // 2. Escape closes modals & Command Palette
+      // 2. Escape closes modals & search dropdown
       if (e.key === 'Escape') {
+        if (showSearchDropdown) {
+          setShowSearchDropdown(false);
+          mainSearchInputRef.current?.blur();
+          return;
+        }
         if (showCommandPalette) {
           setShowCommandPalette(false);
           return;
@@ -4514,6 +4531,119 @@ export default function App() {
       logMessage(`[ROUTE] Destination set: ${place.name} (${place.district}). Snapped to [${closest.name}] (${closest.distanceKm} km)`, 'info');
     }
   };
+
+  // Top Floating Search Bar Handlers & Autocomplete Engine
+  const mainSearchResults = mainSearchQuery.trim().length > 0 
+    ? searchKeralaPlacesAI(mainSearchQuery, 6) 
+    : [];
+
+  const handleSelectSearchPlace = (place, openDirections = false) => {
+    if (!place || !place.lat || !place.lng) return;
+    setMainSearchQuery(place.name);
+    setShowSearchDropdown(false);
+    triggerHaptic(20);
+
+    // Center & Fly map smoothly to location
+    if (mapRef.current) {
+      const targetZoom = Math.max(mapRef.current.getZoom(), 13);
+      mapRef.current.flyTo([place.lat, place.lng], targetZoom, { duration: 1.2 });
+
+      if (searchMarkerRef.current) {
+        searchMarkerRef.current.remove();
+        searchMarkerRef.current = null;
+      }
+
+      const searchPinIcon = L.divIcon({
+        className: 'maps-search-pin-marker',
+        html: `
+          <div class="search-pin-wrapper">
+            <div class="search-pin-pulse"></div>
+            <div class="search-pin-dot">📍</div>
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor: [0, -36]
+      });
+
+      searchMarkerRef.current = L.marker([place.lat, place.lng], { icon: searchPinIcon, zIndexOffset: 2500 })
+        .addTo(mapRef.current)
+        .bindPopup(`
+          <div class="maps-pin-popup">
+            <h4 style="margin: 0 0 4px 0; font-weight: 700; color: #0f172a;">${escapeHtml(place.name)}</h4>
+            <div style="font-size: 0.75rem; color: #475569; margin-bottom: 8px;">
+              ${place.district ? `<strong>District:</strong> ${escapeHtml(place.district)}<br/>` : ''}
+              ${place.desc && place.desc !== place.name ? `${escapeHtml(place.desc)}<br/>` : ''}
+              <span style="font-family: monospace; font-size: 0.7rem; color: #64748b;">${Number(place.lat).toFixed(4)}°N, ${Number(place.lng).toFixed(4)}°E</span>
+            </div>
+            <button id="search-pin-route-btn" style="
+              width: 100%;
+              padding: 6px 12px;
+              background: #2563eb;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              font-weight: 600;
+              font-size: 0.75rem;
+              cursor: pointer;
+            ">🧭 Get Directions Here</button>
+          </div>
+        `)
+        .openPopup();
+
+      setTimeout(() => {
+        const btn = document.getElementById('search-pin-route-btn');
+        if (btn) {
+          btn.onclick = () => {
+            handleSelectDestinationPlace(place);
+            setActiveTab('planner');
+          };
+        }
+      }, 100);
+    }
+
+    handleSelectDestinationPlace(place);
+
+    if (openDirections) {
+      setActiveTab('planner');
+    }
+
+    logMessage(`[SEARCH] Located ${place.name} (${place.district || 'Kerala'}). Coordinates: ${Number(place.lat).toFixed(4)}, ${Number(place.lng).toFixed(4)}`, 'success');
+  };
+
+  const handleSearchInputKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedSearchIndex(prev => (prev + 1) % (mainSearchResults.length || 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedSearchIndex(prev => (prev - 1 + mainSearchResults.length) % (mainSearchResults.length || 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (mainSearchResults.length > 0) {
+        const target = mainSearchResults[selectedSearchIndex] || mainSearchResults[0];
+        handleSelectSearchPlace(target);
+      }
+    } else if (e.key === 'Escape') {
+      setShowSearchDropdown(false);
+      mainSearchInputRef.current?.blur();
+    }
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (
+        searchDropdownRef.current && 
+        !searchDropdownRef.current.contains(e.target) &&
+        mainSearchInputRef.current &&
+        !mainSearchInputRef.current.contains(e.target)
+      ) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   const setDepartureNodeOrPlace = (nodeOrPlace) => {
     if (!nodeOrPlace) return;
@@ -8996,89 +9126,309 @@ export default function App() {
         {/* Interactive Leaflet Element */}
         <div ref={mapContainerRef} className={`map-container ${mapTheme === 'satellite' ? 'map-satellite-theme' : mapTheme === 'terrain' ? 'map-terrain-theme' : mapTheme === 'solar' || mapTheme === 'light' ? 'map-light-theme' : mapTheme === 'nvg' ? 'map-nvg-theme' : mapTheme === 'safety' ? 'map-safety-theme' : 'map-dark-theme'}`}></div>
 
-        {/* Apple Maps / Google Maps Style Floating Search & Action Bar */}
-        <div className="maps-floating-search-card tactical-gnss-telemetry-badge" role="region" aria-label="Quick Actions & Search">
-          {/* Hamburger Menu Button */}
-          <button
-            type="button"
-            className="maps-menu-btn"
-            onClick={() => setShowSlideMenu(prev => !prev)}
-            title="Open Menu (All Modules & Disaster Tools)"
-            aria-label="Open menu"
-          >
-            <Menu size={20} />
-          </button>
+        {/* Apple Maps / Google Maps Style Floating Search & Action Bar Container */}
+        <div className="maps-floating-search-container">
+          <div className="maps-floating-search-card tactical-gnss-telemetry-badge" role="region" aria-label="Quick Actions & Search">
+            {/* Hamburger Menu Button */}
+            <button
+              type="button"
+              className="maps-menu-btn"
+              onClick={() => setShowSlideMenu(prev => !prev)}
+              title="Open Menu (All Modules & Disaster Tools)"
+              aria-label="Open menu"
+            >
+              <Menu size={20} />
+            </button>
 
-          {/* Search Box Trigger */}
-          <div 
-            className="maps-search-box"
-            onClick={() => setIsCommandPaletteOpen(true)}
-            title="Search Kerala places, hospitals, dams... (⌘K / Ctrl+K)"
-            role="button"
-            tabIndex={0}
-          >
-            <Search size={16} className="maps-search-icon" />
-            <span className="maps-search-placeholder">Search Kerala places, hospitals, dams...</span>
-            <kbd className="maps-search-kbd">⌘K</kbd>
+            {/* Interactive Search Box */}
+            <div 
+              className="maps-search-box"
+              title="Search Kerala places, hospitals, dams... (⌘K / Ctrl+K)"
+            >
+              <Search size={16} className="maps-search-icon" />
+              <input
+                ref={mainSearchInputRef}
+                type="text"
+                className="maps-search-input"
+                placeholder="Search Kerala places, hospitals, dams..."
+                value={mainSearchQuery}
+                onChange={(e) => {
+                  setMainSearchQuery(e.target.value);
+                  setShowSearchDropdown(true);
+                  setSelectedSearchIndex(0);
+                }}
+                onFocus={() => setShowSearchDropdown(true)}
+                onKeyDown={handleSearchInputKeyDown}
+                aria-label="Search Kerala places, hospitals, dams"
+              />
+              {mainSearchQuery && (
+                <button
+                  type="button"
+                  className="maps-search-clear-btn"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMainSearchQuery('');
+                    setShowSearchDropdown(false);
+                    if (searchMarkerRef.current) {
+                      searchMarkerRef.current.remove();
+                      searchMarkerRef.current = null;
+                    }
+                    setTimeout(() => mainSearchInputRef.current?.focus(), 10);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMainSearchQuery('');
+                    setShowSearchDropdown(false);
+                    if (searchMarkerRef.current) {
+                      searchMarkerRef.current.remove();
+                      searchMarkerRef.current = null;
+                    }
+                  }}
+                  title="Clear search"
+                  aria-label="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <kbd 
+                className="maps-search-kbd"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCommandPalette(true);
+                }}
+                title="Open Command Palette (⌘K)"
+              >
+                ⌘K
+              </kbd>
+            </div>
+
+            <div className="maps-search-divider" />
+
+            {/* Directions Chip */}
+            <button
+              type="button"
+              className={`maps-chip directions-chip ${activeTab === 'planner' ? 'active' : ''}`}
+              onClick={() => setActiveTab(prev => prev === 'planner' ? null : 'planner')}
+              title="Tactical Route Planner"
+            >
+              <Navigation size={15} />
+              <span>Directions</span>
+            </button>
+
+            {/* Map Theme Cycler */}
+            <button
+              type="button"
+              className="maps-chip telemetry-hud-btn theme-btn"
+              onClick={() => {
+                triggerHaptic(20);
+                setMapTheme(prev => {
+                  const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
+                  const nextIdx = (order.indexOf(prev) + 1) % order.length;
+                  return order[nextIdx];
+                });
+              }}
+              title="Cycle map display theme"
+            >
+              🎨 {mapTheme === 'dark' ? 'Slate' : mapTheme === 'nvg' ? 'Night' : mapTheme === 'solar' ? 'Light' : mapTheme === 'safety' ? 'Safety' : mapTheme}
+            </button>
+
+            {/* Active Demo Scenario Indicator Pill */}
+            {activeDemoScenario && (
+              <div className="active-demo-scenario-pill">
+                <span className="pulse-dot" />
+                <span className="pill-title">{activeDemoScenario.title}</span>
+                <button
+                  type="button"
+                  className="pill-reset-btn"
+                  onClick={handleResetDemoScenario}
+                  title="Reset scenario to standby"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Status Indicator Dot */}
+            <div 
+              className="maps-status-indicator telemetry-hud-item"
+              title={`GNSS: ${gpsCoords ? `${gpsCoords.lat.toFixed(4)}°N, ${gpsCoords.lng.toFixed(4)}°E` : '11.537°N, 76.177°E'} • Mesh Radio: 4 Nodes Ready • Offline Cache: 100% Synced`}
+            >
+              <span className={`telemetry-hud-dot ${isOnline ? 'live' : 'offline'}`} />
+              <span className="telemetry-hud-status-text" style={{ display: 'none' }}>
+                {isOnline ? 'Online' : 'Offline Ready'}
+              </span>
+            </div>
           </div>
 
-          <div className="maps-search-divider" />
-
-          {/* Directions Chip */}
-          <button
-            type="button"
-            className={`maps-chip directions-chip ${activeTab === 'planner' ? 'active' : ''}`}
-            onClick={() => setActiveTab(prev => prev === 'planner' ? null : 'planner')}
-            title="Tactical Route Planner"
-          >
-            <Navigation size={15} />
-            <span>Directions</span>
-          </button>
-
-
-          {/* Map Theme Cycler */}
-          <button
-            type="button"
-            className="maps-chip telemetry-hud-btn theme-btn"
-            onClick={() => {
-              triggerHaptic(20);
-              setMapTheme(prev => {
-                const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
-                const nextIdx = (order.indexOf(prev) + 1) % order.length;
-                return order[nextIdx];
-              });
-            }}
-            title="Cycle map display theme"
-          >
-            🎨 {mapTheme === 'dark' ? 'Slate' : mapTheme === 'nvg' ? 'Night' : mapTheme === 'solar' ? 'Light' : mapTheme === 'safety' ? 'Safety' : mapTheme}
-          </button>
-
-          {/* Active Demo Scenario Indicator Pill */}
-          {activeDemoScenario && (
-            <div className="active-demo-scenario-pill">
-              <span className="pulse-dot" />
-              <span className="pill-title">{activeDemoScenario.title}</span>
-              <button
-                type="button"
-                className="pill-reset-btn"
-                onClick={handleResetDemoScenario}
-                title="Reset scenario to standby"
-              >
-                ✕
-              </button>
+          {/* Google / Apple Maps Search Suggestions Dropdown */}
+          {showSearchDropdown && (
+            <div className="maps-search-dropdown" ref={searchDropdownRef}>
+              {mainSearchQuery.trim().length > 0 ? (
+                <>
+                  <div className="maps-search-dropdown-header">
+                    <span>MATCHING LOCATIONS ({mainSearchResults.length})</span>
+                    <button 
+                      type="button" 
+                      className="maps-search-dropdown-close"
+                      onClick={() => setShowSearchDropdown(false)}
+                      title="Close suggestions"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="maps-search-dropdown-list">
+                    {mainSearchResults.length > 0 ? (
+                      mainSearchResults.map((place, idx) => (
+                        <div
+                          key={`search-res-${place.id || place.name}-${idx}`}
+                          className={`maps-search-dropdown-item ${idx === selectedSearchIndex ? 'selected' : ''}`}
+                          onClick={() => handleSelectSearchPlace(place)}
+                          onMouseEnter={() => setSelectedSearchIndex(idx)}
+                        >
+                          <span className="search-item-icon">
+                            {place.type === 'hospital' ? '🏥' : 
+                             place.type === 'dam' ? '🌊' : 
+                             place.type === 'hazard' || place.type === 'disaster_zone' ? '⚠️' : 
+                             place.type === 'shelter' ? '🛡️' : '📍'}
+                          </span>
+                          <div className="search-item-info">
+                            <div className="search-item-name">{place.name}</div>
+                            <div className="search-item-desc">
+                              {place.district ? `${place.district} District` : 'Kerala'} 
+                              {place.desc && place.desc !== place.name ? ` • ${place.desc}` : ''}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="search-item-route-btn"
+                            title="Route directly here"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectSearchPlace(place, true);
+                            }}
+                          >
+                            <Navigation size={13} />
+                            <span>Route</span>
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="maps-search-no-results">
+                        No matching locations found for "{mainSearchQuery}".
+                        <br />
+                        <small style={{ color: '#64748b' }}>Try searching "Chooralmala", "Wayanad", "Mullaperiyar", "Kozhikode", etc.</small>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="maps-search-dropdown-header">
+                    <span>DISASTER HUBS & CATEGORIES</span>
+                    <button 
+                      type="button" 
+                      className="maps-search-dropdown-close"
+                      onClick={() => setShowSearchDropdown(false)}
+                      title="Close suggestions"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="maps-search-quick-tags">
+                    <button
+                      type="button"
+                      className="maps-search-tag"
+                      onClick={() => {
+                        setMainSearchQuery('Medical College');
+                        setShowSearchDropdown(true);
+                      }}
+                    >
+                      🏥 Hospitals
+                    </button>
+                    <button
+                      type="button"
+                      className="maps-search-tag"
+                      onClick={() => {
+                        setMainSearchQuery('Dam');
+                        setShowSearchDropdown(true);
+                      }}
+                    >
+                      🌊 Dams
+                    </button>
+                    <button
+                      type="button"
+                      className="maps-search-tag"
+                      onClick={() => {
+                        setMainSearchQuery('Wayanad');
+                        setShowSearchDropdown(true);
+                      }}
+                    >
+                      ⚠️ Landslide Hotspots
+                    </button>
+                    <button
+                      type="button"
+                      className="maps-search-tag"
+                      onClick={() => {
+                        setShowDamMonitorModal(true);
+                        setShowSearchDropdown(false);
+                      }}
+                    >
+                      📊 Dam Rule Curves
+                    </button>
+                    <button
+                      type="button"
+                      className="maps-search-tag"
+                      onClick={() => {
+                        setShowWeatherMatrixModal(true);
+                        setShowSearchDropdown(false);
+                      }}
+                    >
+                      🌦️ Weather Matrix
+                    </button>
+                  </div>
+                  <div className="maps-search-recent-header">HIGH-PRIORITY LOCATIONS</div>
+                  <div className="maps-search-dropdown-list">
+                    {[
+                      { name: 'Chooralmala (Wayanad)', district: 'Wayanad', lat: 11.5369, lng: 76.1772, type: 'hazard', desc: 'Active Landslide & High Inundation Ridge' },
+                      { name: 'Banasurasagar Dam', district: 'Wayanad', lat: 11.6685, lng: 75.9572, type: 'dam', desc: 'Earth Dam & Downstream Flood Basin' },
+                      { name: 'Kozhikode Medical College', district: 'Kozhikode', lat: 11.2721, lng: 75.8363, type: 'hospital', desc: 'Apex Tertiary Trauma Care Facility' },
+                      { name: 'Kuttanad (Alappuzha)', district: 'Alappuzha', lat: 9.4000, lng: 76.4500, type: 'hazard', desc: 'Below Sea Level Monsoonal Flood Basin' },
+                      { name: 'Vytilla Mobility Hub', district: 'Ernakulam', lat: 9.9678, lng: 76.3214, type: 'transit', desc: 'Multimodal Kochi Transport Intercept' }
+                    ].map((place, idx) => (
+                      <div
+                        key={`quick-${place.name}-${idx}`}
+                        className="maps-search-dropdown-item"
+                        onClick={() => handleSelectSearchPlace(place)}
+                      >
+                        <span className="search-item-icon">
+                          {place.type === 'hospital' ? '🏥' : 
+                           place.type === 'dam' ? '🌊' : 
+                           place.type === 'hazard' ? '⚠️' : '📍'}
+                        </span>
+                        <div className="search-item-info">
+                          <div className="search-item-name">{place.name}</div>
+                          <div className="search-item-desc">{place.desc}</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="search-item-route-btn"
+                          title="Route directly here"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectSearchPlace(place, true);
+                          }}
+                        >
+                          <Navigation size={13} />
+                          <span>Route</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
-
-          {/* Status Indicator Dot */}
-          <div 
-            className="maps-status-indicator telemetry-hud-item"
-            title={`GNSS: ${gpsCoords ? `${gpsCoords.lat.toFixed(4)}°N, ${gpsCoords.lng.toFixed(4)}°E` : '11.537°N, 76.177°E'} • Mesh Radio: 4 Nodes Ready • Offline Cache: 100% Synced`}
-          >
-            <span className={`telemetry-hud-dot ${isOnline ? 'live' : 'offline'}`} />
-            <span className="telemetry-hud-status-text" style={{ display: 'none' }}>
-              {isOnline ? 'Online' : 'Offline Ready'}
-            </span>
-          </div>
         </div>
 
         {/* Top-Right Discreet Controls: Layers, Weather & SOS Quick Action */}

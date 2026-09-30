@@ -7055,24 +7055,33 @@ textarea {
 }
 
 /* 2. Top-Left Google Maps / Apple Maps Floating Search Bar */
-.maps-floating-search-card {
+.maps-floating-search-container {
   position: absolute;
   top: 16px;
   left: 16px;
-  z-index: 1000;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+}
+
+.maps-floating-search-card {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 5px 12px 5px 6px;
-  background: rgba(15, 23, 42, 0.90) !important;
+  background: rgba(15, 23, 42, 0.92) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 9999px !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35) !important;
   height: 48px;
   box-sizing: border-box;
-  max-width: calc(100vw - 32px);
 }
 
 .maps-menu-btn {
@@ -7097,10 +7106,8 @@ textarea {
 .maps-search-box {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 6px;
-  cursor: pointer;
-  user-select: none;
+  gap: 6px;
+  padding: 0 4px;
 }
 
 .maps-search-icon {
@@ -7108,24 +7115,265 @@ textarea {
   flex-shrink: 0;
 }
 
-.maps-search-placeholder {
-  color: #94a3b8;
-  font-size: 0.8rem;
+.maps-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  font-size: 0.84rem;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 220px;
+  width: 230px;
+  padding: 4px 0;
+  font-family: inherit;
+}
+
+.maps-search-input::placeholder {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.maps-search-clear-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.maps-search-clear-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .maps-search-kbd {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 5px;
-  padding: 1px 5px;
+  padding: 2px 6px;
   font-size: 0.65rem;
-  color: #64748b;
+  color: #94a3b8;
   font-family: ui-monospace, SFMono-Regular, monospace;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.maps-search-kbd:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* Suggestions & Discovery Dropdown Panel */
+.maps-search-dropdown {
+  width: 430px;
+  max-width: calc(100vw - 32px);
+  max-height: 480px;
+  background: rgba(15, 23, 42, 0.96) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55) !important;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  animation: mapsFadeIn 0.18s ease-out;
+}
+
+.maps-search-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  padding: 2px 4px;
+}
+
+.maps-search-dropdown-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.12s ease;
+}
+
+.maps-search-dropdown-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.maps-search-quick-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 2px;
+}
+
+.maps-search-tag {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.maps-search-tag:hover {
+  background: rgba(37, 99, 235, 0.25);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+
+.maps-search-recent-header {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  padding: 6px 4px 2px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.maps-search-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.maps-search-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  background: transparent;
+  user-select: none;
+}
+
+.maps-search-dropdown-item:hover,
+.maps-search-dropdown-item.selected {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.search-item-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+}
+
+.search-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-item-name {
+  color: #f8fafc;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-item-desc {
+  color: #94a3b8;
+  font-size: 0.71rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.search-item-route-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(37, 99, 235, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+
+.search-item-route-btn:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+.maps-search-no-results {
+  text-align: center;
+  padding: 16px 8px;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.maps-search-pin-marker {
+  background: transparent;
+  border: none;
+}
+
+.search-pin-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.search-pin-pulse {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.4);
+  animation: searchPinPulse 1.8s infinite;
+}
+
+@keyframes searchPinPulse {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.search-pin-dot {
+  font-size: 24px;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.maps-pin-popup {
+  font-family: inherit;
+  min-width: 180px;
 }
 
 .maps-search-divider {
