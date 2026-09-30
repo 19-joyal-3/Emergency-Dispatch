@@ -9,6 +9,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "test": "node tests/run-all-tests.js",
+    "start": "node server.js",
     "preview": "vite preview"
   },
   "dependencies": {

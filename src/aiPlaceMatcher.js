@@ -12,6 +12,36 @@
  */
 
 import keralaPlaces from './keralaPlacesDatabase.json' with { type: 'json' };
+import keralaPois from './data/keralaPois.json' with { type: 'json' };
+
+export const POI_CATEGORY_KEYWORDS = {
+  hospital: ['hospital', 'clinic', 'trauma', 'casualty', 'medical', 'doctor', 'emergency', 'healthcare', 'ambulance'],
+  pharmacy: ['pharmacy', 'medicine', 'chemist', 'drug', 'neethi', 'aushadhi', 'karunya', 'apollo', 'medical store'],
+  fuel: ['fuel', 'petrol', 'diesel', 'gas', 'iocl', 'bpcl', 'hpcl', 'pump', 'station', 'refuel'],
+  police: ['police', 'thana', 'cop', 'station', 'outpost', 'patrol', 'inspector'],
+  shelter: ['shelter', 'camp', 'relief', 'evacuation', 'safe hub', 'hall', 'auditorium', 'refuge'],
+  hotel: ['hotel', 'resort', 'lodge', 'stay', 'ktdc', 'accommodation', 'motel', 'transit'],
+  food: ['food', 'kitchen', 'canteen', 'dining', 'mess', 'janakeeya', 'kudumbashree', 'meal', 'restaurant']
+};
+
+export const normalizedPois = (keralaPois || []).map(poi => ({
+  id: poi.id,
+  name: poi.name,
+  district: poi.district,
+  lat: poi.lat,
+  lng: poi.lng,
+  type: poi.category,
+  category: poi.category,
+  desc: `${poi.desc || ''}${poi.address ? ' • ' + poi.address : ''}${poi.is24x7 ? ' • 24/7' : poi.openingHours ? ' • ' + poi.openingHours : ''}`.trim(),
+  phone: poi.phone,
+  openingHours: poi.openingHours,
+  is24x7: poi.is24x7,
+  address: poi.address,
+  verifiedBy: poi.verifiedBy,
+  isPoi: true
+}));
+
+const combinedSearchPlaces = [...keralaPlaces, ...normalizedPois];
 
 // Normalize Malayalam-English transliteration nuances
 export function normalizePlaceName(str) {
@@ -110,7 +140,7 @@ export function searchKeralaPlacesAI(query, maxResults = 8) {
   const normQ = normalizePlaceName(cleanQ);
   const phonQ = phoneticCompress(cleanQ);
 
-  const scored = keralaPlaces.map((place) => {
+  const scored = combinedSearchPlaces.map((place) => {
     const normName = normalizePlaceName(place.name);
     const phonName = phoneticCompress(place.name);
     const normDistrict = normalizePlaceName(place.district);
@@ -195,7 +225,21 @@ export function searchKeralaPlacesAI(query, maxResults = 8) {
     const fullEdit = editSimilarity(normQ, normName);
     bestScore = Math.max(bestScore, fullNGram * 0.55 + fullEdit * 0.45);
 
-    // 4. District and description context boosts
+    // 5. POI Category & Brand Keyword Matching
+    if (place.category && POI_CATEGORY_KEYWORDS[place.category]) {
+      const kwList = POI_CATEGORY_KEYWORDS[place.category];
+      const qWords = normQ.split(' ').filter(w => w.length > 1);
+      const hasCategoryWord = qWords.some(w => kwList.includes(w) || w === place.category || w.startsWith(place.category));
+      if (hasCategoryWord) {
+        if (normDistrict && qWords.some(w => normDistrict.includes(w) || w.includes(normDistrict))) {
+          bestScore = Math.max(bestScore, 0.94);
+        } else {
+          bestScore = Math.max(bestScore, 0.85);
+        }
+      }
+    }
+
+    // 6. District and description context boosts
     if (normDistrict.includes(normQ) || normDistrict === normQ) {
       bestScore = Math.max(bestScore, 0.65);
     }
@@ -206,7 +250,7 @@ export function searchKeralaPlacesAI(query, maxResults = 8) {
     return {
       ...place,
       confidencePct: Math.min(100, Math.round(bestScore * 100)),
-      isDisasterZone: place.type === 'disaster_hotspot'
+      isDisasterZone: place.type === 'disaster_hotspot' || place.type === 'disaster_zone'
     };
   });
 
