@@ -50,11 +50,46 @@ async function runDeepFaultAudit() {
   await new Promise(r => setTimeout(r, 1500));
 
   console.log('▶ [2/6] Auditing Tab Navigation...');
+  const menuBtn = await page.$('.maps-menu-btn');
+  console.log('menuBtn found?', !!menuBtn);
+  if (menuBtn) {
+    await page.evaluate(() => {
+      const btn = document.querySelector('.maps-menu-btn');
+      if (btn) btn.click();
+    });
+    await new Promise(r => setTimeout(r, 600));
+  }
+  const drawerInfo = await page.evaluate(() => {
+    const drawer = document.querySelector('.tab-toolbar.maps-drawer-panel');
+    const firstTab = document.querySelector('.tab-btn');
+    return {
+      drawerExists: !!drawer,
+      drawerClasses: drawer ? drawer.className : '',
+      firstTabRect: firstTab ? {
+        x: firstTab.getBoundingClientRect().x,
+        y: firstTab.getBoundingClientRect().y,
+        width: firstTab.getBoundingClientRect().width,
+        height: firstTab.getBoundingClientRect().height
+      } : null
+    };
+  });
+  console.log('drawerInfo:', JSON.stringify(drawerInfo));
   const navTabs = await page.$$('.tab-btn');
   console.log(`Found ${navTabs.length} main navigation tabs.`);
   for (let i = 0; i < navTabs.length; i++) {
     try {
-      await navTabs[i].click();
+      await page.evaluate(() => {
+        const btn = document.querySelector('.maps-menu-btn');
+        const drawer = document.querySelector('.tab-toolbar.maps-drawer-panel');
+        if (drawer && drawer.classList.contains('drawer-closed') && btn) {
+          btn.click();
+        }
+      });
+      await new Promise(r => setTimeout(r, 200));
+      await page.evaluate((idx) => {
+        const tabs = document.querySelectorAll('.tab-btn');
+        if (tabs[idx]) tabs[idx].click();
+      }, i);
       await new Promise(r => setTimeout(r, 400));
     } catch (e) {
       consoleErrors.push(`Failed clicking tab ${i}: ${e.message}`);

@@ -75,6 +75,9 @@ import {
   ,Printer
   ,ExternalLink
   ,Smartphone
+  ,Menu
+  ,X
+  ,Layers
 } from 'lucide-react';
 
 import CommandPalette from './components/CommandPalette';
@@ -148,6 +151,10 @@ export default function App() {
   // Onboarding Tour States & Handlers
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
+
+  // Modern Apple / Google Maps Slide-Over Navigation Drawer State
+  const [showSlideMenu, setShowSlideMenu] = useState(false);
+  const [showLayersMenu, setShowLayersMenu] = useState(false);
 
   // Live Accurate District Weather & Alert States
   const [districtAlerts, setDistrictAlerts] = useState(() => getFallbackDistrictWeather());
@@ -5769,191 +5776,269 @@ export default function App() {
 
   return (
     <div className={`app-container ${activeTab ? 'sidebar-open' : 'map-focused'}`} data-theme={mapTheme === 'terrain' ? 'thermal' : mapTheme}>
-      {/* Sidebar Controls */}
-      {/* 1. Tab Toolbar (Futuristic HUD Navigation) */}
-      <nav className="tab-toolbar">
-        <div className="brand-icon-wrapper">
-          <ShieldAlert size={26} className="brand-logo" />
+      {/* 1. Sleek Apple / Google Maps Slide-Over Navigation Drawer */}
+      {showSlideMenu && (
+        <div 
+          className="maps-drawer-backdrop" 
+          onClick={() => setShowSlideMenu(false)}
+          aria-label="Close navigation menu backdrop"
+        />
+      )}
+      <nav className={`tab-toolbar maps-drawer-panel ${showSlideMenu ? 'drawer-open' : 'drawer-closed'}`}>
+        <div className="maps-drawer-header">
+          <div className="maps-drawer-brand">
+            <ShieldAlert size={22} className="brand-logo" />
+            <div className="maps-drawer-brand-text">
+              <span className="brand-title">Resylix Geo</span>
+              <span className="brand-sub">Kerala Disaster Management</span>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            className="maps-drawer-close-btn" 
+            onClick={() => setShowSlideMenu(false)}
+            title="Close Menu"
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
         </div>
-        <div className="tab-buttons">
+
+        <div className="maps-drawer-network-status">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className={`network-dot ${isOnline ? 'online' : 'offline'}`} />
+            <span className="status-text">{isOnline ? 'Network Online' : 'Local-Offline Ready'}</span>
+          </div>
+          <button 
+            type="button"
+            className="sync-pill-btn"
+            onClick={() => {
+              handleTabToggle('sync');
+              setShowSlideMenu(false);
+            }}
+            title="Database Sync Console"
+          >
+            <Wifi size={12} /> {syncQueueLength > 0 ? `${syncQueueLength} Queue` : 'Synced'}
+          </button>
+        </div>
+
+        <div className="maps-drawer-section-label">MAIN MODULES</div>
+
+        <div className="tab-buttons maps-drawer-tabs">
           <button
             type="button"
-            className={`tab-btn ${activeTab === null ? 'active' : ''}`}
-            onClick={() => setActiveTab(null)}
+            className={`tab-btn maps-drawer-btn ${activeTab === null ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab(null);
+              setShowSlideMenu(false);
+            }}
             title="Show full-screen map"
           >
             <MapPin size={18} />
-            <span className="tab-label">Map View</span>
+            <span className="tab-label">Map View (Full Screen)</span>
           </button>
           <button 
             type="button"
-            className={`tab-btn ${activeTab === 'planner' ? 'active' : ''}`}
-            onClick={() => handleTabToggle('planner')}
+            className={`tab-btn maps-drawer-btn ${activeTab === 'planner' ? 'active' : ''}`}
+            onClick={() => {
+              handleTabToggle('planner');
+              setShowSlideMenu(false);
+            }}
             title="Tactical Route Planner"
           >
             <Navigation size={18} />
-            <span className="tab-label">Routing</span>
+            <span className="tab-label">Tactical Route Planner</span>
           </button>
           <button 
             type="button"
-            className={`tab-btn ${activeTab === 'bustle' ? 'active' : ''}`}
-            onClick={() => handleTabToggle('bustle')}
+            className={`tab-btn maps-drawer-btn ${activeTab === 'bustle' ? 'active' : ''}`}
+            onClick={() => {
+              handleTabToggle('bustle');
+              setShowSlideMenu(false);
+            }}
             title="Live Bus Tracker (Bustle)"
           >
             <Bus size={18} />
-            <span className="tab-label">Transit</span>
+            <span className="tab-label">Live Bus Tracker</span>
           </button>
           <button 
             type="button"
-            className={`tab-btn ${activeTab === 'customers' ? 'active' : ''}`}
-            onClick={() => handleTabToggle('customers')}
+            className={`tab-btn maps-drawer-btn ${activeTab === 'customers' ? 'active' : ''}`}
+            onClick={() => {
+              handleTabToggle('customers');
+              setShowSlideMenu(false);
+            }}
             title="Live Customer Tracker"
           >
             <Users size={18} />
-            <span className="tab-label">People</span>
+            <span className="tab-label">Live Customer Tracker</span>
           </button>
           <button 
             type="button"
-            className={`tab-btn ${activeTab === 'business' ? 'active' : ''}`}
-            onClick={() => handleTabToggle('business')}
+            className={`tab-btn maps-drawer-btn ${activeTab === 'business' ? 'active' : ''}`}
+            onClick={() => {
+              handleTabToggle('business');
+              setShowSlideMenu(false);
+            }}
             title="Business Operations Console"
           >
             <Building2 size={18} />
-            <span className="tab-label">Business</span>
+            <span className="tab-label">Business Operations</span>
           </button>
           <button 
             type="button"
-            className={`tab-btn ${activeTab === 'alerts' ? 'active' : ''}`}
-            onClick={() => handleTabToggle('alerts')}
+            className={`tab-btn maps-drawer-btn ${activeTab === 'alerts' ? 'active' : ''}`}
+            onClick={() => {
+              handleTabToggle('alerts');
+              setShowSlideMenu(false);
+            }}
             title="Emergencies & Standby"
           >
             <Flame size={18} />
-            <span className="tab-label">Alerts</span>
+            <span className="tab-label">Emergencies & Dispatch</span>
           </button>
           <button 
             type="button"
-            className={`tab-btn ${activeTab === 'climate' ? 'active' : ''}`}
-            onClick={() => handleTabToggle('climate')}
+            className={`tab-btn maps-drawer-btn ${activeTab === 'climate' ? 'active' : ''}`}
+            onClick={() => {
+              handleTabToggle('climate');
+              setShowSlideMenu(false);
+            }}
             title="Climate & Weather Prediction Radar"
           >
             <CloudRain size={18} />
-            <span className="tab-label">Climate</span>
+            <span className="tab-label">Climate & Disaster Radar</span>
           </button>
           <button 
             type="button"
-            className={`tab-btn ${activeTab === 'shelters' ? 'active' : ''}`}
-            onClick={() => handleTabToggle('shelters')}
+            className={`tab-btn maps-drawer-btn ${activeTab === 'shelters' ? 'active' : ''}`}
+            onClick={() => {
+              handleTabToggle('shelters');
+              setShowSlideMenu(false);
+            }}
             title="Evacuation Shelters"
           >
             <Activity size={18} />
-            <span className="tab-label">Shelters</span>
+            <span className="tab-label">Evacuation Safe Hubs</span>
           </button>
           <button 
             type="button"
-            className={`tab-btn ${activeTab === 'sync' ? 'active' : ''}`}
-            onClick={() => handleTabToggle('sync')}
+            className={`tab-btn maps-drawer-btn ${activeTab === 'sync' ? 'active' : ''}`}
+            onClick={() => {
+              handleTabToggle('sync');
+              setShowSlideMenu(false);
+            }}
             title="Database Sync Console"
           >
             <Wifi size={18} />
             {syncQueueLength > 0 && <span className="tab-badge">{syncQueueLength}</span>}
-            <span className="tab-label">Sync</span>
+            <span className="tab-label">Database Sync Console</span>
           </button>
           <button 
             type="button"
-            className={`tab-btn ${activeTab === 'help' ? 'active' : ''}`}
-            onClick={() => handleTabToggle('help')}
+            className={`tab-btn maps-drawer-btn ${activeTab === 'help' ? 'active' : ''}`}
+            onClick={() => {
+              handleTabToggle('help');
+              setShowSlideMenu(false);
+            }}
             title="User Guide & Help"
           >
             <HelpCircle size={18} />
-            <span className="tab-label">Help</span>
+            <span className="tab-label">System Help Manual</span>
           </button>
           <button 
             type="button"
-            className="tab-btn"
+            className="tab-btn maps-drawer-btn"
             onClick={() => {
               setShowP2pModal(true);
               if (!p2pScanning) p2pEngine.startScanning(true);
+              setShowSlideMenu(false);
             }}
             title="Zero-Connectivity Bluetooth & Wi-Fi Proximity Radar & Emergency SOS"
-            style={{ position: 'relative' }}
           >
             <Radio size={18} style={{ color: p2pScanning ? '#34d399' : '#94a3b8' }} />
             {p2pMessages.length > 0 && <span className="tab-badge" style={{ background: '#ef4444' }}>{p2pMessages.length}</span>}
-            <span className="tab-label">P2P Radar</span>
+            <span className="tab-label">Zero-Net P2P Radar</span>
           </button>
-          {/* PWA Install Tab Button (Mobile & Desktop) */}
           <button
             type="button"
-            className="tab-btn"
-            onClick={handleTriggerPwaInstall}
+            className="tab-btn maps-drawer-btn"
+            onClick={() => {
+              handleTriggerPwaInstall();
+              setShowSlideMenu(false);
+            }}
             title={isAppInstalled ? 'Resylix is running in standalone mode' : 'Install Resylix Offline App to Phone'}
-            style={{ position: 'relative', color: isAppInstalled ? '#34d399' : '#38bdf8' }}
+            style={{ color: isAppInstalled ? '#34d399' : '#38bdf8' }}
           >
             <Smartphone size={18} />
             {isAppInstalled && <span className="tab-badge" style={{ background: '#10b981' }}>✓</span>}
-            <span className="tab-label">{isAppInstalled ? 'Installed' : 'Install App'}</span>
+            <span className="tab-label">{isAppInstalled ? 'PWA App Installed' : 'Install Mobile App'}</span>
           </button>
         </div>
-        <div className="toolbar-footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', paddingBottom: '10px' }}>
-          <button 
+
+        <div className="maps-drawer-section-label">LIVE TELEMETRY & RESOURCES</div>
+
+        <div className="maps-drawer-tools">
+          <button
             type="button"
-            className="tour-trigger-btn"
-            onClick={startOnboardingTour}
-            title="Start Onboarding Tour Guide"
-            style={{
-              background: 'rgba(59, 130, 246, 0.12)',
-              border: '1px solid rgba(59, 130, 246, 0.28)',
-              color: '#60a5fa',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-              outline: 'none',
-              marginBottom: '4px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.22)';
-              e.currentTarget.style.boxShadow = '0 0 12px rgba(59, 130, 246, 0.4)';
-              e.currentTarget.style.transform = 'scale(1.08)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.12)';
-              e.currentTarget.style.boxShadow = 'none';
-              e.currentTarget.style.transform = 'scale(1)';
+            className="maps-drawer-tool-btn"
+            onClick={() => {
+              setShowWeatherMatrixModal(true);
+              setShowSlideMenu(false);
             }}
           >
-            <HelpCircle size={18} />
+            <span>🌦️</span> 14-District Weather Matrix
           </button>
-          {!isAppInstalled && (
-            <button 
-              type="button"
-              className="pwa-install-trigger-btn"
-              onClick={handleTriggerPwaInstall}
-              title="Install Resylix Geo Standalone PWA to Home Screen"
-              style={{
-                background: 'rgba(56, 189, 248, 0.15)',
-                border: '1px solid rgba(56, 189, 248, 0.4)',
-                color: '#38bdf8',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                transition: 'all 0.2s ease',
-                outline: 'none',
-                marginBottom: '4px'
-              }}
-            >
-              <Smartphone size={16} />
-            </button>
-          )}
-          <span className={`network-dot ${isOnline ? 'online' : 'offline'}`}></span>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
+            onClick={() => {
+              setShowDamMonitorModal(true);
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>🌊</span> KSDMA Dam Water Levels
+          </button>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
+            onClick={() => {
+              setShowDemoScenariosModal(true);
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>⚡</span> 1-Click Live Scenarios
+          </button>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
+            onClick={() => {
+              window.open('/RESYLIX_PRESENTATION_DECK.html', '_blank');
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>🖥️</span> Interactive Slides Deck
+          </button>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
+            onClick={() => {
+              downloadExecutiveReport();
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>📄</span> Executive Whitepaper PDF
+          </button>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
+            onClick={() => {
+              startOnboardingTour();
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>🧭</span> Quick Interactive Tour
+          </button>
         </div>
       </nav>
 
@@ -5990,18 +6075,24 @@ export default function App() {
             className="sidebar-close-btn"
             onClick={() => setActiveTab(null)}
             style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-muted)',
-              fontSize: '1.25rem',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#94a3b8',
+              fontSize: '1rem',
               cursor: 'pointer',
-              display: 'none',
-              padding: '0 4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
               fontWeight: 'bold',
               outline: 'none',
-              marginLeft: '0.5rem'
+              marginLeft: '0.5rem',
+              transition: 'all 0.15s ease'
             }}
-            title="Collapse Sidebar"
+            title="Close Card (Return to Full Map)"
+            aria-label="Close card"
           >
             ✕
           </button>
@@ -8935,234 +9026,62 @@ export default function App() {
         {/* Interactive Leaflet Element */}
         <div ref={mapContainerRef} className={`map-container ${mapTheme === 'satellite' ? 'map-satellite-theme' : mapTheme === 'terrain' ? 'map-terrain-theme' : mapTheme === 'solar' || mapTheme === 'light' ? 'map-light-theme' : mapTheme === 'nvg' ? 'map-nvg-theme' : mapTheme === 'safety' ? 'map-safety-theme' : 'map-dark-theme'}`}></div>
 
-        {/* KSDMA Kerala Statewide 14-District Weather Ribbon */}
-        <div className="ksdma-alert-ticker" style={{
-          position: 'absolute',
-          top: '1.25rem',
-          left: '4.8rem',
-          right: '1.25rem',
-          zIndex: 999,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.45rem',
-          padding: '0.32rem 0.6rem',
-          overflow: 'hidden'
-        }}>
-          {/* Section 1: Statewide Status, Controls & Matrix Toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.7rem', fontWeight: 600, color: '#f8fafc', flexShrink: 0, paddingRight: '0.5rem', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-            <span style={{
-              background: 'rgba(59, 130, 246, 0.12)',
-              border: '1px solid rgba(59, 130, 246, 0.25)',
-              color: '#60a5fa',
-              padding: '2px 8px',
-              borderRadius: '9999px',
-              fontSize: '0.65rem',
-              fontWeight: 600,
-              letterSpacing: '-0.01em'
-            }}>
-              🌦️ Weather (14)
-            </span>
-            <span style={{
-              display: 'inline-block',
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              background: districtAlertsStatus === 'live' ? '#10b981' : districtAlertsStatus === 'loading' ? '#f59e0b' : '#3b82f6'
-            }} />
-            <button
-              type="button"
-              onClick={refreshLiveDistrictAlerts}
-              title="Refresh live district weather telemetry"
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#94a3b8',
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                padding: '0 2px',
-                display: 'inline-flex',
-                alignItems: 'center'
-              }}
-            >
-              🔄
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowWeatherMatrixModal(true)}
-              title="Open full 14-district weather matrix table"
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#cbd5e1',
-                fontSize: '0.64rem',
-                fontWeight: 600,
-                padding: '2px 8px',
-                borderRadius: '9999px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '3px'
-              }}
-            >
-              📋 All 14
-            </button>
-          </div>
-
-          {/* Left Arrow Button */}
+        {/* Apple Maps / Google Maps Style Floating Search & Action Bar */}
+        <div className="maps-floating-search-card tactical-gnss-telemetry-badge" role="region" aria-label="Quick Actions & Search">
+          {/* Hamburger Menu Button */}
           <button
             type="button"
-            onClick={() => scrollWeatherRibbon('left')}
-            title="Scroll weather ribbon left"
-            style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#e2e8f0',
-              borderRadius: '4px',
-              padding: '2px 5px',
-              cursor: 'pointer',
-              fontSize: '0.62rem',
-              fontWeight: 'bold',
-              flexShrink: 0
-            }}
+            className="maps-menu-btn"
+            onClick={() => setShowSlideMenu(prev => !prev)}
+            title="Open Menu (All Modules & Disaster Tools)"
+            aria-label="Open menu"
           >
-            ◀
+            <Menu size={20} />
           </button>
 
-          {/* Scrolling District Carousel Track */}
-          <div
-            ref={weatherScrollRef}
-            style={{
-              display: 'flex',
-              gap: '0.35rem',
-              alignItems: 'center',
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              scrollBehavior: 'smooth',
-              flex: 1,
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {districtAlerts.map((dist) => (
-              <button
-                key={dist.id}
-                type="button"
-                onClick={() => handleDistrictWeatherClick(dist)}
-                title={`Click to focus map on ${dist.name}: ${dist.temp}°C, ${dist.condition}, Wind ${dist.wind}km/h`}
-                style={{
-                  background: dist.level === 'red'
-                    ? 'rgba(239, 68, 68, 0.25)'
-                    : dist.level === 'orange'
-                      ? 'rgba(249, 115, 22, 0.25)'
-                      : dist.level === 'yellow'
-                        ? 'rgba(234, 179, 8, 0.2)'
-                        : 'rgba(15, 23, 42, 0.75)',
-                  border: `1px solid ${dist.alertColor || 'rgba(56, 189, 248, 0.25)'}`,
-                  color: '#fff',
-                  padding: '3px 8px',
-                  borderRadius: '12px',
-                  fontSize: '0.64rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  flexShrink: 0,
-                  boxShadow: dist.isAlert ? `0 0 8px ${dist.alertColor}44` : 'none',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <span>{dist.emoji || getWeatherEmoji(dist.code) || '⛅'}</span>
-                <span style={{ fontWeight: 800, color: '#f8fafc' }}>{dist.name}:</span>
-                <strong style={{ color: '#38bdf8', fontWeight: 800 }}>{dist.temp}°C</strong>
-                <span style={{ opacity: 0.85, fontSize: '0.58rem' }}>{dist.condition}</span>
-                {dist.rain > 0 && (
-                  <span style={{ color: '#67e8f9', fontSize: '0.55rem', background: 'rgba(6, 182, 212, 0.2)', padding: '1px 4px', borderRadius: '3px' }}>
-                    💧{dist.rain.toFixed(1)}mm
-                  </span>
-                )}
-                {dist.gusts >= 25 && (
-                  <span style={{ color: '#fde047', fontSize: '0.55rem', background: 'rgba(234, 179, 8, 0.2)', padding: '1px 4px', borderRadius: '3px' }}>
-                    💨{dist.gusts}km/h
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Right Arrow Button */}
-          <button
-            type="button"
-            onClick={() => scrollWeatherRibbon('right')}
-            title="Scroll weather ribbon right"
-            style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#e2e8f0',
-              borderRadius: '4px',
-              padding: '2px 5px',
-              cursor: 'pointer',
-              fontSize: '0.62rem',
-              fontWeight: 'bold',
-              flexShrink: 0
-            }}
-          >
-            ▶
-          </button>
-        </div>
-
-        {/* Modern Apple / Linear Style Floating Top Capsule */}
-        <div className="tactical-gnss-telemetry-badge" role="region" aria-label="System Status & Quick Actions">
-          {/* Status Indicator Pill */}
+          {/* Search Box Trigger */}
           <div 
-            className="telemetry-hud-item" 
-            title={`GNSS: ${gpsCoords ? `${gpsCoords.lat.toFixed(4)}°N, ${gpsCoords.lng.toFixed(4)}°E` : '11.537°N, 76.177°E'} • Mesh Radio: 4 Nodes Ready • Offline Cache: 100% Synced`}
+            className="maps-search-box"
+            onClick={() => setIsCommandPaletteOpen(true)}
+            title="Search Kerala places, hospitals, dams... (⌘K / Ctrl+K)"
+            role="button"
+            tabIndex={0}
           >
-            <span className={`telemetry-hud-dot ${isOnline ? 'live' : 'offline'}`} />
-            <span className="telemetry-hud-status-text">
-              {isOnline ? 'Online' : 'Offline Ready'}
-            </span>
+            <Search size={16} className="maps-search-icon" />
+            <span className="maps-search-placeholder">Search Kerala places, hospitals, dams...</span>
+            <kbd className="maps-search-kbd">⌘K</kbd>
           </div>
 
-          <div className="telemetry-hud-sep" />
+          <div className="maps-search-divider" />
+
+          {/* Directions Chip */}
+          <button
+            type="button"
+            className={`maps-chip directions-chip ${activeTab === 'planner' ? 'active' : ''}`}
+            onClick={() => setActiveTab(prev => prev === 'planner' ? null : 'planner')}
+            title="Tactical Route Planner"
+          >
+            <Navigation size={15} />
+            <span>Directions</span>
+          </button>
 
           {/* 1-Click Live Presentation Demo Scenarios Button */}
           <button
             type="button"
-            className="telemetry-hud-btn scenarios-btn"
+            className="maps-chip telemetry-hud-btn scenarios-btn demo-chip"
             onClick={() => {
               triggerHaptic(20);
               setShowDemoScenariosModal(true);
             }}
             title="Launch 1-Click Live Disaster Scenarios (Wayanad, Banasurasagar, Kuttanad)"
           >
-            ⚡ Scenarios
+            ⚡ Demo
           </button>
 
-          {/* Presentation Slides Button */}
+          {/* Map Theme Cycler */}
           <button
             type="button"
-            className="telemetry-hud-btn slides-btn"
-            onClick={() => window.open('/RESYLIX_PRESENTATION_DECK.html', '_blank')}
-            title="Open Interactive Presentation Slides & Defense Notes"
-          >
-            🖥️ Slides
-          </button>
-
-          {/* Whitepaper Report Download Button */}
-          <button
-            type="button"
-            className="telemetry-hud-btn report-btn"
-            onClick={downloadExecutiveReport}
-            title="Download & View Full System Whitepaper Report"
-          >
-            📄 Report
-          </button>
-
-          {/* Theme Cycler */}
-          <button
-            type="button"
-            className="telemetry-hud-btn theme-btn"
+            className="maps-chip telemetry-hud-btn theme-btn"
             onClick={() => {
               triggerHaptic(20);
               setMapTheme(prev => {
@@ -9174,16 +9093,6 @@ export default function App() {
             title="Cycle map display theme"
           >
             🎨 {mapTheme === 'dark' ? 'Slate' : mapTheme === 'nvg' ? 'Night' : mapTheme === 'solar' ? 'Light' : mapTheme === 'safety' ? 'Safety' : mapTheme}
-          </button>
-
-          {/* PWA Mobile & Desktop Install Button */}
-          <button
-            type="button"
-            className="telemetry-hud-btn pwa-hud-btn"
-            onClick={handleTriggerPwaInstall}
-            title={isAppInstalled ? 'Resylix Geo is running in standalone mode' : 'Install Resylix Offline App to Phone or Desktop'}
-          >
-            {isAppInstalled ? '✅ App' : '📲 Install'}
           </button>
 
           {/* Active Demo Scenario Indicator Pill */}
@@ -9199,6 +9108,160 @@ export default function App() {
               >
                 ✕
               </button>
+            </div>
+          )}
+
+          {/* Status Indicator Dot */}
+          <div 
+            className="maps-status-indicator telemetry-hud-item"
+            title={`GNSS: ${gpsCoords ? `${gpsCoords.lat.toFixed(4)}°N, ${gpsCoords.lng.toFixed(4)}°E` : '11.537°N, 76.177°E'} • Mesh Radio: 4 Nodes Ready • Offline Cache: 100% Synced`}
+          >
+            <span className={`telemetry-hud-dot ${isOnline ? 'live' : 'offline'}`} />
+            <span className="telemetry-hud-status-text" style={{ display: 'none' }}>
+              {isOnline ? 'Online' : 'Offline Ready'}
+            </span>
+          </div>
+        </div>
+
+        {/* Top-Right Discreet Controls: Layers, Weather & SOS Quick Action */}
+        <div className="maps-top-right-bar">
+          {/* Layers Button (Apple / Google Maps Style) */}
+          <button
+            type="button"
+            className={`maps-layers-chip ${showLayersMenu ? 'active' : ''}`}
+            onClick={() => setShowLayersMenu(prev => !prev)}
+            title="Map Layers & Disaster Overlays"
+            aria-label="Map layers"
+          >
+            <Layers size={14} />
+            <span>Layers</span>
+          </button>
+
+          <button
+            type="button"
+            className="maps-weather-chip"
+            onClick={() => setShowWeatherMatrixModal(true)}
+            title="Click to view all 14 Kerala districts weather & radar"
+          >
+            <span className="weather-icon">🌦️</span>
+            <span className="weather-text">
+              {districtAlerts && districtAlerts[0] ? `${districtAlerts[0].name} ${districtAlerts[0].temp}°C` : 'Kerala 28°C'}
+            </span>
+            <span className="weather-badge">KSDMA</span>
+          </button>
+
+          <button
+            type="button"
+            className="maps-sos-chip"
+            onClick={() => setShowSosConfirm(true)}
+            title="Emergency Distress SOS Beacon"
+          >
+            🚨 SOS
+          </button>
+
+          {/* Apple Maps Style Layers Popover */}
+          {showLayersMenu && (
+            <div className="maps-layers-popover">
+              <div className="maps-layers-header">
+                <span className="layers-title">MAP LAYERS</span>
+                <button type="button" className="layers-close-btn" onClick={() => setShowLayersMenu(false)}>✕</button>
+              </div>
+              <div className="maps-layers-list">
+                <button 
+                  type="button" 
+                  className={`maps-layer-row ${mapTheme === 'satellite' ? 'active' : ''}`}
+                  onClick={() => setMapTheme(prev => prev === 'satellite' ? 'dark' : 'satellite')}
+                >
+                  <span className="layer-label">🛰️ Satellite Imagery</span>
+                  <span className={`layer-badge-toggle ${mapTheme === 'satellite' ? 'on' : ''}`}>
+                    {mapTheme === 'satellite' ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+                <button 
+                  type="button" 
+                  className={`maps-layer-row ${showHazardZones ? 'active' : ''}`}
+                  onClick={() => setShowHazardZones(prev => !prev)}
+                >
+                  <span className="layer-label">⚠️ Hazard Risk Zones</span>
+                  <span className={`layer-badge-toggle ${showHazardZones ? 'on' : ''}`}>
+                    {showHazardZones ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+                <button 
+                  type="button" 
+                  className={`maps-layer-row ${showRainRadar ? 'active' : ''}`}
+                  onClick={toggleRainRadar}
+                >
+                  <span className="layer-label">🌧️ Live Monsoon Rain Radar</span>
+                  <span className={`layer-badge-toggle ${showRainRadar ? 'on' : ''}`}>
+                    {showRainRadar ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+                <button 
+                  type="button" 
+                  className={`maps-layer-row ${showOfflineVectorLayer ? 'active' : ''}`}
+                  onClick={() => setShowOfflineVectorLayer(prev => !prev)}
+                >
+                  <span className="layer-label">🗺️ Offline Vector Basemap</span>
+                  <span className={`layer-badge-toggle ${showOfflineVectorLayer ? 'on' : ''}`}>
+                    {showOfflineVectorLayer ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+                <button 
+                  type="button" 
+                  className="maps-layer-row"
+                  onClick={() => {
+                    setShowKsdmaModal(true);
+                    setShowLayersMenu(false);
+                  }}
+                  title="KSDMA Reservoir Water Levels & Warnings"
+                >
+                  <span className="layer-label">🌊 KSDMA Dam Reservoirs</span>
+                  {damAlertsCount > 0 && <span className="layer-count-badge warning">{damAlertsCount}</span>}
+                </button>
+                <button 
+                  type="button" 
+                  className="maps-layer-row"
+                  onClick={() => {
+                    setShowWeatherMatrixModal(true);
+                    setShowLayersMenu(false);
+                  }}
+                  title="KSDMA 14-District Weather Matrix"
+                >
+                  <span className="layer-label">🌦️ 14-District Weather Matrix</span>
+                  <span className="layer-count-badge danger">14</span>
+                </button>
+                <button 
+                  type="button" 
+                  className="maps-layer-row"
+                  onClick={() => {
+                    fitKeralaBounds();
+                    setShowLayersMenu(false);
+                  }}
+                >
+                  <span className="layer-label">🧭 Fit Kerala Bounds</span>
+                </button>
+                <button 
+                  type="button" 
+                  className="maps-layer-row"
+                  onClick={() => {
+                    setShowOfflineCacheModal(true);
+                    setShowLayersMenu(false);
+                  }}
+                >
+                  <span className="layer-label">💾 Offline Storage Manager</span>
+                </button>
+                <button 
+                  type="button" 
+                  className="maps-layer-row"
+                  onClick={() => {
+                    setShowSettingsPanel(prev => !prev);
+                    setShowLayersMenu(false);
+                  }}
+                >
+                  <span className="layer-label">⚙️ Environment Audio & Siren</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -9236,42 +9299,6 @@ export default function App() {
           </div>
         )}
 
-        <div className={`map-search-panel ${showLocationSearch ? 'expanded' : 'collapsed'}`}>
-          <button
-            type="button"
-            className="map-search-toggle"
-            onClick={() => setShowLocationSearch(value => !value)}
-            aria-expanded={showLocationSearch}
-            aria-label={showLocationSearch ? 'Close location search' : 'Open location search'}
-            title={showLocationSearch ? 'Close location search' : 'Search location'}
-          >
-            <Search size={17} />
-            {showLocationSearch && <span>Close</span>}
-          </button>
-          {showLocationSearch && <form onSubmit={searchLocations} className="map-search-form">
-            <Search size={14} />
-            <input
-              value={locationQuery}
-              onChange={(event) => setLocationQuery(event.target.value)}
-              placeholder="Search location or landmark"
-              aria-label="Search location or landmark"
-            />
-            <button type="submit" aria-label="Search locations" disabled={locationSearchStatus === 'loading'}>
-              {locationSearchStatus === 'loading' ? '…' : 'Go'}
-            </button>
-          </form>}
-          {showLocationSearch && locationSearchStatus === 'offline' && <div className="map-search-message">Search needs a connection. Bundled Kerala map data remains available.</div>}
-          {showLocationSearch && locationSearchStatus === 'error' && <div className="map-search-message">Location search failed. Try again.</div>}
-          {showLocationSearch && locationResults.length > 0 && (
-            <div className="map-search-results">
-              {locationResults.map(result => (
-                <button type="button" key={`${result.place_id}-${result.lat}`} onClick={() => selectLocationResult(result)}>
-                  {result.display_name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
         
         {/* Google Maps Style Navigation HUD Overlay */}
         {isNavigating && gpsCoords && (
@@ -9577,115 +9604,6 @@ export default function App() {
           alignItems: 'flex-end',
           gap: '0.5rem'
         }}>
-          <div className="map-tools-capsule" role="toolbar" aria-label="Tactical Map HUD Controls">
-            <button
-              type="button"
-              className="map-tool-btn"
-              onClick={() => fitKeralaBounds()}
-              title="Fit Entire Kerala Map to Screen (Recenter)"
-            >
-              🗺️
-            </button>
-            <button
-              type="button"
-              className={`map-tool-btn ${showHazardZones ? 'active-danger' : ''}`}
-              onClick={() => setShowHazardZones(prev => !prev)}
-              title={showHazardZones ? "Hide KSDMA Hazard Risk Zones" : "Show KSDMA Hazard Risk Zones (Landslides & Floods)"}
-            >
-              ⚠️
-            </button>
-            <button
-              type="button"
-              className={`map-tool-btn ${mapTheme === 'satellite' ? 'active-info' : ''}`}
-              onClick={() => setMapTheme(prev => prev === 'satellite' ? 'dark' : 'satellite')}
-              title={mapTheme === 'satellite' ? "Switch to Tactical Dark Map" : "Switch to Satellite Imagery"}
-            >
-              🛰️
-            </button>
-            <button
-              type="button"
-              className={`map-tool-btn ${showP2pModal || p2pScanning ? 'active-success' : ''}`}
-              onClick={() => {
-                setShowP2pModal(true);
-                if (!p2pScanning) p2pEngine.startScanning(true);
-              }}
-              title="Zero-Connectivity Bluetooth & Wi-Fi Proximity Radar & Emergency SOS"
-            >
-              📡
-              {p2pMessages.length > 0 && (
-                <span className="map-tool-badge">
-                  {p2pMessages.length}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              className={`map-tool-btn ${showRainRadar ? 'active-info' : ''}`}
-              onClick={toggleRainRadar}
-              title={showRainRadar ? `Hide Live Precipitation Radar (${radarTimeString})` : "Show Real-Time Rain & Monsoon Radar"}
-            >
-              🌧️
-            </button>
-            <button
-              type="button"
-              className={`map-tool-btn ${showKsdmaModal ? 'active-info' : ''}`}
-              onClick={() => setShowKsdmaModal(true)}
-              title="KSDMA Reservoir Water Levels & Rule Curves (sdma.kerala.gov.in)"
-            >
-              🌊
-              {damAlertsCount > 0 && (
-                <span className="map-tool-badge" style={{ background: '#f97316' }}>
-                  {damAlertsCount}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              className={`map-tool-btn ${showKsdmaWeatherModal ? 'active-info' : ''}`}
-              onClick={() => setShowKsdmaWeatherModal(true)}
-              title="KSDMA & IMD 14-District Weather Warning Matrix (Red/Orange/Yellow Alerts)"
-            >
-              ⚠️
-              <span className="map-tool-badge" style={{ background: '#ef4444' }}>
-                14
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`map-tool-btn ${showOfflineVectorLayer ? 'active-info' : ''}`}
-              onClick={() => {
-                setShowOfflineVectorLayer(prev => !prev);
-                logMessage(`[OFFLINE] Tactical vector basemap ${!showOfflineVectorLayer ? 'ENABLED' : 'DISABLED'}.`, 'info');
-              }}
-              title={showOfflineVectorLayer ? "Disable Zero-Network Offline Vector Basemap" : "Enable Zero-Network Offline Vector Basemap"}
-            >
-              🗺️
-            </button>
-            <button
-              type="button"
-              className="map-tool-btn"
-              onClick={() => setShowOfflineCacheModal(true)}
-              title="Open Offline Storage & Corridor Pre-Cacher"
-            >
-              💾
-            </button>
-            <button
-              type="button"
-              className="map-tool-btn"
-              onClick={() => setShowCommandPalette(true)}
-              title="Open Tactical Command Palette (Ctrl+K or /)"
-            >
-              ⌨️
-            </button>
-            <button
-              type="button"
-              className={`map-tool-btn ${showSettingsPanel ? 'active-info' : ''}`}
-              onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-              title="Configure Map Environment HUD"
-            >
-              ⚙️
-            </button>
-          </div>
           
           {showSettingsPanel && (
             <div className="map-settings-panel" style={{
