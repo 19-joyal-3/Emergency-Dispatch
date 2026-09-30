@@ -1,0 +1,4835 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9272,
+          8.5236
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_tvm_mch",
+        "name": "Govt. Medical College Hospital, Thiruvananthapuram",
+        "category": "hospital",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2528300",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Level-1 Tertiary Trauma Care, Emergency Casualty & Blood Bank",
+        "address": "Medical College P.O., Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9421,
+          8.4984
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_tvm_general",
+        "name": "General Hospital, Thiruvananthapuram",
+        "category": "hospital",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2460102",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Emergency Casualty, ICU & Pediatric Care",
+        "address": "Vanchiyoor, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9281,
+          8.5218
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_tvm_sctimst",
+        "name": "Sree Chitra Tirunal Institute (SCTIMST)",
+        "category": "hospital",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2524444",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "National Institute for Cardiac & Neurological Emergencies",
+        "address": "Medical College Campus, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9042,
+          8.5145
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_tvm_kims",
+        "name": "KIMSHEALTH Hospital",
+        "category": "hospital",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2941000",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Multi-specialty Disaster Trauma Care & Air Ambulance Helipad",
+        "address": "Anayara P.O., NH Bypass, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9268,
+          8.5245
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_tvm_neethi",
+        "name": "Neethi 24x7 Medical Store (Medical College)",
+        "category": "pharmacy",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2528120",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "Govt. Subsidized 24/7 Essential Drugs & Oxygen Cans",
+        "address": "Opposite SAT Hospital Gate, Medical College",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9452,
+          8.5285
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_tvm_apollo",
+        "name": "Apollo Pharmacy 24/7 (Pattom)",
+        "category": "pharmacy",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2541289",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24-Hour Emergency Medicines, Critical Care Injections",
+        "address": "Pattom Junction, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9415,
+          8.4988
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_tvm_karunya",
+        "name": "Karunya Community Pharmacy (General Hospital)",
+        "category": "pharmacy",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2460199",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "State Govt. Karunya Scheme 24/7 Emergency Pharmacy",
+        "address": "General Hospital Compound, Vanchiyoor",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.8742,
+          8.5684
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_tvm_iocl_bypass",
+        "name": "Indian Oil Retail Outlet (NH Bypass Kazhakkoottam)",
+        "category": "fuel",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2418290",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 High-Capacity Diesel Reserve, Generator Power & EV Fast Charging",
+        "address": "NH-66 Bypass, Technopark Phase 1, Kazhakkoottam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9441,
+          8.5292
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_tvm_bpcl_pattom",
+        "name": "BPCL Auto Care Center (Pattom)",
+        "category": "fuel",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2445890",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Emergency Fuel Depot & Free Tyre Air",
+        "address": "Pattom-Kowdiar Road, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9535,
+          8.4995
+        ]
+      },
+      "properties": {
+        "id": "poi_police_tvm_cityhq",
+        "name": "City Police Commissioner Office & Control Room (112)",
+        "category": "police",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2320579",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "State Police Command Center, Emergency Dispatch 112 Hub",
+        "address": "Vazhuthacaud, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9514,
+          8.4912
+        ]
+      },
+      "properties": {
+        "id": "poi_police_tvm_fire_chengalchoola",
+        "name": "Fire & Rescue Services Headquarters",
+        "category": "police",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2320101",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Apex Fire & Disaster Response Base, Scuba & Boat Rescue Unit",
+        "address": "Chengalchoola, Thampanoor, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9498,
+          8.4975
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_tvm_centralstadium",
+        "name": "Central Stadium Relief Shelter Camp",
+        "category": "shelter",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2330015",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 1200 beds • Medical Ward & Food Logistics Hub",
+        "address": "Near Secretariat, Statue, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9512,
+          8.5085
+        ]
+      },
+      "properties": {
+        "id": "poi_hotel_tvm_ktdc_mascot",
+        "name": "KTDC Mascot Hotel (Govt. Relief Lodging)",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2318990",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hotel",
+        "description": "KTDC Heritage Hotel • Emergency Delegation & Relief Quarters",
+        "address": "PMG Junction, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9542,
+          8.4925
+        ]
+      },
+      "properties": {
+        "id": "poi_food_tvm_kudumbashree",
+        "name": "Kudumbashree Janakeeya Hotel & Community Kitchen",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "0471-2321155",
+        "opening_hours": "07:00 - 22:00",
+        "is_24x7": false,
+        "amenity": "food",
+        "description": "Subsidized Food Supply & Disaster Meal Pack Distribution Hub",
+        "address": "Near Thampanoor Bus Terminal, Thiruvananthapuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5921,
+          8.8872
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_klm_district",
+        "name": "District Hospital, Kollam",
+        "category": "hospital",
+        "district": "Kollam",
+        "phone": "0474-2793444",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Casualty, ICU & Specialized Burn Center",
+        "address": "Asramam Road, Kollam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7582,
+          8.8124
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_klm_mch_parippally",
+        "name": "Govt. Medical College Hospital, Kollam",
+        "category": "hospital",
+        "district": "Kollam",
+        "phone": "0474-2575050",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Level-1 Highway Trauma Care on NH-66 Corridor",
+        "address": "Parippally, Kollam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5898,
+          8.8856
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_klm_jan_aushadhi",
+        "name": "Pradhan Mantri Jan Aushadhi Kendra (Chinnakada)",
+        "category": "pharmacy",
+        "district": "Kollam",
+        "phone": "0474-2748910",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Generic Essential Medications & First Aid Stocks",
+        "address": "Chinnakada Overbridge, Kollam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5912,
+          8.8862
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_klm_hpcl_chinnakada",
+        "name": "HPCL Auto Care Outlet (Chinnakada)",
+        "category": "fuel",
+        "district": "Kollam",
+        "phone": "0474-2743120",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 High-Volume Petrol & Diesel Pump",
+        "address": "Main Road, Chinnakada, Kollam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6015,
+          8.8912
+        ]
+      },
+      "properties": {
+        "id": "poi_police_klm_east",
+        "name": "Kollam East Police Station & DEOC Helpline",
+        "category": "police",
+        "district": "Kollam",
+        "phone": "0474-2742262",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "District Disaster Emergency Response Post & Control Room",
+        "address": "Kollam East, Asramam, Kollam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5945,
+          8.8892
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_klm_townhall",
+        "name": "C. Kesavan Memorial Town Hall Relief Camp",
+        "category": "shelter",
+        "district": "Kollam",
+        "phone": "0474-2743320",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Evacuation Shelter Capacity: 600 • Clean Water Facility",
+        "address": "Near Chinnakada, Kollam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6045,
+          8.8942
+        ]
+      },
+      "properties": {
+        "id": "poi_hotel_klm_ktdc",
+        "name": "KTDC Tamarind (Asramam)",
+        "category": "hotel",
+        "district": "Kollam",
+        "phone": "0474-2745538",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hotel",
+        "description": "Govt. Emergency Relief & First Responder Accommodation",
+        "address": "Asramam, Kollam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6031,
+          8.8935
+        ]
+      },
+      "properties": {
+        "id": "poi_food_klm_janakeeya",
+        "name": "Kudumbashree Community Canteen (Asramam)",
+        "category": "food",
+        "district": "Kollam",
+        "phone": "0474-2751122",
+        "opening_hours": "07:00 - 22:00",
+        "is_24x7": false,
+        "amenity": "food",
+        "description": "Disaster Relief Food Packet Packing & Dispatch Centre",
+        "address": "Asramam Ground, Kollam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7865,
+          9.2682
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_pta_general",
+        "name": "General Hospital, Pathanamthitta",
+        "category": "hospital",
+        "district": "Pathanamthitta",
+        "phone": "0468-2222272",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "District Apex Hospital, 24/7 Casualty & Blood Storage Center",
+        "address": "Hospital Road, Pathanamthitta",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7025,
+          9.3385
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_pta_kozhencherry",
+        "name": "District Hospital, Kozhencherry",
+        "category": "hospital",
+        "district": "Pathanamthitta",
+        "phone": "0468-2212234",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Pamba River Basin Flood Response Medical Base",
+        "address": "Kozhencherry, Pathanamthitta",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7018,
+          9.3372
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_pta_neethi",
+        "name": "Neethi 24x7 Pharmacy (Kozhencherry)",
+        "category": "pharmacy",
+        "district": "Pathanamthitta",
+        "phone": "0468-2215588",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24-Hour Emergency Medicines & Anti-Venom Kits",
+        "address": "Hospital Junction, Kozhencherry",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7912,
+          9.2715
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_pta_iocl_ringroad",
+        "name": "Indian Oil Retail Outlet (Ring Road)",
+        "category": "fuel",
+        "district": "Pathanamthitta",
+        "phone": "0468-2224590",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 High-Speed Diesel Reserve & Generator Support",
+        "address": "Ring Road, Pathanamthitta",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7852,
+          9.2662
+        ]
+      },
+      "properties": {
+        "id": "poi_police_pta_station",
+        "name": "Pathanamthitta Police Station & DEOC (1077)",
+        "category": "police",
+        "district": "Pathanamthitta",
+        "phone": "0468-2222233",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "District Police Headquarters & Pamba Flood Monitoring Center",
+        "address": "Collectorate Junction, Pathanamthitta",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7925,
+          9.2745
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_pta_catholicate",
+        "name": "Catholicate College Auditorium Camp",
+        "category": "shelter",
+        "district": "Pathanamthitta",
+        "phone": "0468-2222223",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Flood Evacuation Center Capacity: 800 • Power Backup",
+        "address": "Makkankunnu, Pathanamthitta",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3312,
+          9.4085
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_alp_tdmch",
+        "name": "Govt. T.D. Medical College Hospital, Vandanam",
+        "category": "hospital",
+        "district": "Alappuzha",
+        "phone": "0477-2282015",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Apex Tertiary Hospital, Level-1 Trauma Care, Waterborne Disease Unit",
+        "address": "NH-66, Vandanam, Alappuzha",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3345,
+          9.4988
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_alp_general",
+        "name": "General Hospital, Alappuzha",
+        "category": "hospital",
+        "district": "Alappuzha",
+        "phone": "0477-2253324",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Emergency Casualty, Coastal Rescue Receiving Station",
+        "address": "Beach Road, Alappuzha",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3325,
+          9.4092
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_alp_neethi",
+        "name": "Neethi 24x7 Pharmacy (Vandanam Medical College)",
+        "category": "pharmacy",
+        "district": "Alappuzha",
+        "phone": "0477-2283311",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Emergency Medical Supplies, Drips, Antibiotics",
+        "address": "Opp. Medical College Entrance, Vandanam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3218,
+          9.5482
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_alp_bpcl_nh66",
+        "name": "BPCL Highway Auto Care Outlet (Kalavoor NH-66)",
+        "category": "fuel",
+        "district": "Alappuzha",
+        "phone": "0477-2258810",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Diesel Fueling Station for Emergency Rescue Vehicles",
+        "address": "NH-66, Kalavoor, Alappuzha",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3195,
+          9.4925
+        ]
+      },
+      "properties": {
+        "id": "poi_police_alp_coastal",
+        "name": "Coastal Police Station & Marine Rescue Unit",
+        "category": "police",
+        "district": "Alappuzha",
+        "phone": "0477-2238400",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Marine Sea Patrol, Speedboat Flood Inundation Rescue Base",
+        "address": "Beach Road, Alappuzha",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.345,
+          9.478
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_alp_sd_college",
+        "name": "Sanatana Dharma (SD) College Relief Center",
+        "category": "shelter",
+        "district": "Alappuzha",
+        "phone": "0477-2266205",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Major Kuttanad Inundation Evacuation Camp Capacity: 1500",
+        "address": "Sanathanapuram, Kalarcode, Alappuzha",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3245,
+          9.5512
+        ]
+      },
+      "properties": {
+        "id": "poi_hotel_alp_ktdc_rippon",
+        "name": "KTDC Motel Araam (Kalavoor)",
+        "category": "hotel",
+        "district": "Alappuzha",
+        "phone": "0477-2258288",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hotel",
+        "description": "Highway Relief Waystation & Emergency Quarters",
+        "address": "NH-66, Kalavoor, Alappuzha",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.4185,
+          9.4421
+        ]
+      },
+      "properties": {
+        "id": "poi_food_alp_community_kitchen",
+        "name": "Kuttanad Relief Community Kitchen",
+        "category": "food",
+        "district": "Alappuzha",
+        "phone": "0477-2702210",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "food",
+        "description": "Waterway Emergency Food Boat Supply Base",
+        "address": "Nedumudi Boat Jetty, Alappuzha",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5332,
+          9.664
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_ktm_mch",
+        "name": "Govt. Medical College Hospital, Kottayam",
+        "category": "hospital",
+        "district": "Kottayam",
+        "phone": "0481-2597311",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Super Specialty Trauma Center, Level-1 Cardiac & Neurology ICU",
+        "address": "Gandhinagar, Kottayam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5215,
+          9.5882
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_ktm_district",
+        "name": "General Hospital, Kottayam",
+        "category": "hospital",
+        "district": "Kottayam",
+        "phone": "0481-2563611",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Emergency Casualty & Critical Ambulance Hub",
+        "address": "Near Thirunakkara, Kottayam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5345,
+          9.6635
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_ktm_karunya",
+        "name": "Karunya 24x7 Pharmacy (Gandhinagar MCH)",
+        "category": "pharmacy",
+        "district": "Kottayam",
+        "phone": "0481-2598800",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Critical Medicine Depot & Saline Supplies",
+        "address": "MCH Campus, Gandhinagar, Kottayam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5285,
+          9.5542
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_ktm_iocl_mc_road",
+        "name": "Indian Oil Highway Outlet (MC Road Nattakom)",
+        "category": "fuel",
+        "district": "Kottayam",
+        "phone": "0481-2361120",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Diesel Station for Emergency Vehicles on MC Road",
+        "address": "MC Road, Nattakom, Kottayam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5185,
+          9.5912
+        ]
+      },
+      "properties": {
+        "id": "poi_police_ktm_west",
+        "name": "Kottayam West Police Station",
+        "category": "police",
+        "district": "Kottayam",
+        "phone": "0481-2560312",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Meenachil River Flood Alert Police Monitoring Unit",
+        "address": "Thirunakkara, Kottayam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.5245,
+          9.5982
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_ktm_cms",
+        "name": "CMS College Auditorium Evacuation Shelter",
+        "category": "shelter",
+        "district": "Kottayam",
+        "phone": "0481-2566002",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 900 • Central Medical Triage Camp",
+        "address": "CMS College Road, Kottayam",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9725,
+          9.8512
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_idk_mch_cheruthoni",
+        "name": "Govt. Medical College Hospital, Idukki",
+        "category": "hospital",
+        "district": "Idukki",
+        "phone": "04862-233075",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Hill Region Level-1 Trauma Care, Snakebite Emergency Center",
+        "address": "Painavu, Cheruthoni, Idukki",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.0598,
+          10.0892
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_idk_taluk_munnar",
+        "name": "Tata Tea General Hospital & High Range Trauma Unit",
+        "category": "hospital",
+        "district": "Idukki",
+        "phone": "04865-230225",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "High Range Landslide Emergency Facility & Hypothermia Unit",
+        "address": "Munnar, Idukki",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.0612,
+          10.0882
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_idk_neethi_munnar",
+        "name": "Neethi 24x7 Medical Store (Munnar Town)",
+        "category": "pharmacy",
+        "district": "Idukki",
+        "phone": "04865-230554",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Mountain Emergency First-Aid & Essential Drugs",
+        "address": "Main Bazaar, Munnar, Idukki",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.0645,
+          10.0865
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_idk_iocl_munnar",
+        "name": "Indian Oil Retail Outlet (Munnar Bypass)",
+        "category": "fuel",
+        "district": "Idukki",
+        "phone": "04865-230345",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "Only 24/7 Diesel Station for Rescue Trucks in High Range",
+        "address": "Mattupetty Road, Munnar, Idukki",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9765,
+          9.8525
+        ]
+      },
+      "properties": {
+        "id": "poi_police_idk_painavu",
+        "name": "Idukki District Police Headquarters & Dam Security",
+        "category": "police",
+        "district": "Idukki",
+        "phone": "04862-232304",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Idukki & Cheruthoni Dam Emergency Sirens Command Post",
+        "address": "Painavu, Idukki",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9735,
+          9.8465
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_idk_cheruthoni",
+        "name": "Cheruthoni Community Hall Landslide Shelter",
+        "category": "shelter",
+        "district": "Idukki",
+        "phone": "04862-232115",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 500 • High Ground Landslide Safe Evacuation Zone",
+        "address": "Cheruthoni Town, Idukki",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2818,
+          9.9723
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_ekm_general",
+        "name": "General Hospital, Ernakulam",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "0484-2361251",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Disaster Casualty, NABH Accredited Multi-Specialty Trauma Hub",
+        "address": "Hospital Road, Marine Drive, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2915,
+          10.0325
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_ekm_amrita",
+        "name": "Amrita Institute of Medical Sciences (AIMS)",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "0484-2851234",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Level-1 Quaternary Trauma Care Center & Helicopter Helipad",
+        "address": "Ponekkara, Edappally, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2685,
+          10.0525
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_ekm_aster_medcity",
+        "name": "Aster Medcity (Cheranalloor)",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "0484-6699999",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Critical Emergency Care, Pediatric Trauma & Marine Rescue Base",
+        "address": "South Chittoor, Cheranalloor, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3542,
+          10.0585
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_ekm_mch_kalamassery",
+        "name": "Govt. Medical College, Kalamassery",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "0484-2754000",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "State Infectious Disease Protocol & Major Regional Trauma Center",
+        "address": "HMT Colony P.O., Kalamassery",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2845,
+          9.9712
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_ekm_apollo_mg_road",
+        "name": "Apollo Pharmacy 24/7 (MG Road Kochi)",
+        "category": "pharmacy",
+        "district": "Ernakulam",
+        "phone": "0484-2378912",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24-Hour Central Pharmacy, Surgical Instruments & Oxygen Concentrators",
+        "address": "MG Road, Shenoys Junction, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2825,
+          9.9728
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_ekm_karunya_general",
+        "name": "Karunya 24x7 Pharmacy (General Hospital Gate)",
+        "category": "pharmacy",
+        "district": "Ernakulam",
+        "phone": "0484-2368900",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "Govt. Life-Saving Medicine Store Open 24/7",
+        "address": "Hospital Road, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3214,
+          9.9678
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_ekm_bpcl_vytilla",
+        "name": "BPCL Platinum Auto Care Outlet (Vytilla Hub)",
+        "category": "fuel",
+        "district": "Ernakulam",
+        "phone": "0484-2305544",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Mega Highway Fuel Depot with 50,000L Emergency Reserve",
+        "address": "Vytilla Mobility Hub Entrance, NH-66 Bypass, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3085,
+          10.0245
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_ekm_iocl_edappally",
+        "name": "Indian Oil Retail Outlet (Edappally Toll NH-544)",
+        "category": "fuel",
+        "district": "Ernakulam",
+        "phone": "0484-2541188",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 High-Flow Diesel & Generator Power Station",
+        "address": "NH-544 Junction, Edappally, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2835,
+          9.9745
+        ]
+      },
+      "properties": {
+        "id": "poi_police_ekm_central",
+        "name": "Ernakulam Central Police Station & Cyber Cell",
+        "category": "police",
+        "district": "Ernakulam",
+        "phone": "0484-2394500",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Kochi City Emergency Dispatch Post & Command Center",
+        "address": "Near High Court, Marine Drive, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2952,
+          9.9642
+        ]
+      },
+      "properties": {
+        "id": "poi_police_ekm_fire_clubroad",
+        "name": "Fire & Rescue Station (Gandhinagar/Club Road)",
+        "category": "police",
+        "district": "Ernakulam",
+        "phone": "0484-2301101",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Major Industrial Fire, Chemical & Periyar Flood Rescue Unit",
+        "address": "Gandhinagar, Kadavanthra, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2985,
+          9.9682
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_ekm_rsc",
+        "name": "Rajiv Gandhi Indoor Stadium Disaster Safe Camp",
+        "category": "shelter",
+        "district": "Ernakulam",
+        "phone": "0484-2204555",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 3500 people • Central Disaster Operations Camp",
+        "address": "Kadavanthra, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2685,
+          9.9885
+        ]
+      },
+      "properties": {
+        "id": "poi_hotel_ekm_ktdc_bolgatty",
+        "name": "KTDC Bolgatty Palace & Island Resort",
+        "category": "hotel",
+        "district": "Ernakulam",
+        "phone": "0484-2750003",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hotel",
+        "description": "Helipad Access & Waterfront Disaster Coordination Quarters",
+        "address": "Bolgatty Island, Mulavukad, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.3225,
+          9.9692
+        ]
+      },
+      "properties": {
+        "id": "poi_food_ekm_kudumbashree_vytilla",
+        "name": "Kudumbashree Janakeeya Central Kitchen",
+        "category": "food",
+        "district": "Ernakulam",
+        "phone": "0484-2308899",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "food",
+        "description": "Central Meal Preparation & 10,000 Food Pack Disaster Unit",
+        "address": "Vytilla Mobility Hub, Kochi",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2087,
+          10.6178
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_tsr_mch",
+        "name": "Govt. Medical College Hospital, Thrissur",
+        "category": "hospital",
+        "district": "Thrissur",
+        "phone": "0487-2200310",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Regional Trauma Care, Burn ICU & Central Blood Bank",
+        "address": "Mulamkunnathukavu, Thrissur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2165,
+          10.5218
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_tsr_general",
+        "name": "General Hospital, Thrissur",
+        "category": "hospital",
+        "district": "Thrissur",
+        "phone": "0487-2422212",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Emergency Casualty & Critical Care Ambulances",
+        "address": "Round West, Thrissur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2152,
+          10.5245
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_tsr_apollo_round",
+        "name": "Apollo Pharmacy 24/7 (Swaraj Round)",
+        "category": "pharmacy",
+        "district": "Thrissur",
+        "phone": "0487-2334511",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Emergency Medical Supplies on Swaraj Round",
+        "address": "Swaraj Round North, Thrissur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2625,
+          10.5365
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_tsr_iocl_mannuthy",
+        "name": "Indian Oil Retail Outlet (Mannuthy NH-544)",
+        "category": "fuel",
+        "district": "Thrissur",
+        "phone": "0487-2371280",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Major Highway Fuel Depot connecting Palakkad & Kochi",
+        "address": "NH-544, Mannuthy, Thrissur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2215,
+          10.5255
+        ]
+      },
+      "properties": {
+        "id": "poi_police_tsr_east",
+        "name": "Thrissur East Police Station & DEOC",
+        "category": "police",
+        "district": "Thrissur",
+        "phone": "0487-2424100",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Central District Police Control Room & 112 Dispatch Post",
+        "address": "High Road, Thrissur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.22,
+          10.531
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_tsr_townhall",
+        "name": "Thrissur Town Hall Evacuation Center",
+        "category": "shelter",
+        "district": "Thrissur",
+        "phone": "0487-2331822",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 800 • Clean Water & Medical Supply Base",
+        "address": "Palace Road, Thrissur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6563,
+          10.7744
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_pkd_district",
+        "name": "District Hospital, Palakkad",
+        "category": "hospital",
+        "district": "Palakkad",
+        "phone": "0491-2533323",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Central 24/7 Emergency Casualty & Heatstroke Treatment Ward",
+        "address": "Court Road, Palakkad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.4985,
+          10.5925
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_pkd_kuthiran_trauma",
+        "name": "Vadakkencherry Taluk Hospital & Kuthiran Trauma Unit",
+        "category": "hospital",
+        "district": "Palakkad",
+        "phone": "04922-255234",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "NH-544 Kuthiran Tunnel Corridor Emergency Ambulance Station",
+        "address": "Vadakkencherry, Palakkad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6521,
+          10.7812
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_pkd_neethi_stadium",
+        "name": "Neethi 24x7 Medical Store (Stadium Bypass)",
+        "category": "pharmacy",
+        "district": "Palakkad",
+        "phone": "0491-2501299",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Emergency Anti-Venom & Trauma Pharmaceuticals",
+        "address": "Stadium Bypass Road, Palakkad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.8452,
+          10.8425
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_pkd_bpcl_walayar",
+        "name": "BPCL Interstate Border Fuel Depot (Walayar NH-544)",
+        "category": "fuel",
+        "district": "Palakkad",
+        "phone": "0491-2862210",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Critical Border Tanker Refueling Post with 80,000L Reserve",
+        "address": "Walayar Checkpost, NH-544, Palakkad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.6525,
+          10.7725
+        ]
+      },
+      "properties": {
+        "id": "poi_police_pkd_townsouth",
+        "name": "Palakkad Town South Police Station",
+        "category": "police",
+        "district": "Palakkad",
+        "phone": "0491-2534033",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Gap Corridor Highway Patrol & DEOC 1077 Hub",
+        "address": "Court Road, Palakkad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.659,
+          10.792
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_pkd_victoria",
+        "name": "Govt. Victoria College Auditorium Relief Shelter",
+        "category": "shelter",
+        "district": "Palakkad",
+        "phone": "0491-2576773",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 1000 • Bharathappuzha Flood Relief Camp",
+        "address": "Victoria College, Palakkad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1245,
+          11.1215
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_mlp_mch_manjeri",
+        "name": "Govt. Medical College Hospital, Manjeri",
+        "category": "hospital",
+        "district": "Malappuram",
+        "phone": "0483-2766056",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Tertiary Trauma Care Center & Dedicated Epidemic Response Unit",
+        "address": "Vellarangal, Manjeri, Malappuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2285,
+          11.2785
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_mlp_taluk_nilambur",
+        "name": "District Hospital, Nilambur",
+        "category": "hospital",
+        "district": "Malappuram",
+        "phone": "04931-220265",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Chaliyar River Basin Landslide & Flood Receiving Center",
+        "address": "Nilambur, Malappuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1262,
+          11.1205
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_mlp_jan_aushadhi",
+        "name": "Jan Aushadhi 24/7 Pharmacy (Manjeri)",
+        "category": "pharmacy",
+        "district": "Malappuram",
+        "phone": "0483-2761189",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Subsidized Emergency Antibiotics & First-Aid Stocks",
+        "address": "Opp. Medical College Gate, Manjeri",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.0685,
+          11.0692
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_mlp_iocl_bypass",
+        "name": "Indian Oil Retail Outlet (Malappuram Bypass)",
+        "category": "fuel",
+        "district": "Malappuram",
+        "phone": "0483-2734490",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Diesel Station with Heavy Vehicle Filling Bays",
+        "address": "Kottakkal-Malappuram Road, Malappuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2245,
+          11.2762
+        ]
+      },
+      "properties": {
+        "id": "poi_police_mlp_nilambur",
+        "name": "Nilambur Police Station & Forest Flying Squad",
+        "category": "police",
+        "district": "Malappuram",
+        "phone": "04931-220233",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Chaliyar Basin Search & Rescue Unit and Drone Surveillance Base",
+        "address": "Nilambur Town, Malappuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.2312,
+          11.2805
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_mlp_nilambur_school",
+        "name": "Govt. Manavedan Higher Secondary School Relief Camp",
+        "category": "shelter",
+        "district": "Malappuram",
+        "phone": "04931-221045",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Landslide Relief Safe Camp Capacity: 800 • High Ground",
+        "address": "Nilambur, Malappuram",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8368,
+          11.2721
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_clt_mch",
+        "name": "Govt. Medical College Hospital, Kozhikode",
+        "category": "hospital",
+        "district": "Kozhikode",
+        "phone": "0495-2350216",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Super Specialty Apex Trauma Center, Regional Blood Bank & Helipad",
+        "address": "Medical College P.O., Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7945,
+          11.2612
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_clt_baby_memorial",
+        "name": "Baby Memorial Hospital",
+        "category": "hospital",
+        "district": "Kozhikode",
+        "phone": "0495-2777777",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Private Quaternary Trauma & Emergency Neuro-Critical Care",
+        "address": "Indira Gandhi Road, Arayidathupalam, Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8012,
+          11.2385
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_clt_aster_mims",
+        "name": "Aster MIMS Hospital, Kozhikode",
+        "category": "hospital",
+        "district": "Kozhikode",
+        "phone": "0495-2488000",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Advanced Disaster Resuscitation & Multi-Organ ICU",
+        "address": "Mini Bypass Road, Govindapuram, Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8355,
+          11.2715
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_clt_karunya_mch",
+        "name": "Karunya 24x7 Pharmacy (Kozhikode Medical College)",
+        "category": "pharmacy",
+        "district": "Kozhikode",
+        "phone": "0495-2358822",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Emergency Life-Saving Drugs, Anti-Rabies & Anti-Venom",
+        "address": "Casualty Gate, Medical College Campus, Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.8152,
+          11.2682
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_clt_iocl_thondayad",
+        "name": "Indian Oil Retail Outlet (Thondayad Bypass)",
+        "category": "fuel",
+        "district": "Kozhikode",
+        "phone": "0495-2741120",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Mega Highway Station with EV Charger & Heavy Fuel Reserves",
+        "address": "Thondayad Junction, Mini Bypass Road, Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7765,
+          11.2515
+        ]
+      },
+      "properties": {
+        "id": "poi_police_clt_city_comm",
+        "name": "Kozhikode City Police Commissioner Office & 112 Command Center",
+        "category": "police",
+        "district": "Kozhikode",
+        "phone": "0495-2721000",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "North Kerala Emergency Dispatch Command & Cyber Response Unit",
+        "address": "Mananchira, Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7682,
+          11.2618
+        ]
+      },
+      "properties": {
+        "id": "poi_police_clt_fire_beach",
+        "name": "Beach Fire & Rescue Station (Sea & Scuba Unit)",
+        "category": "police",
+        "district": "Kozhikode",
+        "phone": "0495-2365333",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Coastal Drowning Rescue & Deep Water Inundation Boats",
+        "address": "Beach Road, Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7825,
+          11.2582
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_clt_tagore",
+        "name": "Tagore Centenary Hall Relief Camp",
+        "category": "shelter",
+        "district": "Kozhikode",
+        "phone": "0495-2720455",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 1200 • Water Storage, Generator & Central Kitchen",
+        "address": "Red Cross Road, Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7795,
+          11.2525
+        ]
+      },
+      "properties": {
+        "id": "poi_hotel_clt_ktdc_malabar",
+        "name": "KTDC Tamarind (Kozhikode)",
+        "category": "hotel",
+        "district": "Kozhikode",
+        "phone": "0495-2722391",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hotel",
+        "description": "Government Disaster Relief Staff Quarters",
+        "address": "Near Mananchira, Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7925,
+          11.2605
+        ]
+      },
+      "properties": {
+        "id": "poi_food_clt_kudumbashree_busstand",
+        "name": "Kudumbashree Food Hub (Mofussil Bus Stand)",
+        "category": "food",
+        "district": "Kozhikode",
+        "phone": "0495-2723388",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "food",
+        "description": "Disaster Food Distribution Center & Clean Drinking Water Depot",
+        "address": "Mofussil Bus Stand Terminal, Kozhikode",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.0035,
+          11.8025
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_wyd_mch_mananthavady",
+        "name": "Govt. Medical College Hospital, Mananthavady",
+        "category": "hospital",
+        "district": "Wayanad",
+        "phone": "04935-240223",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Apex Landslide Trauma Unit, Blood Bank & Hilly Evacuation Receiving",
+        "address": "Mananthavady, Wayanad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.0425,
+          11.5512
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_wyd_taluk_vythiri",
+        "name": "Taluk Hospital, Vythiri",
+        "category": "hospital",
+        "district": "Wayanad",
+        "phone": "04936-255300",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Ghat Pass (NH-766) Emergency Receiving Hospital",
+        "address": "Vythiri, Wayanad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1285,
+          11.5545
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_wyd_chc_meppadi",
+        "name": "Community Health Centre, Meppadi",
+        "category": "hospital",
+        "district": "Wayanad",
+        "phone": "04936-282245",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Chooralmala & Mundakkai Disaster Forward Medical Triage Post",
+        "address": "Meppadi Town, Wayanad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.0845,
+          11.6092
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_wyd_neethi_kalpetta",
+        "name": "Neethi 24x7 Medical Store (Kalpetta)",
+        "category": "pharmacy",
+        "district": "Wayanad",
+        "phone": "04936-202288",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Essential Medicine & Orthopedic Trauma Supplies",
+        "address": "Main Road, Kalpetta, Wayanad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.0895,
+          11.6142
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_wyd_iocl_kalpetta",
+        "name": "Indian Oil Retail Outlet (Kalpetta Bypass)",
+        "category": "fuel",
+        "district": "Wayanad",
+        "phone": "04936-203410",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Diesel Station with Heavy Emergency Generator Reserves",
+        "address": "NH-766 Bypass, Kalpetta, Wayanad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.0855,
+          11.6075
+        ]
+      },
+      "properties": {
+        "id": "poi_police_wyd_kalpetta",
+        "name": "Kalpetta Police Station & DEOC Wayanad (1077)",
+        "category": "police",
+        "district": "Wayanad",
+        "phone": "04936-202225",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "District Disaster Emergency Command & Landslide Operations Room",
+        "address": "Collectorate Complex, Kalpetta, Wayanad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          11.1312,
+          11.5562
+        ]
+      },
+      "properties": {
+        "id": "poi_police_wyd_meppadi",
+        "name": "Meppadi Police Station (Forward Outpost)",
+        "category": "police",
+        "district": "Wayanad",
+        "phone": "04936-282222",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Chooralmala Sector Emergency Response Post",
+        "address": "Meppadi, Wayanad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.1325,
+          11.5582
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_wyd_meppadi_school",
+        "name": "St. Joseph Higher Secondary School Relief Camp",
+        "category": "shelter",
+        "district": "Wayanad",
+        "phone": "04936-282410",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Major Chooralmala Landslide Survivor Base Camp Capacity: 750",
+        "address": "Meppadi, Wayanad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.088,
+          11.608
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_wyd_kalpetta_auditorium",
+        "name": "Kalpetta Municipal Town Hall Shelter",
+        "category": "shelter",
+        "district": "Wayanad",
+        "phone": "04936-204122",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 600 • Triage Medical Center & Food Storage",
+        "address": "Town Hall Road, Kalpetta, Wayanad",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.3704,
+          11.8745
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_knr_district",
+        "name": "District Hospital, Kannur",
+        "category": "hospital",
+        "district": "Kannur",
+        "phone": "0497-2731300",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Emergency Casualty, Burn Unit & ICU",
+        "address": "South Bazaar, Kannur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.2985,
+          12.0625
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_knr_mch_pariyaram",
+        "name": "Govt. Medical College Hospital, Pariyaram",
+        "category": "hospital",
+        "district": "Kannur",
+        "phone": "0497-2808111",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "Level-1 Regional Trauma Care Center & Cardiac ICU",
+        "address": "NH-66, Pariyaram, Kannur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.3725,
+          11.8712
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_knr_neethi",
+        "name": "Neethi 24x7 Medical Store (Caltex)",
+        "category": "pharmacy",
+        "district": "Kannur",
+        "phone": "0497-2704512",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Prescription Drugs & Emergency Medical Supplies",
+        "address": "Caltex Junction, Kannur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.3742,
+          11.8695
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_knr_bpcl_caltex",
+        "name": "BPCL Auto Care Center (Caltex Junction)",
+        "category": "fuel",
+        "district": "Kannur",
+        "phone": "0497-2702290",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Central Petrol & High-Flow Diesel Filling Point",
+        "address": "Caltex Junction, Kannur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.3695,
+          11.8682
+        ]
+      },
+      "properties": {
+        "id": "poi_police_knr_town",
+        "name": "Kannur Town Police Station & DEOC",
+        "category": "police",
+        "district": "Kannur",
+        "phone": "0497-2763333",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Central District Police Control Post & 112 Radio Dispatch",
+        "address": "Near Old Bus Stand, Kannur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.3735,
+          11.8665
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_knr_stadium",
+        "name": "Jawahar Stadium Pavilion Relief Shelter",
+        "category": "shelter",
+        "district": "Kannur",
+        "phone": "0497-2705511",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 1000 • High Ground Coastal Flood Safe Camp",
+        "address": "Near Collectorate, Kannur",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.9892,
+          12.5085
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_ksd_general",
+        "name": "General Hospital, Kasaragod",
+        "category": "hospital",
+        "district": "Kasaragod",
+        "phone": "04994-220024",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "District Apex 24/7 Emergency Casualty & Trauma Ward",
+        "address": "Hospital Road, Kasaragod",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.0925,
+          12.3125
+        ]
+      },
+      "properties": {
+        "id": "poi_hosp_ksd_taluk_kanhangad",
+        "name": "District Hospital, Kanhangad",
+        "category": "hospital",
+        "district": "Kasaragod",
+        "phone": "0467-2204222",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "South Kasaragod Emergency Trauma Care Facility",
+        "address": "Kanhangad, Kasaragod",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.9875,
+          12.5065
+        ]
+      },
+      "properties": {
+        "id": "poi_pharm_ksd_jan_aushadhi",
+        "name": "Jan Aushadhi 24/7 Kendra (Kasaragod Town)",
+        "category": "pharmacy",
+        "district": "Kasaragod",
+        "phone": "04994-225510",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "pharmacy",
+        "description": "24/7 Emergency Medical Depot",
+        "address": "Old Bus Stand, Kasaragod",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.0012,
+          12.5185
+        ]
+      },
+      "properties": {
+        "id": "poi_fuel_ksd_iocl_nh66",
+        "name": "Indian Oil Retail Outlet (Vidyanagar NH-66)",
+        "category": "fuel",
+        "district": "Kasaragod",
+        "phone": "04994-230180",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "24/7 Highway Fuel Station with Diesel Reservoirs",
+        "address": "NH-66, Vidyanagar, Kasaragod",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.0025,
+          12.5195
+        ]
+      },
+      "properties": {
+        "id": "poi_police_ksd_vidyanagar",
+        "name": "Vidyanagar Police Station & DEOC Kasaragod (1077)",
+        "category": "police",
+        "district": "Kasaragod",
+        "phone": "04994-230100",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "District Emergency Operations Center & Police Headquarters",
+        "address": "Collectorate Complex, Vidyanagar, Kasaragod",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.988,
+          12.5072
+        ]
+      },
+      "properties": {
+        "id": "poi_shelter_ksd_municipal_hall",
+        "name": "Kasaragod Municipal Town Hall Shelter",
+        "category": "shelter",
+        "district": "Kasaragod",
+        "phone": "04994-220200",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "shelter",
+        "description": "Capacity: 600 • Central Coastal Relief Camp",
+        "address": "Bank Road, Kasaragod",
+        "verified_by": "Kerala State Disaster Management Authority (KSDMA) / OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.59258,
+          9.364
+        ]
+      },
+      "properties": {
+        "id": "osm_307511109",
+        "name": "Aravind Ayurvedic Hospital",
+        "category": "hospital",
+        "district": "Pathanamthitta",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Pathanamthitta",
+        "address": "Thirumoolapuram",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.34672,
+          10.01816
+        ]
+      },
+      "properties": {
+        "id": "osm_343711683",
+        "name": "Thrikkakara Municipal Co-operative Hospital",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "+91 9400904730;0484 2955310",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Ernakulam",
+        "address": "Kakkanad",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.45111,
+          10.09718
+        ]
+      },
+      "properties": {
+        "id": "osm_343714970",
+        "name": "vengola govt homoeo dispensary",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Ernakulam",
+        "address": "Ernakulam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.33888,
+          10.02523
+        ]
+      },
+      "properties": {
+        "id": "osm_343719028",
+        "name": "Sunrise Hospital, Ernakulam",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Ernakulam",
+        "address": "Vii/528-B & Vii/528-C, Seaport - Airport Road, Kakkanad, Kochi",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.34424,
+          11.06113
+        ]
+      },
+      "properties": {
+        "id": "osm_549935042",
+        "name": "MES Hospital",
+        "category": "hospital",
+        "district": "Palakkad",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Palakkad",
+        "address": "Palakkad, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.596,
+          9.86275
+        ]
+      },
+      "properties": {
+        "id": "osm_560865699",
+        "name": "Kottakkal Arya Vydya Sala",
+        "category": "pharmacy",
+        "district": "Alappuzha",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Alappuzha",
+        "address": "Alappuzha, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.94105,
+          8.49984
+        ]
+      },
+      "properties": {
+        "id": "osm_600882700",
+        "name": "Regional Institute of Ophthalmology",
+        "category": "hospital",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.94313,
+          8.49866
+        ]
+      },
+      "properties": {
+        "id": "osm_600882701",
+        "name": "Dr Govindans Hospital",
+        "category": "hospital",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.96237,
+          8.50883
+        ]
+      },
+      "properties": {
+        "id": "osm_618560424",
+        "name": "Medical Shop",
+        "category": "pharmacy",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.61534,
+          9.38523
+        ]
+      },
+      "properties": {
+        "id": "osm_622250802",
+        "name": "Thottabhagam Hospital",
+        "category": "hospital",
+        "district": "Pathanamthitta",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Casualty & Trauma",
+        "address": "Pathanamthitta, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.16747,
+          10.07941
+        ]
+      },
+      "properties": {
+        "id": "osm_649246679",
+        "name": "Silent Valley Hospital",
+        "category": "hospital",
+        "district": "Idukki",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Idukki",
+        "address": "Idukki, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.67652,
+          9.70881
+        ]
+      },
+      "properties": {
+        "id": "osm_675546475",
+        "name": "Alphonsa Eye Hospital",
+        "category": "hospital",
+        "district": "Kottayam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Kottayam",
+        "address": "Kottayam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.68096,
+          9.71146
+        ]
+      },
+      "properties": {
+        "id": "osm_690414609",
+        "name": "General Hospital",
+        "category": "hospital",
+        "district": "Kottayam",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Casualty & Trauma",
+        "address": "Pala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70339,
+          9.74732
+        ]
+      },
+      "properties": {
+        "id": "osm_748739164",
+        "name": "Mar Kavukatt Memorial Hospital, Anthinad",
+        "category": "hospital",
+        "district": "Kottayam",
+        "phone": "+91-4822248927",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Kottayam",
+        "address": "Palai - Thodupuzha Highway, Anthinad P.O., Near Palai",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.68139,
+          9.71174
+        ]
+      },
+      "properties": {
+        "id": "osm_836113240",
+        "name": "Christuraj Hospital",
+        "category": "hospital",
+        "district": "Kottayam",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Casualty & Trauma",
+        "address": "Kottayam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.61177,
+          9.68341
+        ]
+      },
+      "properties": {
+        "id": "osm_997575962",
+        "name": "Little Lourdes Hospital Kidangoor",
+        "category": "hospital",
+        "district": "Kottayam",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "hospital",
+        "description": "24/7 Casualty & Trauma",
+        "address": "Kottayam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.24787,
+          9.96373
+        ]
+      },
+      "properties": {
+        "id": "osm_1023225698",
+        "name": "Neelu Medical",
+        "category": "pharmacy",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Ernakulam",
+        "address": "Ernakulam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.75984,
+          9.7063
+        ]
+      },
+      "properties": {
+        "id": "osm_1026208607",
+        "name": "Holy Family Hospital Plassanal",
+        "category": "hospital",
+        "district": "Kottayam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Kottayam",
+        "address": "Kottayam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.56776,
+          9.76165
+        ]
+      },
+      "properties": {
+        "id": "osm_1026823949",
+        "name": "Sushrusha Hospital, Kozha Kuravlingad",
+        "category": "hospital",
+        "district": "Alappuzha",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Alappuzha",
+        "address": "Alappuzha, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.78516,
+          11.24543
+        ]
+      },
+      "properties": {
+        "id": "osm_1063502199",
+        "name": "Kottakkal Arya Vaidya Pharmacy",
+        "category": "pharmacy",
+        "district": "Kozhikode",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Kozhikode",
+        "address": "Kozhikode, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.6926,
+          11.44254
+        ]
+      },
+      "properties": {
+        "id": "osm_1080750906",
+        "name": "Government Taluk Hospital,Koyilandy",
+        "category": "hospital",
+        "district": "Kozhikode",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Kozhikode",
+        "address": "Kozhikode, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.99829,
+          12.51136
+        ]
+      },
+      "properties": {
+        "id": "osm_1083025357",
+        "name": "Carewell Hospital & Research Centre",
+        "category": "hospital",
+        "district": "Kasaragod",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Kasaragod",
+        "address": "Nullipady",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.9909,
+          12.50755
+        ]
+      },
+      "properties": {
+        "id": "osm_1083025359",
+        "name": "KIMS, Kasaragod",
+        "category": "hospital",
+        "district": "Kasaragod",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Kasaragod",
+        "address": "Near New Bus Stand, Ashwini Nagar",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.64236,
+          11.47293
+        ]
+      },
+      "properties": {
+        "id": "osm_1111336133",
+        "name": "Nandi Hospital",
+        "category": "hospital",
+        "district": "Kozhikode",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Kozhikode",
+        "address": "Kozhikode, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.6414,
+          11.47235
+        ]
+      },
+      "properties": {
+        "id": "osm_1111336201",
+        "name": "Facility 1111336201",
+        "category": "hospital",
+        "district": "Kozhikode",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Kozhikode",
+        "address": "Kozhikode, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.72569,
+          9.90165
+        ]
+      },
+      "properties": {
+        "id": "osm_1116479899",
+        "name": "Kottirikkal Medicals",
+        "category": "pharmacy",
+        "district": "Idukki",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Idukki",
+        "address": "Idukki, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70688,
+          8.7381
+        ]
+      },
+      "properties": {
+        "id": "osm_1185085747",
+        "name": "Kairali Ayurveda Pharmacy",
+        "category": "pharmacy",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.37415,
+          9.94325
+        ]
+      },
+      "properties": {
+        "id": "osm_1190881322",
+        "name": "Naliyath Medical Chamber",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Ernakulam",
+        "address": "Ernakulam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.77679,
+          11.26937
+        ]
+      },
+      "properties": {
+        "id": "osm_1405387689",
+        "name": "Facility 1405387689",
+        "category": "hospital",
+        "district": "Kozhikode",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Kozhikode",
+        "address": "Kozhikode, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.71275,
+          9.89881
+        ]
+      },
+      "properties": {
+        "id": "osm_1440545041",
+        "name": "Krishna Medicals",
+        "category": "pharmacy",
+        "district": "Idukki",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Idukki",
+        "address": "Idukki, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7139,
+          9.89696
+        ]
+      },
+      "properties": {
+        "id": "osm_1440576500",
+        "name": "Karuna Medicals",
+        "category": "pharmacy",
+        "district": "Idukki",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Idukki",
+        "address": "Idukki, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70233,
+          9.74642
+        ]
+      },
+      "properties": {
+        "id": "osm_1440611126",
+        "name": "Ambika Medicals",
+        "category": "pharmacy",
+        "district": "Kottayam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Kottayam",
+        "address": "Kottayam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.77758,
+          9.68673
+        ]
+      },
+      "properties": {
+        "id": "osm_1446283979",
+        "name": "Medicals",
+        "category": "pharmacy",
+        "district": "Kottayam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Kottayam",
+        "address": "Kottayam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.52225,
+          9.59001
+        ]
+      },
+      "properties": {
+        "id": "osm_1449596196",
+        "name": "Jackson Medical Stores",
+        "category": "pharmacy",
+        "district": "Pathanamthitta",
+        "phone": "N/A",
+        "opening_hours": "Mo-Sa 09:00-20:00",
+        "is_24x7": false,
+        "amenity": "pharmacy",
+        "description": "Verified Pharmacy facility in Pathanamthitta",
+        "address": "MC Road",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.318,
+          9.95022
+        ]
+      },
+      "properties": {
+        "id": "osm_1471806291",
+        "name": "Nair's Hospital , Kochi",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Ernakulam",
+        "address": "Ernakulam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.32272,
+          9.93778
+        ]
+      },
+      "properties": {
+        "id": "osm_1472112511",
+        "name": "P.S. Mission Hospital",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Ernakulam",
+        "address": "Maradu, Cochin",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.31924,
+          9.95858
+        ]
+      },
+      "properties": {
+        "id": "osm_1472148626",
+        "name": "Dr. Joys Hospital",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Ernakulam",
+        "address": "N.H.47 Bypass, Thykoodam, Vyttila",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.34186,
+          9.50536
+        ]
+      },
+      "properties": {
+        "id": "osm_1473134118",
+        "name": "Sahrudaya Hospital",
+        "category": "hospital",
+        "district": "Alappuzha",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Alappuzha",
+        "address": "Thathampally",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.34236,
+          9.95386
+        ]
+      },
+      "properties": {
+        "id": "osm_1474212725",
+        "name": "Varma Hospital",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Ernakulam",
+        "address": "Ernakulam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.34906,
+          9.94387
+        ]
+      },
+      "properties": {
+        "id": "osm_1474217343",
+        "name": "Government Ayurveda Hospital",
+        "category": "hospital",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hospital",
+        "description": "Verified Hospital facility in Ernakulam",
+        "address": "Ernakulam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.92977,
+          8.52313
+        ]
+      },
+      "properties": {
+        "id": "osm_253949506",
+        "name": "sri gavuri nivas",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.97243,
+          8.40149
+        ]
+      },
+      "properties": {
+        "id": "osm_304832055",
+        "name": "Uday Samudra",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hotel",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.97283,
+          8.40012
+        ]
+      },
+      "properties": {
+        "id": "osm_304832059",
+        "name": "Samudra",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hotel",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.94791,
+          8.49583
+        ]
+      },
+      "properties": {
+        "id": "osm_309629939",
+        "name": "Pankaj Hotel",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "+91 471 2464645",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hotel",
+        "description": "Rooms: 50",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.01765,
+          8.35827
+        ]
+      },
+      "properties": {
+        "id": "osm_309633372",
+        "name": "Travancore Heritage Resort",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hotel",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.42809,
+          9.62666
+        ]
+      },
+      "properties": {
+        "id": "osm_309685866",
+        "name": "Taj Hotel",
+        "category": "hotel",
+        "district": "Alappuzha",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hotel",
+        "description": "Verified Hotel facility in Alappuzha",
+        "address": "Alappuzha, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70721,
+          8.73317
+        ]
+      },
+      "properties": {
+        "id": "osm_340276909",
+        "name": "Osho Guest House",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70664,
+          8.7331
+        ]
+      },
+      "properties": {
+        "id": "osm_340276912",
+        "name": "Mk Gardens",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70593,
+          8.73401
+        ]
+      },
+      "properties": {
+        "id": "osm_340276925",
+        "name": "Varkala Marine Port",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70572,
+          8.73438
+        ]
+      },
+      "properties": {
+        "id": "osm_340276928",
+        "name": "Palm Beach resort",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hotel",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7048,
+          8.73631
+        ]
+      },
+      "properties": {
+        "id": "osm_340276936",
+        "name": "La Exotica",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70409,
+          8.73685
+        ]
+      },
+      "properties": {
+        "id": "osm_340282823",
+        "name": "Vaisakham",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.69982,
+          8.7393
+        ]
+      },
+      "properties": {
+        "id": "osm_340282860",
+        "name": "Clafouti",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70056,
+          8.73899
+        ]
+      },
+      "properties": {
+        "id": "osm_340282861",
+        "name": "Oceanic beach residency",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70086,
+          8.73897
+        ]
+      },
+      "properties": {
+        "id": "osm_340282863",
+        "name": "Venus Villa",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7015,
+          8.73937
+        ]
+      },
+      "properties": {
+        "id": "osm_340285232",
+        "name": "A nikhil Ayurvedic Heritage",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hotel",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7016,
+          8.73965
+        ]
+      },
+      "properties": {
+        "id": "osm_340285237",
+        "name": "Silver Sand",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70219,
+          8.73972
+        ]
+      },
+      "properties": {
+        "id": "osm_340285251",
+        "name": "Padma",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70286,
+          8.7397
+        ]
+      },
+      "properties": {
+        "id": "osm_340285262",
+        "name": "Raja park beach resort",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70289,
+          8.73955
+        ]
+      },
+      "properties": {
+        "id": "osm_340285272",
+        "name": "Preeth Resort",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "hotel",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70298,
+          8.73949
+        ]
+      },
+      "properties": {
+        "id": "osm_340285278",
+        "name": "Sky lounge Residency",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70324,
+          8.73893
+        ]
+      },
+      "properties": {
+        "id": "osm_340285284",
+        "name": "Silver Estate",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7042,
+          8.73925
+        ]
+      },
+      "properties": {
+        "id": "osm_340285289",
+        "name": "Deshadan",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70492,
+          8.73906
+        ]
+      },
+      "properties": {
+        "id": "osm_340285293",
+        "name": "Prasanti holyday home",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70302,
+          8.73864
+        ]
+      },
+      "properties": {
+        "id": "osm_340285314",
+        "name": "Deccan Restaurant",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "guest_house",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.8761,
+          8.55635
+        ]
+      },
+      "properties": {
+        "id": "osm_247908008",
+        "name": "B6 Inn",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.96366,
+          8.51171
+        ]
+      },
+      "properties": {
+        "id": "osm_251772799",
+        "name": "Buraq",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.95357,
+          8.50493
+        ]
+      },
+      "properties": {
+        "id": "osm_252136765",
+        "name": "Indian Coffee House",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "Mo-Su 08:00-19:00; PH 09:00-17:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Cuisine: coffee_shop;indian",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.88099,
+          8.55876
+        ]
+      },
+      "properties": {
+        "id": "osm_252137258",
+        "name": "Guest House",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.78371,
+          11.24852
+        ]
+      },
+      "properties": {
+        "id": "osm_289607627",
+        "name": "Imperial Hotel",
+        "category": "food",
+        "district": "Kozhikode",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Kozhikode",
+        "address": "Oyitty Road",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70587,
+          8.73313
+        ]
+      },
+      "properties": {
+        "id": "osm_340276914",
+        "name": "Buzz and Breeze",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70545,
+          8.73359
+        ]
+      },
+      "properties": {
+        "id": "osm_340276917",
+        "name": "The Surfer's Cafe",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70533,
+          8.7337
+        ]
+      },
+      "properties": {
+        "id": "osm_340276919",
+        "name": "Theeram",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70414,
+          8.73614
+        ]
+      },
+      "properties": {
+        "id": "osm_340282827",
+        "name": "Oottupura Vegetarian Restaurant",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70322,
+          8.73665
+        ]
+      },
+      "properties": {
+        "id": "osm_340282830",
+        "name": "BGL surf and bistro",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70267,
+          8.73722
+        ]
+      },
+      "properties": {
+        "id": "osm_340282833",
+        "name": "Sky Lounge",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70248,
+          8.73741
+        ]
+      },
+      "properties": {
+        "id": "osm_340282834",
+        "name": "Sea View",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.7019,
+          8.73765
+        ]
+      },
+      "properties": {
+        "id": "osm_340282837",
+        "name": "Cafe del Mar",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70062,
+          8.73815
+        ]
+      },
+      "properties": {
+        "id": "osm_340282844",
+        "name": "Blue Moon Hut",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.70033,
+          8.73818
+        ]
+      },
+      "properties": {
+        "id": "osm_340282846",
+        "name": "Sunrise",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.69972,
+          8.74024
+        ]
+      },
+      "properties": {
+        "id": "osm_340289064",
+        "name": "Darjeeling Cafe",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.69425,
+          8.75028
+        ]
+      },
+      "properties": {
+        "id": "osm_342835319",
+        "name": "Blue Water",
+        "category": "hotel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Hotel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.33419,
+          10.0143
+        ]
+      },
+      "properties": {
+        "id": "osm_343709646",
+        "name": "Rice &Fish Restaurant",
+        "category": "food",
+        "district": "Ernakulam",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Ernakulam",
+        "address": "Ernakulam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.21407,
+          10.52236
+        ]
+      },
+      "properties": {
+        "id": "osm_344473416",
+        "name": "Pathans Veg. Hotel",
+        "category": "food",
+        "district": "Thrissur",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Thrissur",
+        "address": "Thrissur, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.05968,
+          10.08721
+        ]
+      },
+      "properties": {
+        "id": "osm_353409852",
+        "name": "Saravana Bhavan pur Veg",
+        "category": "food",
+        "district": "Idukki",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Cuisine: indian",
+        "address": "Idukki, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.95377,
+          8.48879
+        ]
+      },
+      "properties": {
+        "id": "osm_354065014",
+        "name": "Ariya Nivas",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Cuisine: indian",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.98005,
+          8.386
+        ]
+      },
+      "properties": {
+        "id": "osm_354065019",
+        "name": "Suprabatham Veg.",
+        "category": "food",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Cuisine: indian",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.08251,
+          11.61826
+        ]
+      },
+      "properties": {
+        "id": "osm_443616790",
+        "name": "Harithagiri",
+        "category": "hotel",
+        "district": "Kozhikode",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Hotel facility in Kozhikode",
+        "address": "Kozhikode, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.68479,
+          10.82596
+        ]
+      },
+      "properties": {
+        "id": "osm_471962355",
+        "name": "Facility 471962355",
+        "category": "food",
+        "district": "Palakkad",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "restaurant",
+        "description": "Verified Food facility in Palakkad",
+        "address": "Palakkad, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.96272,
+          8.51102
+        ]
+      },
+      "properties": {
+        "id": "osm_251772796",
+        "name": "HP",
+        "category": "fuel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "Verified Fuel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.96269,
+          8.51018
+        ]
+      },
+      "properties": {
+        "id": "osm_251772797",
+        "name": "Kotak Mahindra Bank",
+        "category": "bank",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "bank",
+        "description": "24/7 Onsite ATM",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.96214,
+          8.50737
+        ]
+      },
+      "properties": {
+        "id": "osm_251772800",
+        "name": "Bharat Petrol",
+        "category": "fuel",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "Verified Fuel facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.96219,
+          8.50758
+        ]
+      },
+      "properties": {
+        "id": "osm_251772801",
+        "name": "South Indian Bank",
+        "category": "bank",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "bank",
+        "description": "Verified Bank facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.21303,
+          10.54451
+        ]
+      },
+      "properties": {
+        "id": "osm_267309544",
+        "name": "State Bank of India",
+        "category": "bank",
+        "district": "Thrissur",
+        "phone": "N/A",
+        "opening_hours": "Mo-Sa 10:00-16:30",
+        "is_24x7": false,
+        "amenity": "bank",
+        "description": "Verified Bank facility in Thrissur",
+        "address": "Kodungallur - Shornur Road",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.77676,
+          11.24913
+        ]
+      },
+      "properties": {
+        "id": "osm_289607637",
+        "name": "Canara Bank",
+        "category": "bank",
+        "district": "Kozhikode",
+        "phone": "N/A",
+        "opening_hours": "08:00 - 20:00",
+        "is_24x7": false,
+        "amenity": "bank",
+        "description": "Verified Bank facility in Kozhikode",
+        "address": "Kozhikode, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.95678,
+          8.50932
+        ]
+      },
+      "properties": {
+        "id": "osm_309609271",
+        "name": "Police Station, Museum",
+        "category": "police",
+        "district": "Thiruvananthapuram",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "police",
+        "description": "Verified Police facility in Thiruvananthapuram",
+        "address": "Thiruvananthapuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.67707,
+          8.8243
+        ]
+      },
+      "properties": {
+        "id": "osm_309911113",
+        "name": "Facility 309911113",
+        "category": "fuel",
+        "district": "Kollam",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "Verified Fuel facility in Kollam",
+        "address": "Kollam, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.21206,
+          10.60634
+        ]
+      },
+      "properties": {
+        "id": "osm_344435543",
+        "name": "Facility 344435543",
+        "category": "fuel",
+        "district": "Thrissur",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "Verified Fuel facility in Thrissur",
+        "address": "Thrissur, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.00572,
+          11.12964
+        ]
+      },
+      "properties": {
+        "id": "osm_355652650",
+        "name": "Essar petrol station musliarangadi",
+        "category": "fuel",
+        "district": "Malappuram",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "Verified Fuel facility in Malappuram",
+        "address": "Malappuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.84561,
+          11.29693
+        ]
+      },
+      "properties": {
+        "id": "osm_418807842",
+        "name": "Facility 418807842",
+        "category": "fuel",
+        "district": "Malappuram",
+        "phone": "N/A",
+        "opening_hours": "24/7",
+        "is_24x7": true,
+        "amenity": "fuel",
+        "description": "Verified Fuel facility in Malappuram",
+        "address": "Malappuram, Kerala",
+        "verified_by": "OpenStreetMap / KSDMA GIS"
+      }
+    }
+  ]
+}

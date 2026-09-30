@@ -103,7 +103,8 @@ const POI_CATEGORIES = [
   { id: 'police', label: 'Police & Safety', icon: '👮', color: '#3b82f6', count: (keralaPois || []).filter(p => p.category === 'police').length },
   { id: 'shelter', label: 'Shelters', icon: '🛡️', color: '#8b5cf6', count: (keralaPois || []).filter(p => p.category === 'shelter').length },
   { id: 'hotel', label: 'Relief Lodging', icon: '🏨', color: '#06b6d4', count: (keralaPois || []).filter(p => p.category === 'hotel').length },
-  { id: 'food', label: 'Food & Kitchens', icon: '🍽️', color: '#f97316', count: (keralaPois || []).filter(p => p.category === 'food').length }
+  { id: 'food', label: 'Food & Dining', icon: '🍽️', color: '#f97316', count: (keralaPois || []).filter(p => p.category === 'food').length },
+  { id: 'bank', label: 'Banks & ATMs', icon: '🏦', color: '#14b8a6', count: (keralaPois || []).filter(p => p.category === 'bank').length }
 ];
 
 const INITIAL_RESPONDERS = [
@@ -3102,145 +3103,181 @@ export default function App() {
 
     const categoryStyles = {
       hospital: { bg: '#ef4444', icon: '🏥', label: 'Hospital & Trauma', ring: 'rgba(239, 68, 68, 0.45)' },
-      pharmacy: { bg: '#10b981', icon: '💊', label: '24/7 Pharmacy', ring: 'rgba(16, 185, 129, 0.45)' },
-      fuel:     { bg: '#f59e0b', icon: '⛽', label: 'Fuel Station', ring: 'rgba(245, 158, 11, 0.45)' },
-      police:   { bg: '#3b82f6', icon: '👮', label: 'Police HQ / Outpost', ring: 'rgba(59, 130, 246, 0.45)' },
-      shelter:  { bg: '#8b5cf6', icon: '🛡️', label: 'Evacuation Shelter', ring: 'rgba(139, 92, 246, 0.45)' },
-      hotel:    { bg: '#06b6d4', icon: '🏨', label: 'Relief Lodging', ring: 'rgba(6, 182, 212, 0.45)' },
-      food:     { bg: '#f97316', icon: '🍽️', label: 'Community Kitchen', ring: 'rgba(249, 115, 22, 0.45)' }
-    };
+        pharmacy: { bg: '#10b981', icon: '💊', label: '24/7 Pharmacy', ring: 'rgba(16, 185, 129, 0.45)' },
+        fuel:     { bg: '#f59e0b', icon: '⛽', label: 'Fuel Station', ring: 'rgba(245, 158, 11, 0.45)' },
+        police:   { bg: '#3b82f6', icon: '👮', label: 'Police HQ / Outpost', ring: 'rgba(59, 130, 246, 0.45)' },
+        shelter:  { bg: '#8b5cf6', icon: '🛡️', label: 'Evacuation Shelter', ring: 'rgba(139, 92, 246, 0.45)' },
+        hotel:    { bg: '#06b6d4', icon: '🏨', label: 'Relief Lodging', ring: 'rgba(6, 182, 212, 0.45)' },
+        food:     { bg: '#f97316', icon: '🍽️', label: 'Food & Dining', ring: 'rgba(249, 115, 22, 0.45)' },
+        bank:     { bg: '#14b8a6', icon: '🏦', label: 'Bank & ATM', ring: 'rgba(20, 184, 166, 0.45)' }
+      };
 
-    visiblePois.forEach(poi => {
-      const style = categoryStyles[poi.category] || { bg: '#64748b', icon: '📍', label: 'Point of Interest', ring: 'rgba(100, 116, 139, 0.45)' };
+      visiblePois.forEach(poi => {
+        const style = categoryStyles[poi.category] || { bg: '#64748b', icon: '📍', label: 'Point of Interest', ring: 'rgba(100, 116, 139, 0.45)' };
+        const distFromUser = (gpsCoords && gpsCoords.lat && gpsCoords.lng)
+          ? haversineDistance(gpsCoords.lat, gpsCoords.lng, poi.lat, poi.lng)
+          : null;
 
-      if (poiMarkersRef.current.has(poi.id)) {
-        poiMarkersRef.current.get(poi.id).setLatLng([poi.lat, poi.lng]);
-      } else {
-        const poiIcon = L.divIcon({
-          className: `custom-poi-marker poi-cat-${poi.category}`,
-          html: `
-            <div class="poi-pin-container" style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              cursor: pointer;
-            ">
-              <div class="poi-pin-core" style="
-                width: 28px;
-                height: 28px;
+        if (poiMarkersRef.current.has(poi.id)) {
+          poiMarkersRef.current.get(poi.id).setLatLng([poi.lat, poi.lng]);
+        } else {
+          const poiIcon = L.divIcon({
+            className: `custom-poi-marker poi-cat-${poi.category}`,
+            html: `
+              <div class="poi-pin-container" style="
                 display: flex;
+                flex-direction: column;
                 align-items: center;
-                justify-content: center;
-                font-size: 14px;
-                background: rgba(15, 23, 42, 0.95);
-                border: 2px solid ${style.bg};
-                border-radius: 8px;
-                box-shadow: 0 3px 10px ${style.ring};
+                cursor: pointer;
               ">
-                ${style.icon}
+                <div class="poi-pin-core" style="
+                  width: 28px;
+                  height: 28px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 14px;
+                  background: rgba(15, 23, 42, 0.95);
+                  border: 2px solid ${style.bg};
+                  border-radius: 8px;
+                  box-shadow: 0 3px 10px ${style.ring};
+                ">
+                  ${style.icon}
+                </div>
+                <div class="poi-pin-needle" style="
+                  width: 0;
+                  height: 0;
+                  border-left: 4px solid transparent;
+                  border-right: 4px solid transparent;
+                  border-top: 5px solid ${style.bg};
+                  margin-top: -1px;
+                "></div>
               </div>
-              <div class="poi-pin-needle" style="
-                width: 0;
-                height: 0;
-                border-left: 4px solid transparent;
-                border-right: 4px solid transparent;
-                border-top: 5px solid ${style.bg};
-                margin-top: -1px;
-              "></div>
-            </div>
-          `,
-          iconSize: [28, 33],
-          iconAnchor: [14, 33],
-          popupAnchor: [0, -33]
-        });
+            `,
+            iconSize: [28, 33],
+            iconAnchor: [14, 33],
+            popupAnchor: [0, -33]
+          });
 
-        const m = L.marker([poi.lat, poi.lng], { icon: poiIcon })
-          .addTo(mapRef.current)
-          .bindPopup(`
-            <div class="kerala-poi-popup-card" style="min-width: 240px; max-width: 280px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #f1f5f9;">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                <span style="background: ${style.bg}22; color: ${style.bg}; border: 1px solid ${style.bg}55; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase;">
-                  ${style.icon} ${style.label}
-                </span>
-                <span style="background: ${poi.is24x7 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)'}; color: ${poi.is24x7 ? '#34d399' : '#cbd5e1'}; border: 1px solid ${poi.is24x7 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(148, 163, 184, 0.3)'}; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600;">
-                  ${poi.is24x7 ? '🟢 24/7 OPEN' : escapeHtml(poi.openingHours || 'Open')}
-                </span>
-              </div>
-              
-              <h4 style="margin: 0 0 4px; font-size: 13px; font-weight: 700; line-height: 1.3; color: #ffffff;">
-                ${escapeHtml(poi.name)}
-              </h4>
+          const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.lat},${poi.lng}`;
 
-              <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
-                📍 ${escapeHtml(poi.address || poi.district)} <strong style="color: #cbd5e1;">(${escapeHtml(poi.district)})</strong>
-              </div>
+          const m = L.marker([poi.lat, poi.lng], { icon: poiIcon })
+            .addTo(mapRef.current)
+            .bindPopup(`
+              <div class="kerala-poi-popup-card" style="min-width: 250px; max-width: 300px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #f1f5f9;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <span style="background: ${style.bg}22; color: ${style.bg}; border: 1px solid ${style.bg}55; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase;">
+                    ${style.icon} ${style.label}
+                  </span>
+                  <span style="background: ${poi.is24x7 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)'}; color: ${poi.is24x7 ? '#34d399' : '#cbd5e1'}; border: 1px solid ${poi.is24x7 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(148, 163, 184, 0.3)'}; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600;">
+                    ${poi.is24x7 ? '🟢 24/7 OPEN' : escapeHtml(poi.openingHours || 'Standard Hours')}
+                  </span>
+                </div>
+                
+                <h4 style="margin: 0 0 4px; font-size: 13.5px; font-weight: 700; line-height: 1.3; color: #ffffff;">
+                  ${escapeHtml(poi.name)}
+                </h4>
 
-              <div style="font-size: 11px; color: #cbd5e1; background: rgba(255, 255, 255, 0.05); padding: 6px 8px; border-radius: 6px; margin-bottom: 8px; line-height: 1.35; border-left: 2px solid ${style.bg};">
-                ${escapeHtml(poi.desc)}
-              </div>
-
-              <div style="display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; margin-bottom: 10px;">
-                ${poi.phone ? `
-                  <div style="display: flex; align-items: center; gap: 4px;">
-                    <span style="color: #94a3b8;">📞 Phone:</span>
-                    <a href="tel:${escapeHtml(poi.phone)}" style="color: #38bdf8; font-weight: 600; text-decoration: none;">${escapeHtml(poi.phone)}</a>
+                ${distFromUser !== null ? `
+                  <div style="font-size: 10.5px; color: #38bdf8; font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 4px;">
+                    <span>⚡</span> <span>${distFromUser < 1 ? Math.round(distFromUser * 1000) + ' m' : distFromUser.toFixed(1) + ' km'} away from your position</span>
                   </div>
                 ` : ''}
-                <div style="color: #64748b; font-size: 9.5px;">
-                  🛡️ Verified: ${escapeHtml(poi.verifiedBy || 'Kerala State GIS / OSM')}
+
+                <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
+                  📍 ${escapeHtml(poi.address || poi.district)} <strong style="color: #cbd5e1;">(${escapeHtml(poi.district)})</strong>
+                </div>
+
+                <div style="font-size: 11px; color: #cbd5e1; background: rgba(255, 255, 255, 0.05); padding: 6px 8px; border-radius: 6px; margin-bottom: 8px; line-height: 1.35; border-left: 2px solid ${style.bg};">
+                  ${escapeHtml(poi.desc)}
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; margin-bottom: 10px;">
+                  ${poi.phone && poi.phone !== 'N/A' ? `
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                      <span style="color: #94a3b8;">📞 Phone:</span>
+                      <a href="tel:${escapeHtml(poi.phone)}" style="color: #38bdf8; font-weight: 600; text-decoration: none;">${escapeHtml(poi.phone)}</a>
+                    </div>
+                  ` : ''}
+                  <div style="display: flex; align-items: center; gap: 4px; color: #94a3b8;">
+                    <span>🌐 GPS:</span>
+                    <span style="color: #cbd5e1; font-family: monospace;">${poi.lat.toFixed(4)}°N, ${poi.lng.toFixed(4)}°E</span>
+                  </div>
+                  <div style="color: #64748b; font-size: 9.5px;">
+                    🛡️ Verified: ${escapeHtml(poi.verifiedBy || 'Kerala State GIS / OSM')}
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 6px;">
+                  <button id="route-poi-btn-${escapeHtml(poi.id)}" style="
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 5px;
+                    padding: 7px 10px;
+                    background: ${style.bg};
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 11px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    box-shadow: 0 2px 6px ${style.ring};
+                    transition: opacity 0.15s ease;
+                  ">
+                    🧭 Route Here
+                  </button>
+                  <a href="${gmapsUrl}" target="_blank" rel="noopener noreferrer" style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 4px;
+                    padding: 7px 10px;
+                    background: rgba(255, 255, 255, 0.08);
+                    color: #e2e8f0;
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    border-radius: 6px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    text-decoration: none;
+                    cursor: pointer;
+                    white-space: nowrap;
+                  ">
+                    🗺️ Google Maps
+                  </a>
                 </div>
               </div>
+            `);
 
-              <button id="route-poi-btn-${escapeHtml(poi.id)}" style="
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                width: 100%;
-                padding: 7px 12px;
-                background: ${style.bg};
-                color: #ffffff;
-                border: none;
-                border-radius: 6px;
-                font-size: 11px;
-                font-weight: 700;
-                cursor: pointer;
-                box-shadow: 0 2px 6px ${style.ring};
-                transition: opacity 0.15s ease;
-              ">
-                🧭 Get Directions / Route Here
-              </button>
-            </div>
-          `);
+          m.on('popupopen', () => {
+            const btn = document.getElementById(`route-poi-btn-${poi.id}`);
+            if (btn) {
+              btn.onclick = () => {
+                if (gpsCoords && gpsActive) {
+                  const { id: startId } = findClosestNode(gpsCoords.lat, gpsCoords.lng, mapData.nodes);
+                  setDepartureNodeOrPlace(startId);
+                }
+                setDestinationNodeOrPlace({
+                  id: poi.id,
+                  name: poi.name,
+                  district: poi.district || 'Kerala',
+                  lat: poi.lat,
+                  lng: poi.lng,
+                  type: poi.category,
+                  desc: poi.desc
+                });
+                setMeansOfTransport('car');
+                setActiveTab('planner');
+                logMessage(`Emergency route plotted to ${poi.name}`, 'warning');
+                mapRef.current?.closePopup();
+              };
+            }
+          });
 
-        m.on('popupopen', () => {
-          const btn = document.getElementById(`route-poi-btn-${poi.id}`);
-          if (btn) {
-            btn.onclick = () => {
-              if (gpsCoords && gpsActive) {
-                const { id: startId } = findClosestNode(gpsCoords.lat, gpsCoords.lng, mapData.nodes);
-                setDepartureNodeOrPlace(startId);
-              }
-              setDestinationNodeOrPlace({
-                id: poi.id,
-                name: poi.name,
-                district: poi.district || 'Kerala',
-                lat: poi.lat,
-                lng: poi.lng,
-                type: poi.category,
-                desc: poi.desc
-              });
-              setMeansOfTransport('car');
-              setActiveTab('planner');
-              logMessage(`Emergency route plotted to ${poi.name}`, 'warning');
-              mapRef.current?.closePopup();
-            };
-          }
-        });
-
-        poiMarkersRef.current.set(poi.id, m);
-      }
-    });
+          poiMarkersRef.current.set(poi.id, m);
+        }
+      });
   }, [showPoiLayer, activePoiCategory, gpsCoords, gpsActive]);
 
   // 8. Live GPS tracking markers

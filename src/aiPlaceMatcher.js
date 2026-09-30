@@ -20,8 +20,9 @@ export const POI_CATEGORY_KEYWORDS = {
   fuel: ['fuel', 'petrol', 'diesel', 'gas', 'iocl', 'bpcl', 'hpcl', 'pump', 'station', 'refuel'],
   police: ['police', 'thana', 'cop', 'station', 'outpost', 'patrol', 'inspector'],
   shelter: ['shelter', 'camp', 'relief', 'evacuation', 'safe hub', 'hall', 'auditorium', 'refuge'],
-  hotel: ['hotel', 'resort', 'lodge', 'stay', 'ktdc', 'accommodation', 'motel', 'transit'],
-  food: ['food', 'kitchen', 'canteen', 'dining', 'mess', 'janakeeya', 'kudumbashree', 'meal', 'restaurant']
+  hotel: ['hotel', 'resort', 'lodge', 'stay', 'ktdc', 'accommodation', 'motel', 'transit', 'guest house', 'homestay'],
+  food: ['food', 'kitchen', 'canteen', 'dining', 'mess', 'janakeeya', 'kudumbashree', 'meal', 'restaurant', 'cafe', 'fast food', 'bakery'],
+  bank: ['bank', 'atm', 'cash', 'money', 'sbi', 'federal', 'canara', 'hdfc', 'icici', 'axis', 'treasury']
 };
 
 export const normalizedPois = (keralaPois || []).map(poi => ({
