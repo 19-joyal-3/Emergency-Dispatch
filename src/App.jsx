@@ -9454,6 +9454,21 @@ export default function App() {
               <span>Directions</span>
             </button>
 
+            {/* Map Layers Button */}
+            <button
+              type="button"
+              className={`maps-chip layers-chip ${showLayersMenu ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic(15);
+                setShowLayersMenu(prev => !prev);
+              }}
+              title="Map Layers, POIs & Weather Overlays"
+              aria-label="Map layers"
+            >
+              <Layers size={14} />
+              <span>Layers</span>
+            </button>
+
             {/* Map Theme Cycler */}
             <button
               type="button"

@@ -7083,8 +7083,14 @@ textarea {
   z-index: 1100;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
-  max-width: calc(100vw - 32px);
+  max-width: calc(100vw - 420px);
+  pointer-events: none;
+}
+
+.maps-floating-search-container > * {
+  pointer-events: auto;
 }
 
 .maps-floating-search-card {
@@ -7103,6 +7109,8 @@ textarea {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35) !important;
   height: 48px;
   box-sizing: border-box;
+  width: auto !important;
+  max-width: 100% !important;
 }
 
 .maps-menu-btn {
@@ -7433,6 +7441,13 @@ textarea {
   box-shadow: 0 0 12px rgba(37, 99, 235, 0.4) !important;
 }
 
+.maps-chip.layers-chip.active {
+  background: rgba(56, 189, 248, 0.25) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3) !important;
+}
+
 .maps-chip.demo-chip {
   background: rgba(245, 158, 11, 0.14) !important;
   border-color: rgba(245, 158, 11, 0.35) !important;
@@ -7456,10 +7471,11 @@ textarea {
   position: absolute;
   top: 16px;
   right: 16px;
-  z-index: 1000;
+  z-index: 1200;
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .maps-weather-chip {
