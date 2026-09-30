@@ -166,7 +166,7 @@ export default function App() {
   const weatherScrollRef = useRef(null);
 
   // Map Environment HUD States
-  const [mapTheme, setMapTheme] = useState('dark'); // 'light', 'dark', 'satellite', 'terrain'
+  const [mapTheme, setMapTheme] = useState('terrain'); // 'terrain' (default), 'dark', 'satellite', 'light'
   const [weatherEffect, setWeatherEffect] = useState('mist'); // 'clear', 'rain', 'mist'
   const [weather, setWeather] = useState(null);
   const [weatherStatus, setWeatherStatus] = useState('loading');
@@ -1752,7 +1752,7 @@ export default function App() {
         break;
       case 'theme':
         setMapTheme(prev => {
-          const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
+          const order = ['terrain', 'dark', 'satellite', 'solar', 'nvg', 'safety'];
           const nextIdx = (order.indexOf(prev) + 1) % order.length;
           return order[nextIdx];
         });
@@ -2546,7 +2546,7 @@ export default function App() {
         (b.fromNode === edge.to && b.toNode === edge.from)
       );
 
-      const defaultRoadColor = mapTheme === 'satellite' ? '#38bdf8' : '#334155';
+      const defaultRoadColor = mapTheme === 'satellite' ? '#38bdf8' : (mapTheme === 'terrain' ? '#1e3a8a' : '#334155');
       const color = isBlocked ? '#ef4444' : (showTraffic ? getTrafficColor(edge) : defaultRoadColor);
       const dashArray = isBlocked ? '5, 5' : null;
       const weight = isBlocked ? 4 : (showTraffic ? 4 : (mapTheme === 'satellite' ? 3.5 : 3));
@@ -5905,7 +5905,7 @@ export default function App() {
   ));
 
   return (
-    <div className={`app-container ${activeTab ? 'sidebar-open' : 'map-focused'}`} data-theme={mapTheme === 'terrain' ? 'thermal' : mapTheme}>
+    <div className={`app-container ${activeTab ? 'sidebar-open' : 'map-focused'}`} data-theme={mapTheme === 'terrain' ? 'dark' : mapTheme}>
       {/* 1. Sleek Apple / Google Maps Slide-Over Navigation Drawer */}
       {showSlideMenu && (
         <div 
@@ -9223,14 +9223,14 @@ export default function App() {
               onClick={() => {
                 triggerHaptic(20);
                 setMapTheme(prev => {
-                  const order = ['dark', 'nvg', 'solar', 'safety', 'satellite', 'terrain'];
+                  const order = ['terrain', 'dark', 'satellite', 'solar', 'nvg', 'safety'];
                   const nextIdx = (order.indexOf(prev) + 1) % order.length;
                   return order[nextIdx];
                 });
               }}
               title="Cycle map display theme"
             >
-              🎨 {mapTheme === 'dark' ? 'Slate' : mapTheme === 'nvg' ? 'Night' : mapTheme === 'solar' ? 'Light' : mapTheme === 'safety' ? 'Safety' : mapTheme}
+              🎨 {mapTheme === 'terrain' ? 'Terrain' : mapTheme === 'dark' ? 'Slate' : mapTheme === 'satellite' ? 'Satellite' : mapTheme === 'solar' ? 'Light' : mapTheme === 'nvg' ? 'Night' : mapTheme === 'safety' ? 'Safety' : mapTheme}
             </button>
 
             {/* Active Demo Scenario Indicator Pill */}
@@ -9477,8 +9477,18 @@ export default function App() {
               <div className="maps-layers-list">
                 <button 
                   type="button" 
+                  className={`maps-layer-row ${mapTheme === 'terrain' ? 'active' : ''}`}
+                  onClick={() => setMapTheme(prev => prev === 'terrain' ? 'dark' : 'terrain')}
+                >
+                  <span className="layer-label">🏔️ Topographic Terrain View</span>
+                  <span className={`layer-badge-toggle ${mapTheme === 'terrain' ? 'on' : ''}`}>
+                    {mapTheme === 'terrain' ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+                <button 
+                  type="button" 
                   className={`maps-layer-row ${mapTheme === 'satellite' ? 'active' : ''}`}
-                  onClick={() => setMapTheme(prev => prev === 'satellite' ? 'dark' : 'satellite')}
+                  onClick={() => setMapTheme(prev => prev === 'satellite' ? 'terrain' : 'satellite')}
                 >
                   <span className="layer-label">🛰️ Satellite Imagery</span>
                   <span className={`layer-badge-toggle ${mapTheme === 'satellite' ? 'on' : ''}`}>
