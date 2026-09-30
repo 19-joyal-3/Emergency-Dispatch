@@ -1,4 +1,15 @@
 services:
+  - type: web
+    name: emergency-dispatch-service
+    env: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SYSTEM_AUDIT_SECRET
+        value: vanguard-resylix-sec-2026
   - type: static_site
     name: emergency-dispatch-2
     buildCommand: npm ci && npm run build
