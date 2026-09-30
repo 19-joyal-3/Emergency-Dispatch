@@ -7858,125 +7858,477 @@ textarea {
 }
 
 /* ==========================================================================
-   KERALA VERIFIED POIS & QUICK CATEGORY CHIPS BAR
+   KERALA VERIFIED POIS & FACILITIES DIRECTORY (SEPARATE VIEW)
    ========================================================================== */
-.maps-poi-chips-bar {
+
+/* Unified Single Toggle Switch & Separate View Pill on Search Card */
+.maps-poi-unified-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  padding: 1px 2px;
+  flex-shrink: 0;
+}
+
+.maps-poi-unified-pill .poi-switch-chip {
+  border: none !important;
+  background: transparent !important;
+  padding: 4px 8px;
+  gap: 5px;
+  box-shadow: none !important;
+}
+
+.maps-poi-unified-pill .poi-switch-chip:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.maps-poi-unified-pill .poi-browse-btn {
+  padding: 4px 8px;
+  background: rgba(56, 189, 248, 0.15) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  color: #38bdf8 !important;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.maps-poi-unified-pill .poi-browse-btn:hover {
+  background: rgba(56, 189, 248, 0.3) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+/* Modal Overlay & Container */
+.poi-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(5, 11, 20, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: drawerFadeIn 0.2s ease;
+}
+
+.poi-modal-content {
+  background: linear-gradient(145deg, #0b1523 0%, #0f1c2e 100%);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 960px;
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(56, 189, 248, 0.2);
+}
+
+.poi-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.7);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.poi-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.poi-modal-icon {
+  font-size: 1.6rem;
+}
+
+.poi-modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+}
+
+.poi-modal-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.poi-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.poi-modal-master-toggle-wrap {
   display: flex;
   align-items: center;
   gap: 6px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 3px 8px;
+}
+
+.poi-modal-toggle-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.poi-modal-master-toggle {
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.poi-modal-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.poi-modal-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #f87171;
+}
+
+.poi-modal-categories-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.65rem 1.25rem;
+  background: rgba(15, 23, 42, 0.45);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   overflow-x: auto;
-  padding: 2px 4px;
-  max-width: 100%;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  z-index: 1090;
+  scrollbar-width: thin;
 }
 
-.maps-poi-chips-bar::-webkit-scrollbar {
-  display: none;
-}
-
-.maps-poi-chip {
+.poi-modal-cat-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 10px;
-  background: rgba(15, 23, 42, 0.90);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 6px 11px;
   border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cbd5e1;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   flex-shrink: 0;
-  user-select: none;
 }
 
-.maps-poi-chip:hover {
-  background: rgba(30, 41, 59, 0.98);
+.poi-modal-cat-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.28);
-  transform: translateY(-1px);
 }
 
-.maps-poi-chip.active {
+.poi-modal-cat-pill.active {
   background: rgba(14, 165, 233, 0.22);
   border-color: #38bdf8;
   color: #38bdf8;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
 }
 
-.maps-poi-chip.poi-chip-hospital.active {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
-  color: #f87171;
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
-}
-
-.maps-poi-chip.poi-chip-pharmacy.active {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: #10b981;
-  color: #34d399;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
-}
-
-.maps-poi-chip.poi-chip-fuel.active {
-  background: rgba(245, 158, 11, 0.2);
-  border-color: #f59e0b;
-  color: #fbbf24;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
-}
-
-.maps-poi-chip.poi-chip-police.active {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: #3b82f6;
-  color: #60a5fa;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
-}
-
-.maps-poi-chip.poi-chip-shelter.active {
-  background: rgba(139, 92, 246, 0.2);
-  border-color: #8b5cf6;
-  color: #a78bfa;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.35);
-}
-
-.maps-poi-chip.poi-chip-hotel.active {
-  background: rgba(6, 182, 212, 0.2);
-  border-color: #06b6d4;
-  color: #22d3ee;
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
-}
-
-.maps-poi-chip.poi-chip-food.active {
-  background: rgba(249, 115, 22, 0.2);
-  border-color: #f97316;
-  color: #fb923c;
-  box-shadow: 0 0 12px rgba(249, 115, 22, 0.35);
-}
-
-.maps-poi-chip .poi-chip-icon {
-  font-size: 0.84rem;
-  line-height: 1;
-}
-
-.maps-poi-chip .poi-chip-count {
-  font-size: 0.65rem;
+.poi-modal-cat-pill .cat-count {
+  font-size: 0.62rem;
   padding: 1px 5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   color: #94a3b8;
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
-.maps-poi-chip.active .poi-chip-count {
+.poi-modal-cat-pill.active .cat-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.poi-modal-search-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.25);
+  flex-wrap: wrap;
+}
+
+.poi-modal-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+  padding: 6px 12px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.poi-modal-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  font-size: 0.82rem;
+  width: 100%;
+}
+
+.poi-modal-search-input::placeholder {
+  color: #64748b;
+}
+
+.search-clear-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 0.8rem;
+}
+
+.poi-modal-stats-badge {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.poi-modal-cards-grid {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 0.85rem;
+  flex: 1;
+  max-height: 58vh;
+}
+
+.poi-dir-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: all 0.15s ease;
+}
+
+.poi-dir-card:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.poi-dir-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.poi-dir-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.poi-dir-cat-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.poi-dir-cat-badge.cat-hospital { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+.poi-dir-cat-badge.cat-hotel { background: rgba(6, 182, 212, 0.18); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.35); }
+.poi-dir-cat-badge.cat-pharmacy { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+.poi-dir-cat-badge.cat-fuel { background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+.poi-dir-cat-badge.cat-police { background: rgba(59, 130, 246, 0.18); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.35); }
+.poi-dir-cat-badge.cat-shelter { background: rgba(139, 92, 246, 0.18); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.35); }
+.poi-dir-cat-badge.cat-food { background: rgba(249, 115, 22, 0.18); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); }
+.poi-dir-cat-badge.cat-bank { background: rgba(20, 184, 166, 0.18); color: #2dd4bf; border: 1px solid rgba(20, 184, 166, 0.35); }
+
+.poi-dir-hours-badge {
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
+
+.poi-dir-hours-badge.live-24 {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.poi-dir-dist-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.poi-dir-card-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.poi-dir-card-location {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.poi-dir-card-desc {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 6px 8px;
+  border-radius: 6px;
+  line-height: 1.35;
+}
+
+.poi-dir-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.poi-dir-phone a {
+  color: #38bdf8;
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.poi-dir-coords code {
+  color: #cbd5e1;
+  font-family: ui-monospace, monospace;
+  margin-left: 4px;
+}
+
+.poi-dir-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.poi-action-btn {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.poi-action-btn.map-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+}
+
+.poi-action-btn.map-btn:hover {
   background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
+}
+
+.poi-action-btn.route-btn {
+  background: #2563eb;
+  border: 1px solid #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+
+.poi-action-btn.route-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.poi-dir-empty-state {
+  grid-column: 1 / -1;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.poi-dir-empty-state h4 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.1rem;
+}
+
+.poi-dir-empty-state p {
+  margin: 0;
+  font-size: 0.78rem;
+  max-width: 320px;
+}
+
+.poi-modal-reset-btn {
+  margin-top: 0.5rem;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* POI Markers on Leaflet */

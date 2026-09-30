@@ -88,6 +88,7 @@ import KsdmaDamMonitorModal from './components/KsdmaDamMonitorModal';
 import KsdmaWeatherWarningModal from './components/KsdmaWeatherWarningModal';
 import PwaInstallGuideModal from './components/PwaInstallGuideModal';
 import DemoScenariosModal from './components/DemoScenariosModal';
+import KeralaPoiDirectoryModal from './components/KeralaPoiDirectoryModal';
 import { createRadarTileLayer } from './services/weatherRadarService';
 import { KSDMA_RESERVOIRS, checkRouteDamAlertProximity } from './services/ksdmaLiveService';
 import { getKsdmaDistrictWarnings, checkRouteWeatherInterception, KSDMA_ALERT_TYPES } from './services/ksdmaWeatherWarningService';
@@ -248,6 +249,7 @@ export default function App() {
   const hospitalMarkersRef = useRef(new Map());
   const [showPoiLayer, setShowPoiLayer] = useState(true);
   const [activePoiCategory, setActivePoiCategory] = useState('all');
+  const [showPoiDirectoryModal, setShowPoiDirectoryModal] = useState(false);
   const poiMarkersRef = useRef(new Map());
   const liveTrafficLayerRef = useRef(null);
   const [tomtomApiKey, setTomtomApiKey] = useState(() => {
@@ -1955,6 +1957,10 @@ export default function App() {
         }
         if (showOfflineCacheModal) {
           setShowOfflineCacheModal(false);
+          return;
+        }
+        if (showPoiDirectoryModal) {
+          setShowPoiDirectoryModal(false);
           return;
         }
         if (p2pSosModalOpen) {
@@ -6257,6 +6263,16 @@ export default function App() {
             type="button"
             className="maps-drawer-tool-btn"
             onClick={() => {
+              setShowPoiDirectoryModal(true);
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>🏥</span> Kerala Facilities Directory (210)
+          </button>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
+            onClick={() => {
               setShowWeatherMatrixModal(true);
               setShowSlideMenu(false);
             }}
@@ -9480,6 +9496,39 @@ export default function App() {
               </span>
             </button>
 
+            {/* Unified Single Toggle Switch & Separate View Pill for Facilities (Hospitals, Hotels, Fuel...) */}
+            <div className="maps-poi-unified-pill" title="Kerala Facilities (Hospitals, Hotels, Fuel, etc.)">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={showPoiLayer}
+                className={`maps-chip poi-switch-chip switch-chip ${showPoiLayer ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic(15);
+                  setShowPoiLayer(prev => !prev);
+                }}
+                title={showPoiLayer ? "Hide Kerala Facilities pins from map" : "Show Kerala Facilities pins on map"}
+                aria-label="Toggle Kerala Facilities"
+              >
+                <span>📍 Facilities</span>
+                <span className={`chip-toggle-switch ${showPoiLayer ? 'on' : ''}`} aria-hidden="true">
+                  <span className="chip-toggle-thumb" />
+                </span>
+              </button>
+              <button
+                type="button"
+                className="maps-chip poi-browse-btn"
+                onClick={() => {
+                  triggerHaptic(15);
+                  setShowPoiDirectoryModal(true);
+                }}
+                title="Browse Facilities Directory (Hospitals, Hotels, Fuel...)"
+                aria-label="Browse Facilities Directory"
+              >
+                <span>📂</span>
+              </button>
+            </div>
+
             {/* Map Theme Cycler */}
             <button
               type="button"
@@ -9523,27 +9572,6 @@ export default function App() {
                 {isOnline ? 'Online' : 'Offline Ready'}
               </span>
             </div>
-          </div>
-
-          {/* Quick POI Category Filter Chips Bar (Directly below search input) */}
-          <div className="maps-poi-chips-bar" role="toolbar" aria-label="Points of Interest Categories">
-            {POI_CATEGORIES.map(cat => (
-              <button
-                key={`poi-chip-${cat.id}`}
-                type="button"
-                className={`maps-poi-chip poi-chip-${cat.id} ${activePoiCategory === cat.id ? 'active' : ''}`}
-                onClick={() => {
-                  triggerHaptic(15);
-                  setShowPoiLayer(true);
-                  setActivePoiCategory(prev => prev === cat.id && cat.id !== 'all' ? 'all' : cat.id);
-                }}
-                title={`Filter map to ${cat.label} across Kerala (${cat.count})`}
-              >
-                <span className="poi-chip-icon">{cat.icon}</span>
-                <span className="poi-chip-label">{cat.label}</span>
-                <span className="poi-chip-count">{cat.count}</span>
-              </button>
-            ))}
           </div>
 
           {/* Google / Apple Maps Search Suggestions Dropdown */}
@@ -9843,25 +9871,19 @@ export default function App() {
                     <span className="toggle-thumb" />
                   </span>
                 </button>
-                {showPoiLayer && (
-                  <div className="maps-layer-subcategories">
-                    {POI_CATEGORIES.map(cat => (
-                      <button
-                        key={`layer-sub-${cat.id}`}
-                        type="button"
-                        className={`maps-layer-subchip ${activePoiCategory === cat.id ? 'active' : ''}`}
-                        onClick={() => {
-                          triggerHaptic(10);
-                          setActivePoiCategory(cat.id);
-                        }}
-                      >
-                        <span>{cat.icon}</span>
-                        <span>{cat.label}</span>
-                        <span className="subchip-count">{cat.count}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  className="maps-layer-row"
+                  onClick={() => {
+                    setShowPoiDirectoryModal(true);
+                    setShowLayersMenu(false);
+                  }}
+                  style={{ color: '#38bdf8', paddingLeft: '1.25rem', fontSize: '0.73rem' }}
+                  title="Open Kerala Facilities Directory View"
+                >
+                  <span className="layer-label">📂 Browse Facilities (Hosp, Hotel, Fuel...)</span>
+                  <span className="layer-row-arrow">›</span>
+                </button>
                 <button 
                   type="button" 
                   role="switch"
@@ -12450,6 +12472,42 @@ export default function App() {
         onLaunchScenario={handleLaunchDemoScenario}
         onResetScenario={handleResetDemoScenario}
         activeScenarioId={activeDemoScenario?.id}
+      />
+
+      {/* Kerala Amenities & Facilities Directory (Separate View) */}
+      <KeralaPoiDirectoryModal
+        isOpen={showPoiDirectoryModal}
+        onClose={() => setShowPoiDirectoryModal(false)}
+        keralaPois={keralaPois}
+        poiCategories={POI_CATEGORIES}
+        showPoiLayer={showPoiLayer}
+        onTogglePoiLayer={() => setShowPoiLayer(prev => !prev)}
+        activePoiCategory={activePoiCategory}
+        onSelectCategory={(catId) => setActivePoiCategory(catId)}
+        userCoords={gpsCoords}
+        onShowOnMap={(poi) => {
+          setShowPoiDirectoryModal(false);
+          setShowPoiLayer(true);
+          if (mapRef.current) {
+            mapRef.current.flyTo([poi.lat, poi.lng], 16, { duration: 1.2 });
+            setTimeout(() => {
+              const marker = poiMarkersRef.current.get(poi.id);
+              if (marker) marker.openPopup();
+            }, 1300);
+          }
+          logMessage(`[FACILITY] Focused map on ${poi.name} (${poi.district})`, 'info');
+        }}
+        onRouteTo={(poi) => {
+          setShowPoiDirectoryModal(false);
+          setShowPoiLayer(true);
+          setCustomDestName(poi.name);
+          setCustomDestCoords({ lat: poi.lat, lng: poi.lng });
+          setActiveTab('planner');
+          if (mapRef.current) {
+            mapRef.current.flyTo([poi.lat, poi.lng], 14, { duration: 1 });
+          }
+          logMessage(`[FACILITY] Routing directly to ${poi.name} (${poi.district})`, 'info');
+        }}
       />
     </div>
   );

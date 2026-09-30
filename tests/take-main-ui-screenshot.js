@@ -32,19 +32,28 @@ async function captureMainUI() {
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'poi_marker_popup.png') });
   console.log('Saved: poi_marker_popup.png');
 
-  // 3. Click the Fuel category chip to filter
+  // 3. Open the Facilities Directory separate view (Hospitals, Hotels, Fuel, etc.)
+  await page.evaluate(() => {
+    const browseBtn = document.querySelector('.poi-browse-btn');
+    if (browseBtn) browseBtn.click();
+  });
+  await new Promise(r => setTimeout(r, 800));
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'kerala_facilities_directory_view.png') });
+  console.log('Saved: kerala_facilities_directory_view.png');
+
+  // Filter to Fuel in the Directory separate view
   await page.evaluate(() => {
     const fuelChip = document.querySelector('.poi-chip-fuel');
     if (fuelChip) fuelChip.click();
   });
-  await new Promise(r => setTimeout(r, 700));
+  await new Promise(r => setTimeout(r, 600));
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'poi_category_filtered_fuel.png') });
   console.log('Saved: poi_category_filtered_fuel.png');
 
-  // Reset to All POIs
+  // Close directory view
   await page.evaluate(() => {
-    const allChip = document.querySelector('.poi-chip-all');
-    if (allChip) allChip.click();
+    const closeBtn = document.querySelector('.poi-modal-close-btn');
+    if (closeBtn) closeBtn.click();
   });
   await new Promise(r => setTimeout(r, 400));
 
