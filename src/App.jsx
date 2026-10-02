@@ -9539,7 +9539,7 @@ export default function App() {
 
         {/* Apple Maps / Google Maps Style Floating Search & Action Bar Container */}
         <div className="maps-floating-search-container">
-          <div className="maps-floating-search-card tactical-gnss-telemetry-badge" role="region" aria-label="Quick Actions & Search">
+          <div className="maps-floating-search-card" role="region" aria-label="Quick Actions & Search">
             {/* Hamburger Menu Button */}
             <button
               type="button"
@@ -9613,9 +9613,10 @@ export default function App() {
                 ⌘K
               </kbd>
             </div>
+          </div>
 
-            <div className="maps-search-divider" />
-
+          {/* Quick Action Chips Bar (Smooth horizontal carousel on mobile/tablet) */}
+          <div className="maps-search-chips" role="toolbar" aria-label="Quick Action Filters">
             {/* Directions Chip */}
             <button
               type="button"
@@ -10999,20 +11000,13 @@ export default function App() {
 
       {/* P2P Emergency Floating Notification Toast */}
       {p2pToast && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          zIndex: 10000,
-          background: p2pToast.type === 'danger' ? '#7f1d1d' : p2pToast.type === 'warning' ? '#78350f' : '#064e3b',
-          border: `1px solid ${p2pToast.type === 'danger' ? '#ef4444' : p2pToast.type === 'warning' ? '#f59e0b' : '#10b981'}`,
-          borderRadius: '8px',
-          padding: '10px 14px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
-          maxWidth: '380px',
-          color: '#fff',
-          animation: 'p2pFadeIn 0.2s ease-out'
-        }}>
+        <div 
+          className="p2p-toast-alert"
+          style={{
+            background: p2pToast.type === 'danger' ? '#7f1d1d' : p2pToast.type === 'warning' ? '#78350f' : '#064e3b',
+            border: `1px solid ${p2pToast.type === 'danger' ? '#ef4444' : p2pToast.type === 'warning' ? '#f59e0b' : '#10b981'}`
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <strong style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
               {p2pToast.title}

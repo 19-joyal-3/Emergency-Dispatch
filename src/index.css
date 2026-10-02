@@ -3605,7 +3605,7 @@ textarea {
 
 .proximity-hazard-banner {
   position: absolute;
-  top: 14px;
+  top: 72px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -5082,10 +5082,11 @@ textarea {
     align-items: center;
     justify-content: space-between;
     position: fixed;
-    top: 3.5rem;
+    top: auto;
+    bottom: 76px;
     left: 0.65rem;
     right: 0.65rem;
-    z-index: 1000;
+    z-index: 1150;
     background: rgba(11, 20, 36, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -7082,10 +7083,10 @@ textarea {
   left: 16px;
   z-index: 1100;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
-  max-width: calc(100vw - 420px);
+  max-width: calc(100vw - 32px);
   pointer-events: none;
 }
 
@@ -7100,17 +7101,33 @@ textarea {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 12px 5px 6px;
+  padding: 4px 12px 4px 6px;
   background: rgba(15, 23, 42, 0.92) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   border-radius: 9999px !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35) !important;
-  height: 48px;
+  height: 46px;
   box-sizing: border-box;
   width: auto !important;
   max-width: 100% !important;
+  flex-shrink: 0;
+}
+
+.maps-search-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  flex-wrap: nowrap;
+  padding: 2px 0;
+}
+
+.maps-search-chips::-webkit-scrollbar {
+  display: none;
 }
 
 .maps-menu-btn {
@@ -7418,8 +7435,10 @@ textarea {
   gap: 6px;
   padding: 5px 12px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #e2e8f0;
   font-size: 0.76rem;
   font-weight: 600;
@@ -7427,10 +7446,12 @@ textarea {
   transition: all 0.15s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .maps-chip:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(56, 189, 248, 0.35);
   color: #fff;
 }
 
@@ -7621,27 +7642,103 @@ textarea {
   padding: 1rem 1.25rem 1.5rem !important;
 }
 
+/* Tablet Responsiveness */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .maps-floating-search-container {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    width: calc(100% - 24px);
+    max-width: calc(100vw - 24px);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .maps-floating-search-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 46px;
+  }
+  .maps-search-box {
+    flex: 1;
+    min-width: 0;
+  }
+  .maps-search-input {
+    width: 100%;
+  }
+  .maps-search-chips {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding: 2px 2px;
+    gap: 6px;
+  }
+  .proximity-hazard-banner {
+    top: 98px;
+    width: calc(100% - 24px);
+    max-width: calc(100vw - 24px);
+  }
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
-  .maps-floating-search-card {
+  .maps-floating-search-container {
     top: 10px;
     left: 10px;
     right: 10px;
+    width: calc(100% - 20px);
     max-width: calc(100vw - 20px);
-    padding: 4px 8px;
-    height: 44px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
   }
-  .maps-search-placeholder {
-    max-width: 110px;
-    font-size: 0.74rem;
+  .maps-floating-search-card {
+    top: auto;
+    left: auto;
+    right: auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 4px 10px;
+    height: 44px;
+    border-radius: 9999px;
+  }
+  .maps-search-box {
+    flex: 1;
+    min-width: 0;
+  }
+  .maps-search-input {
+    width: 100%;
+    font-size: 16px; /* Prevents auto-zoom on iOS Safari */
+  }
+  .maps-search-input::placeholder {
+    font-size: 0.78rem;
   }
   .maps-search-kbd {
     display: none;
   }
+  .maps-search-chips {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding: 2px 1px;
+    gap: 5px;
+  }
+  .maps-search-dropdown {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 16px;
+  }
   .maps-top-right-bar {
     top: auto;
-    bottom: 16px;
-    right: 16px;
+    bottom: 18px;
+    right: 10px;
   }
   .sidebar {
     position: fixed !important;
@@ -7655,6 +7752,117 @@ textarea {
     border-radius: 24px 24px 0 0 !important;
     z-index: 1001 !important;
   }
+
+  /* Facilities Directory Mobile Bottom Sheet */
+  .poi-modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .poi-modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    border-radius: 22px 22px 0 0 !important;
+    border-bottom: none !important;
+  }
+  .poi-modal-header {
+    padding: 0.85rem 1rem !important;
+    gap: 0.5rem !important;
+  }
+  .poi-modal-search-box {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+  .poi-modal-cards-grid {
+    grid-template-columns: 1fr !important;
+    padding: 0.75rem !important;
+    gap: 0.65rem !important;
+    max-height: calc(92vh - 210px) !important;
+  }
+  .poi-modal-cat-scroll {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 4px !important;
+    width: 100% !important;
+  }
+  .poi-modal-cat-pill {
+    flex-shrink: 0 !important;
+  }
+  .poi-dir-card-actions {
+    display: flex !important;
+    gap: 6px !important;
+  }
+  .poi-action-btn {
+    flex: 1 !important;
+    min-height: 38px !important;
+    font-size: 0.72rem !important;
+    padding: 6px 4px !important;
+  }
+
+  /* Mobile Hazard Intercept */
+  .hazard-intercept-card {
+    max-height: 90vh !important;
+    border-radius: 16px !important;
+    margin: auto 0 !important;
+    width: 100% !important;
+  }
+  .hazard-intercept-body {
+    padding: 0.75rem 0.85rem !important;
+    gap: 0.6rem !important;
+  }
+  .hazard-intercept-actions {
+    padding: 0.65rem 0.85rem !important;
+    gap: 6px !important;
+  }
+  .btn-hazard-detour,
+  .btn-hazard-shelter,
+  .btn-hazard-minimize {
+    padding: 8px 10px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .proximity-hazard-banner {
+    top: 94px !important;
+    width: calc(100% - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    padding: 0.5rem 0.75rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .proximity-hazard-actions {
+    display: flex !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .proximity-hazard-actions .btn {
+    flex: 1 !important;
+    font-size: 0.7rem !important;
+    padding: 0.35rem 0.5rem !important;
+  }
+
+  .p2p-toast-alert {
+    top: auto !important;
+    bottom: 80px !important;
+    left: 12px !important;
+    right: 12px !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
+.p2p-toast-alert {
+  position: fixed;
+  top: 76px;
+  right: 16px;
+  z-index: 10000;
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  max-width: 380px;
+  color: #fff;
+  animation: p2pFadeIn 0.2s ease-out;
 }
 
 /* 5. Apple Maps Layers Popover */
@@ -7866,11 +8074,14 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 9999px;
-  padding: 1px 2px;
+  padding: 1px 3px;
   flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .maps-poi-unified-pill .poi-switch-chip {
