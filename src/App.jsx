@@ -7658,6 +7658,30 @@ export default function App() {
                 <div style={{ marginTop: '0.55rem', color: 'var(--text-muted)', fontSize: '0.62rem' }}>
                   Interface: {interfaceLanguage} • {presentationMode ? 'Demo data highlighted' : 'Operations mode'}
                 </div>
+                <div style={{
+                  marginTop: '0.75rem',
+                  padding: '0.45rem 0.65rem',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '0.66rem'
+                }}>
+                  <div>
+                    <span style={{ color: '#94a3b8' }}>Creator &amp; Architect: </span>
+                    <strong style={{ color: '#f8fafc' }}>Joyal Thomas Francis</strong>
+                  </div>
+                  <a
+                    href="https://github.com/19-joyal-3"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: 600, fontSize: '0.62rem' }}
+                  >
+                    @19-joyal-3
+                  </a>
+                </div>
               </section>
 
               <section className="panel-card" style={{ borderLeft: '3px solid #ec4899' }}>
