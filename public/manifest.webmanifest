@@ -10,6 +10,10 @@
   "background_color": "#0b0f17",
   "theme_color": "#0b0f17",
   "description": "Zero-connectivity tactical emergency dispatch, offline vector navigation, KSDMA reservoir telemetry, and V2V hazard mesh platform for Kerala.",
+  "developer": {
+    "name": "Joyal Thomas Francis",
+    "url": "https://github.com/19-joyal-3"
+  },
   "categories": ["navigation", "utilities", "productivity", "safety"],
   "icons": [
     {
