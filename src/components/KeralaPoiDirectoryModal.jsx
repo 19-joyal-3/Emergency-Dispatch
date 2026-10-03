@@ -99,6 +99,9 @@ export default function KeralaPoiDirectoryModal({
       }}
     >
       <div className="poi-modal-content">
+        <div className="mobile-bottom-sheet-handle" aria-hidden="true">
+          <span className="bottom-sheet-drag-pill" />
+        </div>
         {/* Modal Header */}
         <div className="poi-modal-header">
           <div className="poi-modal-title-wrap">

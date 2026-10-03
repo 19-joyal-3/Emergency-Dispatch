@@ -4556,6 +4556,14 @@ export default function App() {
     }
   };
 
+  const handleDismissHazardModal = () => {
+    if (activeProximityHazard) {
+      const hazardKey = `${activeProximityHazard.hazardId}_${Math.round((activeProximityHazard.distanceKm || 0) * 2) / 2}`;
+      setDismissedHazardIds(prev => new Set([...prev, hazardKey, activeProximityHazard.hazardId]));
+    }
+    setShowHazardInterceptModal(false);
+  };
+
   const handleBroadcastGeofenceEvacuation = () => {
     if (!geofenceModalData?.incident) return;
     const inc = geofenceModalData.incident;
@@ -6461,6 +6469,9 @@ export default function App() {
 
       {/* 2. active tab sidebar panel */}
       <aside className={`sidebar ${activeTab ? 'open' : 'closed'}`}>
+        <div className="mobile-bottom-sheet-handle" aria-hidden="true">
+          <span className="bottom-sheet-drag-pill" />
+        </div>
         <header className="sidebar-header" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <div style={{ flex: 1 }}>
             <h1 className="brand-title">
@@ -12059,7 +12070,7 @@ export default function App() {
               <button
                 type="button"
                 className="hazard-intercept-close-btn"
-                onClick={() => setShowHazardInterceptModal(false)}
+                onClick={handleDismissHazardModal}
                 title="Minimize Alert to Map Banner"
                 aria-label="Minimize Alert"
               >
@@ -12186,7 +12197,7 @@ export default function App() {
               <button
                 type="button"
                 className="btn-hazard-minimize"
-                onClick={() => setShowHazardInterceptModal(false)}
+                onClick={handleDismissHazardModal}
               >
                 Minimize to Banner
               </button>

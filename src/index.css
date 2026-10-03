@@ -1,4 +1,16 @@
 :root {
+  /* Dynamic Hardware Safe Area Insets (Notches, Home Bar, Dynamic Island, Curved Edges) */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+
+  /* Fluid Safe Offsets with Minimum Ergonomic Clearances */
+  --safe-top: max(10px, calc(var(--sat) + 8px));
+  --safe-bottom: max(12px, calc(var(--sab) + 10px));
+  --safe-left: max(10px, calc(var(--sal) + 8px));
+  --safe-right: max(10px, calc(var(--sar) + 8px));
+
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -154,8 +166,8 @@ body,
 .sidebar-header,
 .sidebar-content,
 .network-bar {
-  width: 360px;
-  min-width: 360px;
+  width: 100%;
+  min-width: 0;
   box-sizing: border-box;
 }
 
@@ -1922,249 +1934,33 @@ select option {
    Responsive Drawer Layouts
    ========================================== */
 
-/* Tablets / Small Laptops (769px - 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .sidebar {
-    width: 320px;
-    min-width: 320px;
-    max-width: 320px;
-  }
-  .sidebar-header,
-  .sidebar-content,
-  .network-bar {
-    width: 320px;
-    min-width: 320px;
-  }
+/* Mobile-First Bottom Sheet Grab Handle */
+.mobile-bottom-sheet-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 6px;
+  width: 100%;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
 }
 
-/* Smartphones & Mobile Viewports (max-width: 768px) */
-@media (max-width: 768px) {
-  .app-container {
-    display: flex !important;
-    flex-direction: column-reverse !important;
-    grid-template-columns: none !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    width: 100vw !important;
-    overflow: hidden !important;
-    position: relative !important;
-  }
+.bottom-sheet-drag-pill {
+  width: 38px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.28);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
 
-  .app-container.map-focused .map-viewport,
-  .app-container.sidebar-open .map-viewport {
-    grid-column: auto;
-  }
+.mobile-bottom-sheet-handle:hover .bottom-sheet-drag-pill {
+  background: rgba(255, 255, 255, 0.55);
+}
 
-  .app-container.sidebar-open .sidebar {
-    display: flex !important;
-  }
-
-  /* Map viewport and container fill available mobile screen above the bottom tab bar */
-  .map-viewport {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 56px !important;
-    width: 100% !important;
-    height: calc(100vh - 56px) !important;
-    height: calc(100dvh - 56px) !important;
-    max-height: none !important;
-    z-index: 1 !important;
-  }
-
-  .map-container {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 100% !important;
-    max-height: none !important;
-  }
-
-  /* Horizontal bottom navigation bar */
-  .tab-toolbar {
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 56px !important;
-    flex-direction: row !important;
-    justify-content: flex-start !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    gap: 0 !important;
-    border-right: none !important;
-    border-top: 1px solid var(--border-color) !important;
-    background: #090d16 !important;
-    z-index: 20 !important;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6) !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-  }
-  .tab-toolbar::-webkit-scrollbar {
+@media (min-width: 768px) {
+  .mobile-bottom-sheet-handle {
     display: none !important;
-  }
-
-  /* Hide brand wrapper and tour footer on mobile toolbar */
-  .brand-icon-wrapper, .toolbar-footer {
-    display: none !important;
-  }
-
-  .tab-buttons {
-    display: flex !important;
-    flex-direction: row !important;
-    height: 100% !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    padding: 0 8px !important;
-    gap: 4px !important;
-    width: max-content !important;
-    min-width: 100% !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    flex-wrap: nowrap !important;
-  }
-  .tab-buttons::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .tab-btn {
-    height: 100% !important;
-    flex: 0 0 68px !important;
-    width: 68px !important;
-    min-width: 68px !important;
-    padding: 6px 2px !important;
-    border-radius: 6px !important;
-    box-shadow: none !important;
-    gap: 2px !important;
-  }
-
-  .tab-btn.active {
-    background: rgba(59, 130, 246, 0.16) !important;
-    box-shadow: inset 0 -3px 0 #3b82f6 !important;
-    color: #60a5fa !important;
-  }
-
-  /* Sidebar drawer overlaps map on slide-in */
-  .sidebar {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    max-width: 360px !important;
-    height: calc(100vh - 56px) !important;
-    height: calc(100dvh - 56px) !important;
-    z-index: 15 !important;
-    transform: translateX(-100%) !important;
-    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
-    box-shadow: 8px 0 25px rgba(0, 0, 0, 0.6) !important;
-    background: rgba(9, 13, 22, 0.98) !important;
-    backdrop-filter: blur(16px) !important;
-    border-right: 1px solid var(--border-color) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: thin !important;
-  }
-
-  .sidebar.open {
-    transform: translateX(0) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-  }
-
-  .sidebar.closed {
-    transform: translateX(-100%) !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-  }
-
-  /* Mobile close drawer button style */
-  .sidebar-close-btn {
-    display: block !important;
-  }
-
-  /* Adjust map popups and floating overlays */
-  .map-overlay-panel {
-    bottom: 70px !important;
-    left: 8px !important;
-    right: 8px !important;
-    width: auto !important;
-    max-width: none !important;
-  }
-
-  .nav-banner {
-    left: 8px !important;
-    right: 8px !important;
-    width: auto !important;
-  }
-
-  .map-settings-container {
-    bottom: 70px !important;
-    right: 8px !important;
-  }
-
-  /* Position floating island above the 56px mobile tab bar */
-  .floating-island-hud {
-    bottom: 68px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: calc(100% - 16px) !important;
-    max-width: 480px !important;
-    padding: 0.35rem 0.5rem !important;
-    gap: 0.25rem !important;
-    z-index: 1005 !important;
-    justify-content: space-evenly !important;
-  }
-
-  .floating-hud-btn {
-    padding: 0.35rem 0.55rem !important;
-    font-size: 0.68rem !important;
-    gap: 0.25rem !important;
-  }
-
-  /* Lift instruction banner above floating island HUD on mobile */
-  .instruction-banner {
-    bottom: 122px !important;
-    left: 10px !important;
-    right: 10px !important;
-    width: auto !important;
-    max-width: 480px !important;
-    margin: 0 auto !important;
-    transform: none !important;
-    font-size: 0.72rem !important;
-    padding: 0.45rem 0.8rem !important;
-    white-space: normal !important;
-    text-align: center !important;
-    justify-content: center !important;
-    z-index: 1004 !important;
-  }
-
-  .instruction-restore-btn {
-    bottom: 68px !important;
-    right: 10px !important;
-    z-index: 1006 !important;
-  }
-
-  /* Hide map HUD overlays when mobile drawer sidebar is open */
-  .app-container.sidebar-open .floating-island-hud,
-  .app-container.sidebar-open .instruction-banner,
-  .app-container.sidebar-open .instruction-restore-btn {
-    display: none !important;
-  }
-
-  .tour-card {
-    right: 8px !important;
-    left: 8px !important;
-    width: auto !important;
-    bottom: 70px !important;
   }
 }
 
@@ -2211,21 +2007,6 @@ textarea:focus-visible {
   border-color: rgba(148, 163, 184, 0.2);
 }
 
-@media (max-width: 768px) {
-  .tab-btn {
-    min-height: 56px;
-  }
-
-  .tab-label {
-    font-size: 9px;
-  }
-
-  .instruction-banner {
-    padding: 0.6rem 0.8rem !important;
-    border-radius: 12px !important;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -2234,115 +2015,6 @@ textarea:focus-visible {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-@media (max-width: 768px) {
-  html,
-  body,
-  #root {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .app-container {
-    height: 100dvh !important;
-    min-height: 100dvh;
-    width: 100%;
-    overflow: hidden !important;
-  }
-
-  .map-viewport {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 56px !important;
-    width: 100% !important;
-    height: calc(100vh - 56px) !important;
-    height: calc(100dvh - 56px) !important;
-    max-height: none !important;
-    z-index: 1 !important;
-  }
-
-  .map-container {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 100% !important;
-  }
-
-  .tab-toolbar {
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-
-  .tab-buttons {
-    width: max-content !important;
-    min-width: 100% !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    justify-content: flex-start !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
-    flex-wrap: nowrap !important;
-  }
-
-  .tab-buttons::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .tab-btn {
-    flex: 0 0 68px !important;
-    width: 68px !important;
-    min-width: 68px !important;
-    min-height: 54px !important;
-  }
-
-  .sidebar {
-    width: calc(100% - 12px) !important;
-    max-width: none !important;
-    height: calc(100dvh - 56px) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: thin !important;
-  }
-
-  .sidebar-content {
-    min-height: 0;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .panel-card {
-    padding: 0.9rem;
-  }
-
-  .map-overlay-card {
-    min-width: 0;
-    width: 100%;
-  }
-
-  .map-search-panel {
-    top: 0.75rem;
-    left: 0.75rem;
-    width: calc(100vw - 1.5rem);
-  }
-
-  .map-search-panel.collapsed {
-    width: auto;
-  }
-
-  .map-search-form {
-    padding: 0.4rem;
-  }
-
-  .map-search-form input {
-    font-size: 0.85rem;
   }
 }
 
@@ -7597,272 +7269,511 @@ textarea {
   color: #fff;
 }
 
-/* 4. Sleek Apple Maps Floating Side Sheet for Tactical Routing & Modules */
-.sidebar {
+/* ==========================================================================
+   MOBILE-FIRST & DEVICE-ADAPTIVE RESPONSIVE ARCHITECTURE
+   - Mobile-First Base (<768px): Vertical stack, dynamic safe-area insets, ergonomic bottom sheets
+   - Multi-Pane Split View (>=768px): Docked left sidebar, right dynamic map viewport
+   - Ultra-Wide Screens (>=1440px): Spacious multi-pane layout
+   ========================================================================== */
+
+/* 1. Mobile-First Foundation (<768px): Compact Phones & Foldables */
+.app-container {
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+.map-viewport {
   position: absolute !important;
-  top: 76px !important;
-  left: 16px !important;
-  width: 420px !important;
-  max-width: calc(100vw - 32px) !important;
-  max-height: calc(100vh - 96px) !important;
-  height: auto !important;
-  border-radius: 20px !important;
-  background: rgba(15, 23, 42, 0.95) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45) !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1 !important;
+  overflow: hidden !important;
+}
+
+.map-container {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Dynamic Safe Area Protected Floating Controls */
+.maps-floating-search-container {
+  position: absolute !important;
+  top: var(--safe-top) !important;
+  left: var(--safe-left) !important;
+  right: var(--safe-right) !important;
+  width: calc(100% - var(--safe-left) - var(--safe-right)) !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
   z-index: 1000 !important;
+  pointer-events: none !important;
+}
+
+.maps-floating-search-card {
+  pointer-events: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 46px !important;
+  padding: 4px 10px !important;
+  border-radius: 9999px !important;
+  background: rgba(15, 23, 42, 0.92) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.maps-search-box {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.maps-search-input {
+  width: 100% !important;
+  font-size: 16px !important; /* Prevents auto-zoom on iOS Safari */
+}
+
+.maps-search-input::placeholder {
+  font-size: 0.8rem !important;
+}
+
+.maps-search-kbd {
+  display: none !important;
+}
+
+.maps-search-chips {
+  pointer-events: auto !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+  flex-wrap: nowrap !important;
+  padding: 2px 0 !important;
+  gap: 6px !important;
+}
+
+.maps-search-chips::-webkit-scrollbar {
+  display: none !important;
+}
+
+.maps-chip {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+.maps-search-dropdown {
+  position: absolute !important;
+  top: 52px !important;
+  left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  border-radius: 16px !important;
+  max-height: calc(65dvh - var(--safe-top)) !important;
+  overflow-y: auto !important;
+}
+
+/* Mobile-First Sidebar as Modern Slide-Up Bottom Sheet */
+.sidebar {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: calc(85dvh - var(--sat)) !important;
+  height: auto !important;
+  border-radius: 24px 24px 0 0 !important;
+  background: rgba(15, 23, 42, 0.97) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.65) !important;
+  padding-bottom: max(1.25rem, calc(var(--sab) + 0.75rem)) !important;
+  z-index: 1050 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   display: flex !important;
   flex-direction: column !important;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
-}
-
-.sidebar.closed {
-  display: none !important;
+  transform: translateY(105%) !important;
   opacity: 0 !important;
-  transform: translateX(-20px) !important;
   pointer-events: none !important;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
 }
 
 .sidebar.open {
-  display: flex !important;
+  transform: translateY(0) !important;
   opacity: 1 !important;
-  transform: translateX(0) !important;
+  pointer-events: auto !important;
+  display: flex !important;
+}
+
+.sidebar.closed {
+  transform: translateY(105%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.mobile-bottom-sheet-handle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 0 4px !important;
+  width: 100% !important;
+  cursor: grab !important;
 }
 
 .sidebar-header {
-  padding: 1.15rem 1.25rem 0.85rem !important;
+  padding: 0.75rem 1.15rem 0.65rem !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
 .sidebar-content {
-  padding: 1rem 1.25rem 1.5rem !important;
+  padding: 0.85rem 1.15rem 1.25rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-/* Tablet Responsiveness */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .maps-floating-search-container {
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    width: calc(100% - 24px);
-    max-width: calc(100vw - 24px);
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  .maps-floating-search-card {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 46px;
-  }
-  .maps-search-box {
-    flex: 1;
-    min-width: 0;
-  }
-  .maps-search-input {
-    width: 100%;
-  }
-  .maps-search-chips {
-    width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap;
-    padding: 2px 2px;
-    gap: 6px;
-  }
-  .proximity-hazard-banner {
-    top: 98px;
-    width: calc(100% - 24px);
-    max-width: calc(100vw - 24px);
-  }
+.network-bar {
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-  .maps-floating-search-container {
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    width: calc(100% - 20px);
-    max-width: calc(100vw - 20px);
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-  }
-  .maps-floating-search-card {
-    top: auto;
-    left: auto;
-    right: auto;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 4px 10px;
-    height: 44px;
-    border-radius: 9999px;
-  }
-  .maps-search-box {
-    flex: 1;
-    min-width: 0;
-  }
-  .maps-search-input {
-    width: 100%;
-    font-size: 16px; /* Prevents auto-zoom on iOS Safari */
-  }
-  .maps-search-input::placeholder {
-    font-size: 0.78rem;
-  }
-  .maps-search-kbd {
-    display: none;
-  }
-  .maps-search-chips {
-    width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap;
-    padding: 2px 1px;
-    gap: 5px;
-  }
-  .maps-search-dropdown {
-    position: absolute;
-    top: 50px;
-    left: 0;
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 16px;
-  }
-  .maps-top-right-bar {
-    top: auto;
-    bottom: 18px;
-    right: 10px;
-  }
-  .sidebar {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 82vh !important;
-    border-radius: 24px 24px 0 0 !important;
-    z-index: 1001 !important;
-  }
+/* Floating Safe Action Controls (Layers, SOS, Weather, Toasts) */
+.maps-top-right-bar {
+  top: auto !important;
+  bottom: var(--safe-bottom) !important;
+  right: var(--safe-right) !important;
+  z-index: 990 !important;
+}
 
-  /* Facilities Directory Mobile Bottom Sheet */
-  .poi-modal-overlay {
-    align-items: flex-end !important;
-    padding: 0 !important;
-  }
-  .poi-modal-content {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 92vh !important;
-    border-radius: 22px 22px 0 0 !important;
-    border-bottom: none !important;
-  }
-  .poi-modal-header {
-    padding: 0.85rem 1rem !important;
-    gap: 0.5rem !important;
-  }
-  .poi-modal-search-box {
-    min-width: 100% !important;
-    width: 100% !important;
-  }
-  .poi-modal-cards-grid {
-    grid-template-columns: 1fr !important;
-    padding: 0.75rem !important;
-    gap: 0.65rem !important;
-    max-height: calc(92vh - 210px) !important;
-  }
-  .poi-modal-cat-scroll {
-    overflow-x: auto !important;
-    flex-wrap: nowrap !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
-    padding-bottom: 4px !important;
-    width: 100% !important;
-  }
-  .poi-modal-cat-pill {
-    flex-shrink: 0 !important;
-  }
-  .poi-dir-card-actions {
-    display: flex !important;
-    gap: 6px !important;
-  }
-  .poi-action-btn {
-    flex: 1 !important;
-    min-height: 38px !important;
-    font-size: 0.72rem !important;
-    padding: 6px 4px !important;
-  }
+.proximity-hazard-banner {
+  top: calc(var(--safe-top) + 88px) !important;
+  left: var(--safe-left) !important;
+  right: var(--safe-right) !important;
+  width: calc(100% - var(--safe-left) - var(--safe-right)) !important;
+  max-width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  border-radius: 14px !important;
+}
 
-  /* Mobile Hazard Intercept */
-  .hazard-intercept-card {
-    max-height: 90vh !important;
-    border-radius: 16px !important;
-    margin: auto 0 !important;
-    width: 100% !important;
-  }
-  .hazard-intercept-body {
-    padding: 0.75rem 0.85rem !important;
-    gap: 0.6rem !important;
-  }
-  .hazard-intercept-actions {
-    padding: 0.65rem 0.85rem !important;
-    gap: 6px !important;
-  }
-  .btn-hazard-detour,
-  .btn-hazard-shelter,
-  .btn-hazard-minimize {
-    padding: 8px 10px !important;
-    font-size: 0.76rem !important;
-  }
+.proximity-hazard-actions {
+  display: flex !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
 
-  .proximity-hazard-banner {
-    top: 94px !important;
-    width: calc(100% - 20px) !important;
-    max-width: calc(100vw - 20px) !important;
-    padding: 0.5rem 0.75rem !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 8px !important;
-  }
-  .proximity-hazard-actions {
-    display: flex !important;
-    gap: 6px !important;
-    width: 100% !important;
-  }
-  .proximity-hazard-actions .btn {
-    flex: 1 !important;
-    font-size: 0.7rem !important;
-    padding: 0.35rem 0.5rem !important;
-  }
-
-  .p2p-toast-alert {
-    top: auto !important;
-    bottom: 80px !important;
-    left: 12px !important;
-    right: 12px !important;
-    max-width: calc(100vw - 24px) !important;
-  }
+.proximity-hazard-actions .btn {
+  flex: 1 !important;
+  font-size: 0.7rem !important;
+  padding: 0.35rem 0.5rem !important;
 }
 
 .p2p-toast-alert {
-  position: fixed;
-  top: 76px;
-  right: 16px;
-  z-index: 10000;
-  border-radius: 10px;
-  padding: 10px 14px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-  max-width: 380px;
-  color: #fff;
-  animation: p2pFadeIn 0.2s ease-out;
+  position: fixed !important;
+  top: auto !important;
+  bottom: calc(var(--safe-bottom) + 60px) !important;
+  left: var(--safe-left) !important;
+  right: var(--safe-right) !important;
+  width: calc(100% - var(--safe-left) - var(--safe-right)) !important;
+  max-width: 100% !important;
+  z-index: 10000 !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
+  animation: p2pFadeIn 0.2s ease-out !important;
+}
+
+/* Modals Mobile Bottom Sheet Behavior */
+.poi-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  z-index: 2000 !important;
+}
+
+.poi-modal-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: calc(92dvh - var(--sat)) !important;
+  border-radius: 24px 24px 0 0 !important;
+  border-bottom: none !important;
+  padding-bottom: var(--safe-bottom) !important;
+}
+
+.poi-modal-header {
+  padding: 0.85rem 1rem !important;
+  gap: 0.5rem !important;
+}
+
+.poi-modal-search-box {
+  min-width: 100% !important;
+  width: 100% !important;
+}
+
+.poi-modal-cards-grid {
+  grid-template-columns: 1fr !important;
+  padding: 0.75rem !important;
+  gap: 0.65rem !important;
+  max-height: calc(92dvh - 210px) !important;
+}
+
+.poi-modal-cat-scroll {
+  overflow-x: auto !important;
+  flex-wrap: nowrap !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 4px !important;
+  width: 100% !important;
+}
+
+.poi-modal-cat-pill {
+  flex-shrink: 0 !important;
+}
+
+.poi-dir-card-actions {
+  display: flex !important;
+  gap: 6px !important;
+}
+
+.poi-action-btn {
+  flex: 1 !important;
+  min-height: 38px !important;
+  font-size: 0.72rem !important;
+  padding: 6px 4px !important;
+}
+
+.hazard-intercept-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: calc(90dvh - var(--sat)) !important;
+  border-radius: 22px 22px 0 0 !important;
+  margin-top: auto !important;
+  margin-bottom: 0 !important;
+}
+
+.hazard-intercept-body {
+  padding: 0.75rem 0.85rem !important;
+  gap: 0.6rem !important;
+}
+
+.hazard-intercept-actions {
+  padding: 0.65rem 0.85rem !important;
+  gap: 6px !important;
+}
+
+.btn-hazard-detour,
+.btn-hazard-shelter,
+.btn-hazard-minimize {
+  padding: 8px 10px !important;
+  font-size: 0.76rem !important;
+}
+
+
+/* ==========================================================================
+   2. WINDOW-SIZE-AWARE MULTI-PANE SPLIT VIEW: Tablets & Desktops (>= 768px)
+   ========================================================================== */
+@media (min-width: 768px) {
+  /* Multi-Pane Split View when module/tab is active */
+  .app-container.sidebar-open {
+    display: grid !important;
+    grid-template-columns: clamp(340px, 32vw, 480px) minmax(0, 1fr) !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    position: relative !important;
+  }
+
+  /* Left Pane: Docked Sidebar */
+  .app-container.sidebar-open .sidebar,
+  .sidebar.open {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    border-right: 1px solid var(--border-color) !important;
+    border-top: none !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4) !important;
+    transform: none !important;
+    opacity: 1 !important;
+    z-index: 10 !important;
+    padding-bottom: 1.5rem !important;
+    display: flex !important;
+  }
+
+  /* Right Pane: Dynamic Leaflet Map */
+  .app-container.sidebar-open .map-viewport {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-width: 0 !important;
+    z-index: 1 !important;
+  }
+
+  /* Full Screen Map View when tab is closed */
+  .app-container.map-focused {
+    display: block !important;
+    position: relative !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+  }
+
+  .app-container.map-focused .sidebar,
+  .sidebar.closed {
+    display: none !important;
+    width: 0 !important;
+    transform: translateX(-20px) !important;
+    pointer-events: none !important;
+  }
+
+  .app-container.map-focused .map-viewport {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Drag handle is phone-only */
+  .mobile-bottom-sheet-handle {
+    display: none !important;
+  }
+
+  /* Tablet / Desktop Floating Search Bar */
+  .maps-floating-search-container {
+    top: 14px !important;
+    left: 14px !important;
+    right: auto !important;
+    width: min(540px, calc(100% - 28px)) !important;
+    max-width: 540px !important;
+    gap: 8px !important;
+  }
+
+  .maps-floating-search-card {
+    height: 48px !important;
+    padding: 5px 14px !important;
+  }
+
+  .maps-search-kbd {
+    display: inline-flex !important;
+  }
+
+  .maps-search-dropdown {
+    top: 56px !important;
+  }
+
+  .maps-top-right-bar {
+    top: 14px !important;
+    bottom: auto !important;
+    right: 14px !important;
+  }
+
+  .proximity-hazard-banner {
+    top: 100px !important;
+    left: 14px !important;
+    right: auto !important;
+    width: min(540px, calc(100% - 28px)) !important;
+    max-width: 540px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+
+  .proximity-hazard-actions {
+    width: auto !important;
+  }
+
+  .p2p-toast-alert {
+    top: 76px !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: 16px !important;
+    width: auto !important;
+    max-width: 380px !important;
+  }
+
+  /* Modals: Centered Floating Cards on Tablet/Desktop */
+  .poi-modal-overlay {
+    align-items: center !important;
+    padding: 1.5rem !important;
+  }
+
+  .poi-modal-content {
+    width: min(92vw, 980px) !important;
+    max-width: 980px !important;
+    max-height: min(88vh, 840px) !important;
+    border-radius: 20px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .poi-modal-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)) !important;
+    max-height: min(62vh, 600px) !important;
+    padding: 1rem 1.25rem !important;
+    gap: 1rem !important;
+  }
+
+  .hazard-intercept-card {
+    width: min(90vw, 560px) !important;
+    max-width: 560px !important;
+    border-radius: 20px !important;
+    margin: auto !important;
+  }
+}
+
+
+/* ==========================================================================
+   3. ULTRA-WIDE & LARGE DESKTOP (>= 1440px): Spacious Multi-Pane Layout
+   ========================================================================== */
+@media (min-width: 1440px) {
+  .app-container.sidebar-open {
+    grid-template-columns: clamp(380px, 26vw, 500px) minmax(0, 1fr) !important;
+  }
+
+  .maps-floating-search-container {
+    width: min(600px, calc(100% - 32px)) !important;
+    max-width: 600px !important;
+  }
+
+  .poi-modal-content {
+    width: min(90vw, 1180px) !important;
+    max-width: 1180px !important;
+  }
+
+  .poi-modal-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)) !important;
+  }
 }
 
 /* 5. Apple Maps Layers Popover */
