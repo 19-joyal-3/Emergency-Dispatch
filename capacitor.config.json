@@ -1,5 +1,9 @@
 {
-  "appId": "com.vanguardgeo.emergencydispatch",
-  "appName": "Vanguard Geo",
-  "webDir": "dist"
+  "appId": "org.resylix.emergency",
+  "appName": "Resylix Geo",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
 }

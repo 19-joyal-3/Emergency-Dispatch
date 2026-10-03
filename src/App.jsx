@@ -80,17 +80,17 @@ import {
   ,Layers
 } from 'lucide-react';
 
-import CommandPalette from './components/CommandPalette';
-import RouteElevationChart from './components/RouteElevationChart';
-import OfflineCacheManagerModal from './components/OfflineCacheManagerModal';
-import RouteSimulatorHud from './components/RouteSimulatorHud';
-import KsdmaDamMonitorModal from './components/KsdmaDamMonitorModal';
-import KsdmaWeatherWarningModal from './components/KsdmaWeatherWarningModal';
-import PwaInstallGuideModal from './components/PwaInstallGuideModal';
-import DemoScenariosModal from './components/DemoScenariosModal';
-import KeralaPoiDirectoryModal from './components/KeralaPoiDirectoryModal';
-import ReportHazardModal from './components/ReportHazardModal';
-import ProximityScanModal from './components/ProximityScanModal';
+const CommandPalette = React.lazy(() => import('./components/CommandPalette'));
+const RouteElevationChart = React.lazy(() => import('./components/RouteElevationChart'));
+const OfflineCacheManagerModal = React.lazy(() => import('./components/OfflineCacheManagerModal'));
+const RouteSimulatorHud = React.lazy(() => import('./components/RouteSimulatorHud'));
+const KsdmaDamMonitorModal = React.lazy(() => import('./components/KsdmaDamMonitorModal'));
+const KsdmaWeatherWarningModal = React.lazy(() => import('./components/KsdmaWeatherWarningModal'));
+const PwaInstallGuideModal = React.lazy(() => import('./components/PwaInstallGuideModal'));
+const DemoScenariosModal = React.lazy(() => import('./components/DemoScenariosModal'));
+const KeralaPoiDirectoryModal = React.lazy(() => import('./components/KeralaPoiDirectoryModal'));
+const ReportHazardModal = React.lazy(() => import('./components/ReportHazardModal'));
+const ProximityScanModal = React.lazy(() => import('./components/ProximityScanModal'));
 import { createRadarTileLayer } from './services/weatherRadarService';
 import { KSDMA_RESERVOIRS, checkRouteDamAlertProximity } from './services/ksdmaLiveService';
 import { getKsdmaDistrictWarnings, checkRouteWeatherInterception, KSDMA_ALERT_TYPES } from './services/ksdmaWeatherWarningService';
@@ -1847,6 +1847,9 @@ export default function App() {
       type: hazardData.type,
       severity: hazardData.severity,
       notes: hazardData.notes,
+      reporterRole: hazardData.reporterRole || 'responder',
+      trustLevel: hazardData.trustLevel || 'responder_verified',
+      trustBadge: hazardData.trustBadge || '🔵 Field Verified',
       active: 1
     };
 
@@ -1854,7 +1857,7 @@ export default function App() {
       await addBlockageLocal(newBlock, isOnline);
       triggerHaptic(50);
       playTacticalChime();
-      logMessage(`[FIELD HAZARD] Placed ${hazardData.label} barrier on ${hazardData.name}`, 'warning');
+      logMessage(`[FIELD HAZARD] Placed ${hazardData.label} barrier on ${hazardData.name} (${newBlock.trustBadge})`, 'warning');
       await reloadLocalData();
       if (mapRef.current) {
         mapRef.current.flyTo([hazardData.coords.lat, hazardData.coords.lng], 15, { duration: 1.2 });
@@ -1862,6 +1865,27 @@ export default function App() {
       tacticalVoiceNav.speak(`Alert: Field hazard reported at ${hazardData.name}. Road barrier active, rerouting traffic.`);
     } catch (err) {
       logMessage(`Failed to place hazard: ${err.message}`, 'error');
+    }
+  };
+
+  // Field Responder Hazard Verification Action
+  const handleVerifyHazard = async (blockageId) => {
+    try {
+      const block = blockages.find(b => b.id === blockageId);
+      if (!block) return;
+      const updated = {
+        ...block,
+        trustLevel: 'responder_verified',
+        trustBadge: '🔵 Field Verified (Responder)'
+      };
+      await addBlockageLocal(updated, isOnline);
+      triggerHaptic(50);
+      playTacticalChime();
+      logMessage(`[VERIFIED] Emergency Responder confirmed hazard at ${block.name}`, 'success');
+      await reloadLocalData();
+      mapRef.current?.closePopup();
+    } catch (err) {
+      logMessage(`Verification failed: ${err.message}`, 'error');
     }
   };
 
@@ -3045,39 +3069,84 @@ export default function App() {
         iconAnchor: [11, 11]
       });
 
-      if (blockageMarkersRef.current.has(b.id)) {
-        blockageMarkersRef.current.get(b.id).setLatLng([b.lat, b.lng]);
-      } else {
-        const m = L.marker([b.lat, b.lng], { icon: blockageIcon })
-          .addTo(mapRef.current)
-          .bindPopup(`
-            <div style="color: #f3f4f6; font-family: sans-serif;">
-              <h4 style="margin: 0 0 4px; color: #ef4444;">Road Blockage</h4>
-              <p style="margin: 0 0 8px; font-size: 11px;">Road segment: <strong>${escapeHtml(b.name)}</strong></p>
-              <button id="pop-clear-block-${escapeHtml(b.id)}" style="
-                background: #475569; 
-                color: white; 
-                border: none; 
-                padding: 4px 8px; 
-                border-radius: 4px; 
-                font-weight: bold;
-                font-size: 11px;
-                cursor: pointer;
-                width: 100%;
-              ">Clear Blockage</button>
-            </div>
-          `);
+      const isOfficial = b.trustLevel === 'official_ksdma';
+      const isVerified = b.trustLevel === 'responder_verified';
+      const badgeHtml = isOfficial
+        ? '<div style="display:inline-block; font-size:10px; font-weight:700; background:rgba(16,185,129,0.2); color:#10b981; border:1px solid rgba(16,185,129,0.4); border-radius:4px; padding:2px 6px; margin-bottom:6px;">🟢 Official KSDMA Directive</div>'
+        : isVerified
+          ? '<div style="display:inline-block; font-size:10px; font-weight:700; background:rgba(56,189,248,0.2); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); border-radius:4px; padding:2px 6px; margin-bottom:6px;">🔵 Field Verified (Responder)</div>'
+          : '<div style="display:inline-block; font-size:10px; font-weight:700; background:rgba(245,158,11,0.2); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); border-radius:4px; padding:2px 6px; margin-bottom:6px;">🟡 Citizen Report (Unverified)</div>';
 
-        m.on('popupopen', () => {
-          const btn = document.getElementById(`pop-clear-block-${b.id}`);
-          if (btn) {
-            btn.onclick = async () => {
-              await removeBlockage(b.id);
+      const verifyBtnHtml = (!isOfficial && !isVerified)
+        ? `<button id="pop-verify-block-${escapeHtml(b.id)}" style="
+            background: #0284c7; 
+            color: white; 
+            border: none; 
+            padding: 5px 8px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            font-size: 11px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+          ">🛡️ Verify as Official Responder</button>`
+        : '';
+
+      const popupHtml = `
+        <div style="color: #f3f4f6; font-family: sans-serif; min-width: 180px;">
+          <h4 style="margin: 0 0 4px; color: #ef4444; font-size: 13px;">Road Blockage</h4>
+          ${badgeHtml}
+          <p style="margin: 0 0 6px; font-size: 11px;">Road segment: <strong>${escapeHtml(b.name)}</strong></p>
+          ${b.notes ? `<p style="margin: 0 0 8px; font-size: 10px; color: #94a3b8;">${escapeHtml(b.notes)}</p>` : ''}
+          ${verifyBtnHtml}
+          <button id="pop-clear-block-${escapeHtml(b.id)}" style="
+            background: #475569; 
+            color: white; 
+            border: none; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            font-size: 11px;
+            cursor: pointer;
+            width: 100%;
+          ">Clear Blockage</button>
+        </div>
+      `;
+
+      const attachPopupHandlers = (marker, blockId) => {
+        marker.off('popupopen');
+        marker.on('popupopen', () => {
+          const verifyBtn = document.getElementById(`pop-verify-block-${blockId}`);
+          if (verifyBtn) {
+            verifyBtn.onclick = async () => {
+              await handleVerifyHazard(blockId);
+            };
+          }
+          const clearBtn = document.getElementById(`pop-clear-block-${blockId}`);
+          if (clearBtn) {
+            clearBtn.onclick = async () => {
+              await removeBlockage(blockId);
               mapRef.current?.closePopup();
             };
           }
         });
+      };
 
+      if (blockageMarkersRef.current.has(b.id)) {
+        const m = blockageMarkersRef.current.get(b.id);
+        m.setLatLng([b.lat, b.lng]);
+        m.setPopupContent(popupHtml);
+        attachPopupHandlers(m, b.id);
+      } else {
+        const m = L.marker([b.lat, b.lng], { icon: blockageIcon })
+          .addTo(mapRef.current)
+          .bindPopup(popupHtml);
+
+        attachPopupHandlers(m, b.id);
         blockageMarkersRef.current.set(b.id, m);
       }
     });
@@ -7190,11 +7259,13 @@ export default function App() {
                       {/* Topographic Elevation & Incline Gradient Chart */}
                       {customRoute.geometry && customRoute.geometry.length > 1 && (
                         <div style={{ marginTop: '0.65rem' }}>
-                          <RouteElevationChart
-                            geometry={customRoute.geometry}
-                            onHoverPoint={handleElevationHoverPoint}
-                            onLeavePoint={handleElevationLeavePoint}
-                          />
+                          <React.Suspense fallback={null}>
+                            <RouteElevationChart
+                              geometry={customRoute.geometry}
+                              onHoverPoint={handleElevationHoverPoint}
+                              onLeavePoint={handleElevationLeavePoint}
+                            />
+                          </React.Suspense>
                         </div>
                       )}
 
@@ -10274,32 +10345,34 @@ export default function App() {
 
         {/* Tactical Route Simulator & Drive Replay HUD Overlay */}
         {simulationActive && (activeSimulationRouteRef.current || customRoute || dispatchRoute) && (
-          <RouteSimulatorHud
-            active={simulationActive}
-            route={activeSimulationRouteRef.current || customRoute || dispatchRoute}
-            progress={simulationProgress}
-            onSeek={handleSimulatorSeek}
-            isPlaying={simIsPlaying}
-            onTogglePlay={handleSimulatorTogglePlay}
-            speedMultiplier={simSpeedMultiplier}
-            onChangeSpeed={handleSimulatorChangeSpeed}
-            onStep={handleSimulatorStep}
-            onReplay={handleSimulatorReplay}
-            onStop={stopCustomSimulation}
-            autoPan={simAutoPan}
-            onToggleAutoPan={() => {
-              setSimAutoPan(prev => {
-                const next = !prev;
-                simAutoPanRef.current = next;
-                return next;
-              });
-            }}
-            transportMode={simTransport}
-            vehicleHeading={simVehicleHeading}
-            vehicleCoords={simVehicleCoords}
-            startName={startPlaceObj?.name || (mapData.nodes[selectedStartNode]?.name) || 'Origin'}
-            endName={endPlaceObj?.name || (mapData.nodes[selectedEndNode]?.name) || 'Destination'}
-          />
+          <React.Suspense fallback={null}>
+            <RouteSimulatorHud
+              active={simulationActive}
+              route={activeSimulationRouteRef.current || customRoute || dispatchRoute}
+              progress={simulationProgress}
+              onSeek={handleSimulatorSeek}
+              isPlaying={simIsPlaying}
+              onTogglePlay={handleSimulatorTogglePlay}
+              speedMultiplier={simSpeedMultiplier}
+              onChangeSpeed={handleSimulatorChangeSpeed}
+              onStep={handleSimulatorStep}
+              onReplay={handleSimulatorReplay}
+              onStop={stopCustomSimulation}
+              autoPan={simAutoPan}
+              onToggleAutoPan={() => {
+                setSimAutoPan(prev => {
+                  const next = !prev;
+                  simAutoPanRef.current = next;
+                  return next;
+                });
+              }}
+              transportMode={simTransport}
+              vehicleHeading={simVehicleHeading}
+              vehicleCoords={simVehicleCoords}
+              startName={startPlaceObj?.name || (mapData.nodes[selectedStartNode]?.name) || 'Origin'}
+              endName={endPlaceObj?.name || (mapData.nodes[selectedEndNode]?.name) || 'Destination'}
+            />
+          </React.Suspense>
         )}
         <div className="map-overlay-panel">
           {/* Dispatch controls card */}
@@ -12094,6 +12167,41 @@ export default function App() {
               <div className="hazard-intercept-priority-pill">
                 {activeProximityHazard.priority?.toUpperCase() || 'CRITICAL'} PRIORITY
               </div>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '3px 8px',
+                borderRadius: '6px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                letterSpacing: '0.02em',
+                background: activeProximityHazard.trustLevel === 'official_ksdma'
+                  ? 'rgba(16, 185, 129, 0.2)'
+                  : activeProximityHazard.trustLevel === 'responder_verified'
+                    ? 'rgba(56, 189, 248, 0.2)'
+                    : 'rgba(245, 158, 11, 0.2)',
+                color: activeProximityHazard.trustLevel === 'official_ksdma'
+                  ? '#34d399'
+                  : activeProximityHazard.trustLevel === 'responder_verified'
+                    ? '#38bdf8'
+                    : '#fbbf24',
+                border: `1px solid ${
+                  activeProximityHazard.trustLevel === 'official_ksdma'
+                    ? 'rgba(16, 185, 129, 0.4)'
+                    : activeProximityHazard.trustLevel === 'responder_verified'
+                      ? 'rgba(56, 189, 248, 0.4)'
+                      : 'rgba(245, 158, 11, 0.4)'
+                }`
+              }}>
+                {activeProximityHazard.trustBadge || (
+                  activeProximityHazard.trustLevel === 'official_ksdma'
+                    ? '🟢 Official KSDMA Directive'
+                    : activeProximityHazard.trustLevel === 'responder_verified'
+                      ? '🔵 Field Verified (Responder)'
+                      : '🟡 Citizen Report (Unverified)'
+                )}
+              </div>
             </div>
 
             {/* Prominent Automatic Safe Detour Notification Banner */}
@@ -12176,6 +12284,39 @@ export default function App() {
 
             {/* Action Buttons */}
             <div className="hazard-intercept-actions">
+              {activeProximityHazard.hazardType === 'road_blockage' &&
+               activeProximityHazard.trustLevel !== 'official_ksdma' &&
+               activeProximityHazard.trustLevel !== 'responder_verified' && (
+                <button
+                  type="button"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    background: '#0284c7',
+                    color: '#ffffff',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                  onClick={async () => {
+                    await handleVerifyHazard(activeProximityHazard.hazardId);
+                    setActiveProximityHazard(prev => prev ? ({
+                      ...prev,
+                      trustLevel: 'responder_verified',
+                      trustBadge: '🔵 Field Verified (Responder)'
+                    }) : null);
+                  }}
+                >
+                  <ShieldAlert size={15} />
+                  <span>🛡️ Verify as Official Responder</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 className="btn-hazard-detour"
@@ -12626,140 +12767,152 @@ export default function App() {
         </div>
       )}
 
-      {/* Tactical Command Palette Modal (Ctrl+K or /) */}
-      <CommandPalette
-        isOpen={showCommandPalette}
-        onClose={() => setShowCommandPalette(false)}
-        onSelectPlace={handleCommandPaletteSelectPlace}
-        onExecuteAction={handleCommandPaletteExecuteAction}
-        onNavigateTab={setActiveTab}
-      />
+      {/* Modals & Overlays (Dynamically Code-Split with Suspense) */}
+      <React.Suspense fallback={null}>
+        {showCommandPalette && (
+          <CommandPalette
+            isOpen={showCommandPalette}
+            onClose={() => setShowCommandPalette(false)}
+            onSelectPlace={handleCommandPaletteSelectPlace}
+            onExecuteAction={handleCommandPaletteExecuteAction}
+            onNavigateTab={setActiveTab}
+          />
+        )}
 
-      {/* Offline Storage & Priority Corridor Pre-Cacher Modal */}
-      <OfflineCacheManagerModal
-        isOpen={showOfflineCacheModal}
-        onClose={() => setShowOfflineCacheModal(false)}
-        onNotify={logMessage}
-        onInstallPwa={handleTriggerPwaInstall}
-        canInstallPwa={!isAppInstalled}
-        isPwaInstalled={isAppInstalled}
-      />
+        {showOfflineCacheModal && (
+          <OfflineCacheManagerModal
+            isOpen={showOfflineCacheModal}
+            onClose={() => setShowOfflineCacheModal(false)}
+            onNotify={logMessage}
+            onInstallPwa={handleTriggerPwaInstall}
+            canInstallPwa={!isAppInstalled}
+            isPwaInstalled={isAppInstalled}
+          />
+        )}
 
-      {/* PWA Mobile & Desktop Standalone Installation Guide Modal */}
-      <PwaInstallGuideModal
-        isOpen={showPwaInstallModal}
-        onClose={() => setShowPwaInstallModal(false)}
-        canPrompt={Boolean(deferredInstallPrompt)}
-        onTriggerPrompt={handleTriggerPwaInstall}
-        isInstalled={isAppInstalled}
-        onNotify={logMessage}
-      />
+        {showPwaInstallModal && (
+          <PwaInstallGuideModal
+            isOpen={showPwaInstallModal}
+            onClose={() => setShowPwaInstallModal(false)}
+            canPrompt={Boolean(deferredInstallPrompt)}
+            onTriggerPrompt={handleTriggerPwaInstall}
+            isInstalled={isAppInstalled}
+            onNotify={logMessage}
+          />
+        )}
 
-      {/* KSDMA Reservoir & Dam Water Level Telemetry Modal */}
-      <KsdmaDamMonitorModal
-        isOpen={showKsdmaModal}
-        onClose={() => setShowKsdmaModal(false)}
-        onFocusDamOnMap={handleFocusDamOnMap}
-      />
+        {showKsdmaModal && (
+          <KsdmaDamMonitorModal
+            isOpen={showKsdmaModal}
+            onClose={() => setShowKsdmaModal(false)}
+            onFocusDamOnMap={handleFocusDamOnMap}
+          />
+        )}
 
-      {/* KSDMA & IMD 14-District Weather Warning Matrix Modal */}
-      <KsdmaWeatherWarningModal
-        isOpen={showKsdmaWeatherModal}
-        onClose={() => setShowKsdmaWeatherModal(false)}
-        activeRouteWeatherAlerts={checkRouteWeatherInterception(customRoute?.geometry || dispatchRoute?.geometry || [])}
-        onFocusDistrictOnMap={(district) => {
-          if (mapRef.current && district.centroid) {
-            mapRef.current.flyTo(district.centroid, 11, { duration: 1.2 });
-            logMessage(`[MAP] Focused on ${district.name} (${district.alert} Alert).`, 'info');
-          }
-        }}
-      />
+        {showKsdmaWeatherModal && (
+          <KsdmaWeatherWarningModal
+            isOpen={showKsdmaWeatherModal}
+            onClose={() => setShowKsdmaWeatherModal(false)}
+            activeRouteWeatherAlerts={checkRouteWeatherInterception(customRoute?.geometry || dispatchRoute?.geometry || [])}
+            onFocusDistrictOnMap={(district) => {
+              if (mapRef.current && district.centroid) {
+                mapRef.current.flyTo(district.centroid, 11, { duration: 1.2 });
+                logMessage(`[MAP] Focused on ${district.name} (${district.alert} Alert).`, 'info');
+              }
+            }}
+          />
+        )}
 
-      {/* 1-Click Live Presentation Demo Scenarios Modal */}
-      <DemoScenariosModal
-        isOpen={showDemoScenariosModal}
-        onClose={() => setShowDemoScenariosModal(false)}
-        onLaunchScenario={handleLaunchDemoScenario}
-        onResetScenario={handleResetDemoScenario}
-        activeScenarioId={activeDemoScenario?.id}
-      />
+        {showDemoScenariosModal && (
+          <DemoScenariosModal
+            isOpen={showDemoScenariosModal}
+            onClose={() => setShowDemoScenariosModal(false)}
+            onLaunchScenario={handleLaunchDemoScenario}
+            onResetScenario={handleResetDemoScenario}
+            activeScenarioId={activeDemoScenario?.id}
+          />
+        )}
 
-      {/* Kerala Amenities & Facilities Directory (Separate View) */}
-      <KeralaPoiDirectoryModal
-        isOpen={showPoiDirectoryModal}
-        onClose={() => setShowPoiDirectoryModal(false)}
-        keralaPois={keralaPois}
-        poiCategories={POI_CATEGORIES}
-        showPoiLayer={showPoiLayer}
-        onTogglePoiLayer={() => setShowPoiLayer(prev => !prev)}
-        activePoiCategory={activePoiCategory}
-        onSelectCategory={(catId) => setActivePoiCategory(catId)}
-        userCoords={gpsCoords}
-        onTriggerProximityScan={(coords, name) => handleTriggerProximityScan(coords || gpsCoords, name || 'Current Field GPS')}
-        onShowOnMap={(poi) => {
-          setShowPoiDirectoryModal(false);
-          setShowPoiLayer(true);
-          if (mapRef.current) {
-            mapRef.current.flyTo([poi.lat, poi.lng], 16, { duration: 1.2 });
-            setTimeout(() => {
-              const marker = poiMarkersRef.current.get(poi.id);
-              if (marker) marker.openPopup();
-            }, 1300);
-          }
-          logMessage(`[FACILITY] Focused map on ${poi.name} (${poi.district})`, 'info');
-        }}
-        onRouteTo={(poi) => {
-          setShowPoiDirectoryModal(false);
-          setShowPoiLayer(true);
-          setCustomDestName(poi.name);
-          setCustomDestCoords({ lat: poi.lat, lng: poi.lng });
-          setActiveTab('planner');
-          if (mapRef.current) {
-            mapRef.current.flyTo([poi.lat, poi.lng], 14, { duration: 1 });
-          }
-          logMessage(`[FACILITY] Routing directly to ${poi.name} (${poi.district})`, 'info');
-        }}
-      />
+        {showPoiDirectoryModal && (
+          <KeralaPoiDirectoryModal
+            isOpen={showPoiDirectoryModal}
+            onClose={() => setShowPoiDirectoryModal(false)}
+            keralaPois={keralaPois}
+            poiCategories={POI_CATEGORIES}
+            showPoiLayer={showPoiLayer}
+            onTogglePoiLayer={() => setShowPoiLayer(prev => !prev)}
+            activePoiCategory={activePoiCategory}
+            onSelectCategory={(catId) => setActivePoiCategory(catId)}
+            userCoords={gpsCoords}
+            onTriggerProximityScan={(coords, name) => handleTriggerProximityScan(coords || gpsCoords, name || 'Current Field GPS')}
+            onShowOnMap={(poi) => {
+              setShowPoiDirectoryModal(false);
+              setShowPoiLayer(true);
+              if (mapRef.current) {
+                mapRef.current.flyTo([poi.lat, poi.lng], 16, { duration: 1.2 });
+                setTimeout(() => {
+                  const marker = poiMarkersRef.current.get(poi.id);
+                  if (marker) marker.openPopup();
+                }, 1300);
+              }
+              logMessage(`[FACILITY] Focused map on ${poi.name} (${poi.district})`, 'info');
+            }}
+            onRouteTo={(poi) => {
+              setShowPoiDirectoryModal(false);
+              setShowPoiLayer(true);
+              setCustomDestName(poi.name);
+              setCustomDestCoords({ lat: poi.lat, lng: poi.lng });
+              setActiveTab('planner');
+              if (mapRef.current) {
+                mapRef.current.flyTo([poi.lat, poi.lng], 14, { duration: 1 });
+              }
+              logMessage(`[FACILITY] Routing directly to ${poi.name} (${poi.district})`, 'info');
+            }}
+          />
+        )}
 
-      {/* 5.0 KM Tactical Proximity Scan Modal */}
-      <ProximityScanModal
-        isOpen={showProximityScanModal}
-        onClose={() => setShowProximityScanModal(false)}
-        centerCoords={proximityScanCenter || gpsCoords || { lat: 11.5369, lng: 76.1772 }}
-        centerName={proximityScanCenter?.name || 'Active Incident Sector'}
-        keralaPois={keralaPois}
-        onShowOnMap={(poi) => {
-          setShowProximityScanModal(false);
-          setShowPoiLayer(true);
-          if (mapRef.current) {
-            mapRef.current.flyTo([poi.lat, poi.lng], 16, { duration: 1.2 });
-            setTimeout(() => {
-              const marker = poiMarkersRef.current.get(poi.id);
-              if (marker) marker.openPopup();
-            }, 1300);
-          }
-          logMessage(`[PROXIMITY] Focused on ${poi.name} (${poi.district})`, 'info');
-        }}
-        onRouteTo={(poi) => {
-          setShowProximityScanModal(false);
-          setShowPoiLayer(true);
-          setCustomDestName(poi.name);
-          setCustomDestCoords({ lat: poi.lat, lng: poi.lng });
-          setActiveTab('planner');
-          if (mapRef.current) {
-            mapRef.current.flyTo([poi.lat, poi.lng], 14, { duration: 1 });
-          }
-          logMessage(`[PROXIMITY] Route calculated to ${poi.name} (${poi.district})`, 'info');
-        }}
-      />
+        {showProximityScanModal && (
+          <ProximityScanModal
+            isOpen={showProximityScanModal}
+            onClose={() => setShowProximityScanModal(false)}
+            centerCoords={proximityScanCenter || gpsCoords || { lat: 11.5369, lng: 76.1772 }}
+            centerName={proximityScanCenter?.name || 'Active Incident Sector'}
+            keralaPois={keralaPois}
+            onShowOnMap={(poi) => {
+              setShowProximityScanModal(false);
+              setShowPoiLayer(true);
+              if (mapRef.current) {
+                mapRef.current.flyTo([poi.lat, poi.lng], 16, { duration: 1.2 });
+                setTimeout(() => {
+                  const marker = poiMarkersRef.current.get(poi.id);
+                  if (marker) marker.openPopup();
+                }, 1300);
+              }
+              logMessage(`[PROXIMITY] Focused on ${poi.name} (${poi.district})`, 'info');
+            }}
+            onRouteTo={(poi) => {
+              setShowProximityScanModal(false);
+              setShowPoiLayer(true);
+              setCustomDestName(poi.name);
+              setCustomDestCoords({ lat: poi.lat, lng: poi.lng });
+              setActiveTab('planner');
+              if (mapRef.current) {
+                mapRef.current.flyTo([poi.lat, poi.lng], 14, { duration: 1 });
+              }
+              logMessage(`[PROXIMITY] Route calculated to ${poi.name} (${poi.district})`, 'info');
+            }}
+          />
+        )}
 
-      {/* Field Road Blockage / Landslide Quick-Report Tool */}
-      <ReportHazardModal
-        isOpen={showReportHazardModal}
-        onClose={() => setShowReportHazardModal(false)}
-        onSubmit={handleReportHazardSubmit}
-        currentCoords={gpsCoords || (selectedIncident ? { lat: selectedIncident.lat, lng: selectedIncident.lng } : null)}
-      />
+        {showReportHazardModal && (
+          <ReportHazardModal
+            isOpen={showReportHazardModal}
+            onClose={() => setShowReportHazardModal(false)}
+            onSubmit={handleReportHazardSubmit}
+            currentCoords={gpsCoords || (selectedIncident ? { lat: selectedIncident.lat, lng: selectedIncident.lng } : null)}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 }

@@ -118,7 +118,10 @@ export function checkUserHazardProximity({
         priority: inc.priority || 'critical',
         coordinates: [inc.lat, inc.lng],
         proofImage: inc.proofImage || null,
-        isInsidePolygon: false
+        isInsidePolygon: false,
+        trustLevel: inc.trustLevel || 'official_ksdma',
+        trustBadge: inc.trustBadge || '🟢 Official KSDMA Directive',
+        reporterRole: inc.reporterRole || 'ksdma'
       };
     }
   }
@@ -140,7 +143,10 @@ export function checkUserHazardProximity({
         priority: 'high',
         coordinates: [blk.lat, blk.lng],
         proofImage: blk.proofImage || null,
-        isInsidePolygon: false
+        isInsidePolygon: false,
+        trustLevel: blk.trustLevel || (blk.reporterRole === 'civilian' ? 'unverified' : 'responder_verified'),
+        trustBadge: blk.trustBadge || (blk.reporterRole === 'civilian' ? '🟡 Citizen Report (Unverified)' : '🔵 Field Verified (Responder)'),
+        reporterRole: blk.reporterRole || 'responder'
       };
     }
   }
@@ -167,7 +173,10 @@ export function checkUserHazardProximity({
         priority: zone.riskLevel === 'Severe' ? 'critical' : 'high',
         coordinates: zone.center || zone.polygon[0],
         proofImage: null,
-        isInsidePolygon: isInside
+        isInsidePolygon: isInside,
+        trustLevel: 'official_ksdma',
+        trustBadge: '🟢 Official KSDMA Directive',
+        reporterRole: 'ksdma'
       };
     }
   }

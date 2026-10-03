@@ -141,22 +141,32 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
+          const norm = id.replace(/\\/g, '/');
+          if (norm.includes('lucide-react')) {
+            return 'vendor-icons';
+          }
+          if (norm.includes('node_modules')) {
+            if (norm.includes('react') || norm.includes('react-dom')) {
               return 'vendor-react';
             }
-            if (id.includes('leaflet')) {
+            if (norm.includes('leaflet')) {
               return 'vendor-leaflet';
             }
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons';
-            }
-            if (id.includes('dexie')) {
+            if (norm.includes('dexie') || norm.includes('@supabase')) {
               return 'vendor-storage';
             }
-            if (id.includes('pmtiles')) {
+            if (norm.includes('pmtiles')) {
               return 'vendor-pmtiles';
             }
+            if (norm.includes('canvas-confetti')) {
+              return 'vendor-confetti';
+            }
+            if (norm.includes('qrcode')) {
+              return 'vendor-qrcode';
+            }
+          }
+          if (norm.includes('keralaPlacesDatabase.json') || norm.includes('data/keralaPois.json') || norm.includes('mapData.json')) {
+            return 'offline-geodata';
           }
         }
       }

@@ -8,6 +8,12 @@ const HAZARD_TYPES = [
   { id: 'road_damage', label: 'Road Caved In / Mudslip', icon: '🚧', severity: 'warning' }
 ];
 
+export const VERIFICATION_ROLES = [
+  { id: 'civilian', label: 'Citizen / Volunteer', badge: '🟡 Community Sourced', trustLevel: 'unverified', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.4)' },
+  { id: 'responder', label: 'Emergency Responder (Police/Fire/SDRF)', badge: '🔵 Field Verified', trustLevel: 'responder_verified', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.4)' },
+  { id: 'ksdma', label: 'KSDMA / EOC Official Directive', badge: '🟢 Official Authority', trustLevel: 'official_ksdma', color: '#34d399', border: 'rgba(16, 185, 129, 0.4)' }
+];
+
 export default function ReportHazardModal({
   isOpen,
   onClose,
@@ -15,6 +21,7 @@ export default function ReportHazardModal({
   currentCoords
 }) {
   const [selectedType, setSelectedType] = useState('landslide');
+  const [selectedRole, setSelectedRole] = useState('responder');
   const [notes, setNotes] = useState('');
   const [sectorName, setSectorName] = useState('');
 
@@ -23,6 +30,7 @@ export default function ReportHazardModal({
   const handleSubmit = (e) => {
     e.preventDefault();
     const hazard = HAZARD_TYPES.find(h => h.id === selectedType) || HAZARD_TYPES[0];
+    const role = VERIFICATION_ROLES.find(r => r.id === selectedRole) || VERIFICATION_ROLES[1];
     const coords = currentCoords && currentCoords.lat
       ? currentCoords
       : { lat: 11.5369, lng: 76.1772 }; // Default Wayanad hotspot if no GPS
@@ -34,7 +42,10 @@ export default function ReportHazardModal({
       severity: hazard.severity,
       name: sectorName.trim() || `${hazard.label} Hazard Spot`,
       notes: notes.trim(),
-      coords
+      coords,
+      reporterRole: role.id,
+      trustLevel: role.trustLevel,
+      trustBadge: role.badge
     });
     onClose();
   };
@@ -100,7 +111,46 @@ export default function ReportHazardModal({
             </div>
           </div>
 
-          {/* Location & Sector Name */}
+          {/* Reporter Authority & Verification Tier */}
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+              Reporting Authority & Trust Tier
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+              {VERIFICATION_ROLES.map(r => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setSelectedRole(r.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: selectedRole === r.id ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1.5px solid ${selectedRole === r.id ? r.color : 'rgba(255, 255, 255, 0.08)'}`,
+                    color: selectedRole === r.id ? '#f8fafc' : '#94a3b8',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span style={{ fontSize: '0.76rem', fontWeight: 700 }}>{r.label}</span>
+                  <span style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '9999px',
+                    background: `${r.color}20`,
+                    color: r.color,
+                    border: `1px solid ${r.border}`
+                  }}>
+                    {r.badge}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.35rem', textTransform: 'uppercase' }}>
               Road / Sector Location Name
