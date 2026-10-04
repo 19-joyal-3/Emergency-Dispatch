@@ -1,5 +1,7 @@
 # [Resylix](https://emergency-dispatch-2.onrender.com/) — Offline Emergency Dispatch & Tactical Navigation Engine
 
+> Conceived, architected, and engineered by **Joyal Thomas Francis** ([@19-joyal-3](https://github.com/19-joyal-3)) — [Official Creator Bio](https://emergency-dispatch-2.onrender.com/creator.html).
+
 [![Live Deployment](https://img.shields.io/badge/Live%20Platform-emergency--dispatch--2.onrender.com-success?style=for-the-badge&logo=render)](https://emergency-dispatch-2.onrender.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 [![PWA Ready](https://img.shields.io/badge/PWA-Offline%20Ready-orange?style=for-the-badge)](https://emergency-dispatch-2.onrender.com/)
