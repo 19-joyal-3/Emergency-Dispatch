@@ -8715,3 +8715,61 @@ textarea {
   white-space: nowrap;
 }
 
+/* ==========================================================================
+   MOBILE LOW-LATENCY HARDWARE ACCELERATION & ZERO-JANK PROFILE (<= 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* 1. Bypass heavy GPU blur compositing that causes micro-stutter on mobile devices */
+  .sidebar,
+  .app-header,
+  .hud-frame,
+  .hud-panel,
+  .mobile-bottom-sheet,
+  .tactical-bottom-nav,
+  .maps-floating-search-card,
+  .maps-top-right-bar,
+  .control-chip,
+  .leaflet-bar,
+  .search-container,
+  .modal-card,
+  .poi-modal-content,
+  .proximity-scan-card,
+  .report-hazard-card,
+  .hazard-intercept-card,
+  .scenario-card,
+  .pwa-guide-card,
+  .maps-search-dropdown {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: rgba(11, 15, 23, 0.97) !important;
+  }
+
+  /* 2. Immediate responsive touch gestures (no 300ms tap or scroll delay) */
+  .map-viewport,
+  .map-container,
+  .leaflet-container,
+  .leaflet-pane {
+    touch-action: pan-x pan-y pinch-zoom !important;
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  /* 3. Promote interactive map pins to GPU layers */
+  .leaflet-marker-icon,
+  .custom-poi-marker,
+  .custom-responder-icon,
+  .custom-customer-marker {
+    will-change: transform;
+  }
+
+  /* 4. Keep smooth 60fps momentum scrolling on touch sheets and modals */
+  .sidebar-content,
+  .poi-modal-cards-grid,
+  .facilities-scroll-grid,
+  .proximity-scroll-area,
+  .maps-search-dropdown-list {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { PMTiles, leafletRasterLayer } from 'pmtiles';
@@ -1159,6 +1159,10 @@ export default function App() {
   const [gpsActive, setGpsActive] = useState(false);
   const [instructionBannerVisible, setInstructionBannerVisible] = useState(true);
   const [gpsCoords, setGpsCoords] = useState(null);
+  const gpsCoordsRef = useRef(gpsCoords);
+  useEffect(() => {
+    gpsCoordsRef.current = gpsCoords;
+  }, [gpsCoords]);
   const [weatherRefreshKey, setWeatherRefreshKey] = useState(0);
   const knownIncidentIdsRef = useRef(new Set());
   const incidentsHydratedRef = useRef(false);
@@ -2230,8 +2234,10 @@ export default function App() {
     return { lat, lng, heading: angle };
   };
 
-  // Live Bus Tracker simulation loop
+  // Live Bus Tracker simulation loop - runs only when tracking or in planner tab
   useEffect(() => {
+    if (!trackedBusId && activeTab !== 'planner') return;
+
     const interval = setInterval(() => {
       setSimulatedBuses(prevBuses => {
         return prevBuses.map(bus => {
@@ -2290,10 +2296,10 @@ export default function App() {
           };
         });
       });
-    }, 1000);
+    }, 2500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [trackedBusId, activeTab]);
 
   // Auto-pan map on tracked bus if it exits the current view
   useEffect(() => {
@@ -2332,7 +2338,11 @@ export default function App() {
         zoom: 8,
         minZoom: 7,
         maxZoom: 18,
-        doubleClickZoom: false
+        doubleClickZoom: false,
+        preferCanvas: true,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
+        wheelDebounceTime: 80
       });
 
       const pmtilesUrl = getPmtilesUrl(mapTheme);
@@ -3245,7 +3255,7 @@ export default function App() {
       marker.remove();
     });
     busMarkersRef.current.clear();
-  }, [simulatedBuses]);
+  }, []);
 
   // Unified Kerala POI Layer Effect (Hospitals, Pharmacies, Fuel, Police, Shelters, Lodging, Food)
   useEffect(() => {
@@ -3286,8 +3296,9 @@ export default function App() {
 
       visiblePois.forEach(poi => {
         const style = categoryStyles[poi.category] || { bg: '#64748b', icon: '📍', label: 'Point of Interest', ring: 'rgba(100, 116, 139, 0.45)' };
-        const distFromUser = (gpsCoords && gpsCoords.lat && gpsCoords.lng)
-          ? haversineDistance(gpsCoords.lat, gpsCoords.lng, poi.lat, poi.lng)
+        const currentGps = gpsCoordsRef.current;
+        const distFromUser = (currentGps && currentGps.lat && currentGps.lng)
+          ? haversineDistance(currentGps.lat, currentGps.lng, poi.lat, poi.lng)
           : null;
 
         if (poiMarkersRef.current.has(poi.id)) {
@@ -3426,8 +3437,9 @@ export default function App() {
             const btn = document.getElementById(`route-poi-btn-${poi.id}`);
             if (btn) {
               btn.onclick = () => {
-                if (gpsCoords && gpsActive) {
-                  const { id: startId } = findClosestNode(gpsCoords.lat, gpsCoords.lng, mapData.nodes);
+                const curGps = gpsCoordsRef.current;
+                if (curGps && curGps.lat && curGps.lng) {
+                  const { id: startId } = findClosestNode(curGps.lat, curGps.lng, mapData.nodes);
                   setDepartureNodeOrPlace(startId);
                 }
                 setDestinationNodeOrPlace({
@@ -3450,7 +3462,7 @@ export default function App() {
           poiMarkersRef.current.set(poi.id, m);
         }
       });
-  }, [showPoiLayer, activePoiCategory, gpsCoords, gpsActive]);
+  }, [showPoiLayer, activePoiCategory]);
 
   // 8. Live GPS tracking markers
   useEffect(() => {
@@ -3622,15 +3634,29 @@ export default function App() {
 
       logMessage('[GPS] Requesting device GPS coordinates...', 'info');
 
+      let lastGpsLat = 0;
+      let lastGpsLng = 0;
+      let lastGpsTime = 0;
+
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude, heading } = position.coords;
+          const now = Date.now();
+          if (lastGpsLat !== 0) {
+            const dist = haversineDistance(lastGpsLat, lastGpsLng, latitude, longitude);
+            // Throttle GPS updates: ignore micro-jitter under 3 meters if updated within 1.5 seconds
+            if (dist < 0.003 && now - lastGpsTime < 1500) {
+              return;
+            }
+          }
+          lastGpsLat = latitude;
+          lastGpsLng = longitude;
+          lastGpsTime = now;
+
           setGpsCoords({ lat: latitude, lng: longitude });
           setGpsActive(true);
           setMockGpsMode(false);
           if (heading !== null) setGpsHeading(heading);
-          
-          logMessage(`[GPS] Location update: [${latitude.toFixed(5)}, ${longitude.toFixed(5)}]`, 'system');
         },
         (error) => {
           logMessage(`[GPS] Tracking failed: ${error.message}. Initiating Mock GPS Mode at selected Departure Point.`, 'warning');
@@ -3640,7 +3666,7 @@ export default function App() {
           setGpsActive(true);
           setMockGpsMode(true);
         },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 2000 }
       );
     }
   };
@@ -3807,6 +3833,8 @@ export default function App() {
 
   // Demo movement makes the multi-customer view testable before a backend is connected.
   useEffect(() => {
+    if (!customerTrackingActive && activeTab !== 'tracking') return;
+
     const timer = setInterval(() => {
       setCustomers(prev => prev.map(customer => {
         if (customer.isSelf || customer.status !== 'Moving') return customer;
@@ -3819,9 +3847,9 @@ export default function App() {
           heading: (customer.heading + (customer.id === 'customer_2' ? 2 : -1) + 360) % 360
         };
       }));
-    }, 3000);
+    }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [customerTrackingActive, activeTab]);
 
   
   // Speak navigation instructions when updating
@@ -4887,9 +4915,11 @@ export default function App() {
   };
 
   // Top Floating Search Bar Handlers & Autocomplete Engine
-  const mainSearchResults = mainSearchQuery.trim().length > 0 
-    ? searchKeralaPlacesAI(mainSearchQuery, 6) 
-    : [];
+  const mainSearchResults = useMemo(() => {
+    return mainSearchQuery.trim().length > 0 
+      ? searchKeralaPlacesAI(mainSearchQuery, 6) 
+      : [];
+  }, [mainSearchQuery]);
 
   const handleSelectSearchPlace = (place, openDirections = false) => {
     if (!place || !place.lat || !place.lng) return;
