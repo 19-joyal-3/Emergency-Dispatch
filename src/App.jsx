@@ -91,7 +91,6 @@ const DemoScenariosModal = React.lazy(() => import('./components/DemoScenariosMo
 const KeralaPoiDirectoryModal = React.lazy(() => import('./components/KeralaPoiDirectoryModal'));
 const ReportHazardModal = React.lazy(() => import('./components/ReportHazardModal'));
 const ProximityScanModal = React.lazy(() => import('./components/ProximityScanModal'));
-const CreatorBioModal = React.lazy(() => import('./components/CreatorBioModal'));
 import { createRadarTileLayer } from './services/weatherRadarService';
 import { KSDMA_RESERVOIRS, checkRouteDamAlertProximity } from './services/ksdmaLiveService';
 import { getKsdmaDistrictWarnings, checkRouteWeatherInterception, KSDMA_ALERT_TYPES } from './services/ksdmaWeatherWarningService';
@@ -255,7 +254,6 @@ export default function App() {
   const [showPoiDirectoryModal, setShowPoiDirectoryModal] = useState(false);
   const [showReportHazardModal, setShowReportHazardModal] = useState(false);
   const [showProximityScanModal, setShowProximityScanModal] = useState(false);
-  const [showCreatorModal, setShowCreatorModal] = useState(false);
   const [proximityScanCenter, setProximityScanCenter] = useState(null);
   const proximityCircleRef = useRef(null);
   const poiMarkersRef = useRef(new Map());
@@ -299,17 +297,16 @@ export default function App() {
   };
 
   const getTileAttribution = (theme) => {
-    const creatorSuffix = ' | Resylix by <a href="/creator.html" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;font-weight:600;">Joyal Thomas Francis</a>';
     const pmtilesUrl = getPmtilesUrl(theme);
     if (pmtilesUrl) {
-      if (pmtilesUrl.includes('satellite')) return '&copy; Copernicus Sentinel-2 / EOX IT Services (CC BY 4.0)' + creatorSuffix;
-      return '&copy; OpenStreetMap contributors' + creatorSuffix;
+      if (pmtilesUrl.includes('satellite')) return '&copy; Copernicus Sentinel-2 / EOX IT Services (CC BY 4.0)';
+      return '&copy; OpenStreetMap contributors';
     }
-    if (!navigator.onLine) return 'Offline mode: local road network view' + creatorSuffix;
-    if (theme === 'satellite') return '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics' + creatorSuffix;
-    if (theme === 'terrain') return '&copy; Esri &mdash; Source: Esri, USGS' + creatorSuffix;
-    if (theme === 'light') return '&copy; OpenStreetMap contributors, Tiles: Humanitarian OSM Team' + creatorSuffix;
-    return '&copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ' + creatorSuffix;
+    if (!navigator.onLine) return 'Offline mode: local road network view';
+    if (theme === 'satellite') return '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics';
+    if (theme === 'terrain') return '&copy; Esri &mdash; Source: Esri, USGS';
+    if (theme === 'light') return '&copy; OpenStreetMap contributors, Tiles: Humanitarian OSM Team';
+    return '&copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ';
   };
 
   const persistAlertPreference = (key, value, setter) => {
@@ -1936,9 +1933,6 @@ export default function App() {
 
   const handleCommandPaletteExecuteAction = (actionId) => {
     switch (actionId) {
-      case 'creator_bio':
-        setShowCreatorModal(true);
-        break;
       case 'demo_scenarios':
         setShowDemoScenariosModal(true);
         break;
@@ -6311,32 +6305,6 @@ export default function App() {
             <div className="maps-drawer-brand-text">
               <span className="brand-title">Resylix Geo</span>
               <span className="brand-sub">Kerala Disaster Management</span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowCreatorModal(true);
-                  setShowSlideMenu(false);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '0.64rem',
-                  color: '#38bdf8',
-                  marginTop: '2px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  textAlign: 'left'
-                }}
-                title="View Creator Bio: Joyal Thomas Francis"
-              >
-                <span>By Joyal Thomas Francis</span>
-                <span style={{ fontSize: '0.6rem' }}>↗</span>
-              </button>
             </div>
           </div>
           <button 
@@ -6595,70 +6563,6 @@ export default function App() {
           >
             <span>🧭</span> Quick Interactive Tour
           </button>
-          <button
-            type="button"
-            className="maps-drawer-tool-btn"
-            onClick={() => {
-              setShowCreatorModal(true);
-              setShowSlideMenu(false);
-            }}
-            style={{ color: '#38bdf8', borderLeft: '3px solid #38bdf8', background: 'rgba(56, 189, 248, 0.08)' }}
-          >
-            <span>👨‍💻</span> Creator Bio: Joyal Thomas Francis
-          </button>
-        </div>
-
-        <div style={{
-          margin: '0.85rem 0.75rem 0.75rem',
-          padding: '0.75rem',
-          background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '10px'
-        }}>
-          <div style={{ fontSize: '0.62rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Platform Architect &amp; Creator
-          </div>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#f8fafc', marginTop: '2px' }}>
-            Joyal Thomas Francis
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px', fontSize: '0.68rem' }}>
-            <button
-              type="button"
-              onClick={() => {
-                setShowCreatorModal(true);
-                setShowSlideMenu(false);
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                color: '#38bdf8',
-                cursor: 'pointer',
-                fontWeight: 600,
-                textDecoration: 'underline'
-              }}
-            >
-              Bio Modal
-            </button>
-            <span style={{ color: '#64748b' }}>•</span>
-            <a
-              href="/creator.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#38bdf8', textDecoration: 'underline', fontWeight: 600 }}
-            >
-              Web Bio ↗
-            </a>
-            <span style={{ color: '#64748b' }}>•</span>
-            <a
-              href="https://github.com/19-joyal-3"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#94a3b8', textDecoration: 'none' }}
-            >
-              @19-joyal-3
-            </a>
-          </div>
         </div>
       </nav>
 
@@ -7783,30 +7687,6 @@ export default function App() {
                 </div>
                 <div style={{ marginTop: '0.55rem', color: 'var(--text-muted)', fontSize: '0.62rem' }}>
                   Interface: {interfaceLanguage} • {presentationMode ? 'Demo data highlighted' : 'Operations mode'}
-                </div>
-                <div style={{
-                  marginTop: '0.75rem',
-                  padding: '0.45rem 0.65rem',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  fontSize: '0.66rem'
-                }}>
-                  <div>
-                    <span style={{ color: '#94a3b8' }}>Creator &amp; Architect: </span>
-                    <strong style={{ color: '#f8fafc' }}>Joyal Thomas Francis</strong>
-                  </div>
-                  <a
-                    href="https://github.com/19-joyal-3"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: 600, fontSize: '0.62rem' }}
-                  >
-                    @19-joyal-3
-                  </a>
                 </div>
               </section>
 
@@ -9918,25 +9798,6 @@ export default function App() {
                 <span>📂</span>
               </button>
             </div>
-
-            {/* Creator & Lead Architect Bio Chip */}
-            <button
-              type="button"
-              className="maps-chip creator-chip"
-              onClick={() => {
-                triggerHaptic(15);
-                setShowCreatorModal(true);
-              }}
-              title="Creator & Lead Architect: Joyal Thomas Francis (@19-joyal-3)"
-              style={{
-                color: '#38bdf8',
-                borderColor: 'rgba(56, 189, 248, 0.4)',
-                background: 'rgba(56, 189, 248, 0.08)',
-                fontWeight: 600
-              }}
-            >
-              <span>👨‍💻 Joyal Thomas Francis</span>
-            </button>
 
             {/* 1-Click 5.0 KM Tactical Proximity Scan */}
             <button
@@ -13079,13 +12940,6 @@ export default function App() {
             onClose={() => setShowReportHazardModal(false)}
             onSubmit={handleReportHazardSubmit}
             currentCoords={gpsCoords || (selectedIncident ? { lat: selectedIncident.lat, lng: selectedIncident.lng } : null)}
-          />
-        )}
-
-        {showCreatorModal && (
-          <CreatorBioModal
-            isOpen={showCreatorModal}
-            onClose={() => setShowCreatorModal(false)}
           />
         )}
       </React.Suspense>
