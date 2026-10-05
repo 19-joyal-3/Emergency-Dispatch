@@ -19,13 +19,14 @@ import {
   Eye,
   Volume2,
   Terminal,
-  Loader2
+  Loader2,
+  Key
 } from 'lucide-react';
 import {
   queryTacticalAiCopilot,
   PRESET_TACTICAL_QUESTIONS,
   PLATFORM_IDENTITY
-} from '../services/aiCopilotService';
+} from '../services/aiCopilotService.js';
 
 // Icon mapper for dynamic action buttons
 const ICON_MAP = {
@@ -216,6 +217,10 @@ You can ask me anything about:
   const [inputQuery, setInputQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showKeySettings, setShowKeySettings] = useState(false);
+  const [customKey, setCustomKey] = useState(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem('resylix_custom_gemini_key') || '' : '';
+  });
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -439,13 +444,13 @@ You can ask me anything about:
                   textTransform: 'uppercase',
                   padding: '2px 6px',
                   borderRadius: '6px',
-                  background: 'rgba(16, 185, 129, 0.18)',
-                  color: '#34d399',
-                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                  background: customKey ? 'rgba(14, 165, 233, 0.2)' : 'rgba(16, 185, 129, 0.18)',
+                  color: customKey ? '#38bdf8' : '#34d399',
+                  border: customKey ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(16, 185, 129, 0.4)',
                   letterSpacing: '0.05em'
                 }}
               >
-                100% Grounded
+                {customKey ? 'Gemini Live' : '100% Grounded'}
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '0.72rem', color: '#94a3b8' }}>
@@ -457,27 +462,51 @@ You can ask me anything about:
         {/* Header Action Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {!isMinimized && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClearChat();
-              }}
-              title="Clear conversation"
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                padding: '6px',
-                color: '#94a3b8',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <RotateCcw size={14} />
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowKeySettings(prev => !prev);
+                }}
+                title={customKey ? "Gemini API Key Connected (Click to edit/disconnect)" : "Connect Google Gemini API Key (Optional Live LLM Expansion)"}
+                style={{
+                  background: customKey ? 'rgba(14, 165, 233, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                  border: customKey ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  padding: '6px',
+                  color: customKey ? '#38bdf8' : '#94a3b8',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Key size={14} />
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClearChat();
+                }}
+                title="Clear conversation"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  padding: '6px',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <RotateCcw size={14} />
+              </button>
+            </>
           )}
 
           <button
@@ -529,6 +558,79 @@ You can ask me anything about:
       {/* Main Body (Hidden when Minimized) */}
       {!isMinimized && (
         <>
+          {/* Optional Gemini API Key Drawer */}
+          {showKeySettings && (
+            <div
+              style={{
+                padding: '10px 14px',
+                background: 'rgba(15, 23, 42, 0.98)',
+                borderBottom: '1px solid rgba(56, 189, 248, 0.25)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.74rem' }}>
+                <span style={{ color: '#cbd5e1', fontWeight: 600 }}>Google Gemini API Key (Optional)</span>
+                {customKey && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.removeItem('resylix_custom_gemini_key');
+                      setCustomKey('');
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#f87171', fontSize: '0.7rem', cursor: 'pointer' }}
+                  >
+                    Disconnect
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  type="password"
+                  value={customKey}
+                  onChange={(e) => setCustomKey(e.target.value)}
+                  placeholder="Paste Google AI Studio / Gemini API Key..."
+                  style={{
+                    flex: 1,
+                    padding: '6px 10px',
+                    background: 'rgba(30, 41, 59, 0.8)',
+                    border: '1px solid rgba(56, 189, 248, 0.3)',
+                    borderRadius: '8px',
+                    color: '#f8fafc',
+                    fontSize: '0.78rem',
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (customKey.trim()) {
+                      localStorage.setItem('resylix_custom_gemini_key', customKey.trim());
+                    } else {
+                      localStorage.removeItem('resylix_custom_gemini_key');
+                    }
+                    setShowKeySettings(false);
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+              <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                Without a key, Resylix operates 100% offline via its embedded knowledge base across all 26 Kerala disaster clusters.
+              </div>
+            </div>
+          )}
           {/* 2. Tactical Quick Suggestion Carousel */}
           <div
             style={{

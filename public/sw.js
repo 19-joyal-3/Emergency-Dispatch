@@ -4,7 +4,7 @@
  * Stale-While-Revalidate asset streaming, and instant offline PWA launch.
  */
 
-const CACHE_NAME = 'resylix-dispatch-v11';
+const CACHE_NAME = 'resylix-dispatch-v12';
 const TILE_CACHE_NAME = 'resylix-maptiles-v1';
 const MAX_TILE_CACHE_ITEMS = 600;
 
