@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X, Play, Waves, Smartphone, FileText, Presentation } from 'lucide-react';
+import { Search, MapPin, Zap, Navigation, Shield, Compass, CloudRain, Database, ArrowRight, CornerDownLeft, X, Play, Waves, Smartphone, FileText, Presentation, Bot } from 'lucide-react';
 import { searchKeralaPlacesAI } from '../aiPlaceMatcher.js';
 
 export default function CommandPalette({
@@ -23,6 +23,7 @@ export default function CommandPalette({
   }, [isOpen]);
 
   const defaultActions = [
+    { id: 'ai_copilot', label: 'Resylix Tactical AI Copilot (Ask Anything / Offline Grounded)', icon: Bot, category: 'AI Intelligence', badge: 'AI' },
     { id: 'demo_scenarios', label: 'Launch 1-Click Live Presentation Demo Scenarios', icon: Zap, category: 'Presentation', badge: 'Demo' },
     { id: 'recenter', label: 'Recenter Map to Kerala Bounds', icon: Compass, category: 'Map Controls', badge: 'R' },
     { id: 'open_presentation', label: 'Open Presentation Slide Deck & Speaker Defense Notes', icon: Presentation, category: 'Documentation', badge: 'Slides' },

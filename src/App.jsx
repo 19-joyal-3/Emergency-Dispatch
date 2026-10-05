@@ -78,6 +78,8 @@ import {
   ,Menu
   ,X
   ,Layers
+  ,Bot
+  ,Sparkles
 } from 'lucide-react';
 
 const CommandPalette = React.lazy(() => import('./components/CommandPalette'));
@@ -91,6 +93,7 @@ const DemoScenariosModal = React.lazy(() => import('./components/DemoScenariosMo
 const KeralaPoiDirectoryModal = React.lazy(() => import('./components/KeralaPoiDirectoryModal'));
 const ReportHazardModal = React.lazy(() => import('./components/ReportHazardModal'));
 const ProximityScanModal = React.lazy(() => import('./components/ProximityScanModal'));
+const TacticalAiCopilotModal = React.lazy(() => import('./components/TacticalAiCopilotModal'));
 import { createRadarTileLayer } from './services/weatherRadarService';
 import { KSDMA_RESERVOIRS, checkRouteDamAlertProximity } from './services/ksdmaLiveService';
 import { getKsdmaDistrictWarnings, checkRouteWeatherInterception, KSDMA_ALERT_TYPES } from './services/ksdmaWeatherWarningService';
@@ -254,6 +257,7 @@ export default function App() {
   const [showPoiDirectoryModal, setShowPoiDirectoryModal] = useState(false);
   const [showReportHazardModal, setShowReportHazardModal] = useState(false);
   const [showProximityScanModal, setShowProximityScanModal] = useState(false);
+  const [showAiCopilot, setShowAiCopilot] = useState(false);
   const [proximityScanCenter, setProximityScanCenter] = useState(null);
   const proximityCircleRef = useRef(null);
   const poiMarkersRef = useRef(new Map());
@@ -1933,6 +1937,9 @@ export default function App() {
 
   const handleCommandPaletteExecuteAction = (actionId) => {
     switch (actionId) {
+      case 'ai_copilot':
+        setShowAiCopilot(true);
+        break;
       case 'demo_scenarios':
         setShowDemoScenariosModal(true);
         break;
@@ -2042,6 +2049,13 @@ export default function App() {
         return;
       }
 
+      // Tactical AI Copilot Trigger: Ctrl+J or Cmd+J
+      if ((e.key === 'j' || e.key === 'J') && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setShowAiCopilot(prev => !prev);
+        return;
+      }
+
       if (!isInput && e.key === '/') {
         e.preventDefault();
         if (mainSearchInputRef.current) {
@@ -2058,6 +2072,10 @@ export default function App() {
         if (showSearchDropdown) {
           setShowSearchDropdown(false);
           mainSearchInputRef.current?.blur();
+          return;
+        }
+        if (showAiCopilot) {
+          setShowAiCopilot(false);
           return;
         }
         if (showCommandPalette) {
@@ -2130,7 +2148,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [showCommandPalette, showKsdmaWeatherModal, showKsdmaModal, showOfflineCacheModal, p2pSosModalOpen, showSettingsPanel]);
+  }, [showAiCopilot, showCommandPalette, showKsdmaWeatherModal, showKsdmaModal, showOfflineCacheModal, showPoiDirectoryModal, showProximityScanModal, showReportHazardModal, p2pSosModalOpen, showSettingsPanel]);
 
   const refreshLiveDistrictAlerts = useCallback(async () => {
     setDistrictAlertsStatus('loading');
@@ -6496,6 +6514,17 @@ export default function App() {
           <button
             type="button"
             className="maps-drawer-tool-btn"
+            style={{ color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.35)', background: 'rgba(14, 165, 233, 0.1)' }}
+            onClick={() => {
+              setShowAiCopilot(true);
+              setShowSlideMenu(false);
+            }}
+          >
+            <span>🤖</span> Resylix Tactical AI Copilot
+          </button>
+          <button
+            type="button"
+            className="maps-drawer-tool-btn"
             onClick={() => {
               setShowPoiDirectoryModal(true);
               setShowSlideMenu(false);
@@ -9799,6 +9828,23 @@ export default function App() {
               </button>
             </div>
 
+            {/* Tactical AI Copilot Chip */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showAiCopilot}
+              className={`maps-chip ai-copilot-chip ${showAiCopilot ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic(15);
+                setShowAiCopilot(prev => !prev);
+              }}
+              title="Resylix Tactical AI Copilot (Ask Anything / Offline Grounded Intelligence)"
+              aria-label="Toggle Tactical AI Copilot"
+            >
+              <Bot size={14} />
+              <span>AI Copilot</span>
+            </button>
+
             {/* 1-Click 5.0 KM Tactical Proximity Scan */}
             <button
               type="button"
@@ -12942,7 +12988,39 @@ export default function App() {
             currentCoords={gpsCoords || (selectedIncident ? { lat: selectedIncident.lat, lng: selectedIncident.lng } : null)}
           />
         )}
+
+        {showAiCopilot && (
+          <TacticalAiCopilotModal
+            isOpen={showAiCopilot}
+            onClose={() => setShowAiCopilot(false)}
+            onExecuteAction={handleCommandPaletteExecuteAction}
+            onOpenDamMonitor={() => setShowKsdmaModal(true)}
+            onOpenWeatherModal={() => setShowKsdmaWeatherModal(true)}
+            onOpenHazardModal={() => setShowReportHazardModal(true)}
+            onTriggerProximityScan={() => handleTriggerProximityScan(gpsCoords, 'Current Location')}
+            onExportManifest={handleExportEvacuationManifest}
+            currentCoords={gpsCoords}
+          />
+        )}
       </React.Suspense>
+
+      {/* Floating Tactical AI Copilot Launcher Badge */}
+      {!showAiCopilot && (
+        <button
+          type="button"
+          className="copilot-floating-badge"
+          onClick={() => {
+            triggerHaptic(20);
+            setShowAiCopilot(true);
+          }}
+          title="Open Resylix Tactical AI Copilot (Ask Anything / Offline Grounded)"
+          aria-label="Open AI Copilot"
+        >
+          <span className="copilot-pulse-dot" />
+          <Bot size={16} />
+          <span>Tactical AI</span>
+        </button>
+      )}
     </div>
   );
 }
