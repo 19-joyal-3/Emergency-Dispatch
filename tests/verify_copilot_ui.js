@@ -62,11 +62,11 @@ async function runVerification() {
       const input = await page.waitForSelector('input[placeholder*="Ask anything"]', { timeout: 4000 });
       if (input) {
         console.log('Typing query into copilot input...');
-        await input.type('Who created Resylix?');
+        await input.type('weather in palakkad');
         await page.keyboard.press('Enter');
         await new Promise(r => setTimeout(r, 2000));
 
-        const screenshot3Path = path.join(screenshotsDir, 'copilot_modal_answered.png');
+        const screenshot3Path = path.join(screenshotsDir, 'copilot_palakkad_weather_answered.png');
         await page.screenshot({ path: screenshot3Path });
         console.log('Saved screenshot 3:', screenshot3Path);
       }

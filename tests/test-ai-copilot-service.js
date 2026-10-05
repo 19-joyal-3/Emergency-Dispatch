@@ -138,4 +138,16 @@ assert(openQuery.answer.includes('Tactical AI Analysis'), 'Should provide tactic
 assert(openQuery.actions.length >= 3, 'Should provide relevant tactical actions');
 console.log('✓ Open-ended tactical inquiry synthesized gracefully');
 
-console.log('\n✔ ALL 15 EXPANDED TACTICAL AI COPILOT TESTS PASSED PERFECTLY!\n');
+// TEST 16: District-Specific Weather Resolution (Palakkad bug regression test)
+console.log('--- [TEST 16] Verifying District-Specific Weather Query Resolution ---');
+const palakkadWeather = queryTacticalAiCopilotOffline('weather in palakkad');
+assert(palakkadWeather.category === 'DISTRICT_WEATHER', 'Category should be DISTRICT_WEATHER');
+assert(palakkadWeather.answer.includes('Palakkad'), 'Response must be for Palakkad, not another district');
+assert(!palakkadWeather.answer.includes('Kottayam'), 'Must NOT match Kottayam');
+assert(palakkadWeather.answer.includes('ORANGE ALERT'), 'Palakkad should show Orange Alert');
+assert(palakkadWeather.answer.includes('154'), 'Palakkad rainfall should show ~154 mm');
+assert(palakkadWeather.answer.includes('Malampuzha Dam'), 'Should cite Malampuzha Dam in Palakkad');
+assert(palakkadWeather.answer.includes('0491-2505309'), 'Should cite Palakkad DEOC phone');
+console.log('✓ Palakkad district-specific weather resolved accurately with Orange Alert and Malampuzha Dam');
+
+console.log('\n✔ ALL 16 EXPANDED TACTICAL AI COPILOT TESTS PASSED PERFECTLY!\n');

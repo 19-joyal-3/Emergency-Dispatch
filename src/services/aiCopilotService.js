@@ -13,7 +13,7 @@
  */
 
 import { KSDMA_RESERVOIRS } from './ksdmaLiveService.js';
-import { KSDMA_ALERT_TYPES, getKsdmaDistrictWarnings } from './ksdmaWeatherWarningService.js';
+import { KERALA_DISTRICTS_DATA, KSDMA_ALERT_TYPES, getKsdmaDistrictWarnings } from './ksdmaWeatherWarningService.js';
 import { KERALA_DEOC_DIRECTORY } from '../deoc.js';
 import keralaPois from '../data/keralaPois.json' with { type: 'json' };
 
@@ -83,14 +83,32 @@ export const PRESET_TACTICAL_QUESTIONS = [
   }
 ];
 
+// Mapping 3-letter codes to full district identifiers
+export const CODE_TO_DISTRICT_ID = {
+  tvm: 'thiruvananthapuram',
+  klm: 'kollam',
+  pta: 'pathanamthitta',
+  alp: 'alappuzha',
+  ktm: 'kottayam',
+  idk: 'idukki',
+  ekm: 'ernakulam',
+  tsr: 'thrissur',
+  pkd: 'palakkad',
+  mpm: 'malappuram',
+  kkd: 'kozhikode',
+  wyd: 'wayanad',
+  knr: 'kannur',
+  ksd: 'kasaragod'
+};
+
 // District keywords dictionary for entity resolution
 const DISTRICT_KEYWORDS = {
   tvm: ['thiruvananthapuram', 'trivandrum', 'തിരുവനന്തപുരം', 'tvm', 'kazhakkoottam', 'neyyattinkara', 'nedumangad', 'vizhinjam', 'varkala'],
   klm: ['kollam', 'quilon', 'കൊല്ലം', 'klm', 'karunagappally', 'punalur', 'kottarakkara', 'paravur', 'chavara'],
   pta: ['pathanamthitta', 'പത്തനംതിട്ട', 'pta', 'adivaram', 'ranni', 'konni', 'thiruvalla', 'pamba', 'sabarimala', 'aranmula'],
-  alp: ['alappuzha', 'alleppey', 'ആലപ്പുഴ', 'alp', 'kuttanad', 'cherthala', 'mavelikkara', 'chengannur', 'kayamkulam', 'haripad'],
-  ktm: ['kottayam', 'കോട്ടയം', 'ktm', 'changanassery', 'pala', 'kanjirappally', 'koottickal', 'mundakkayam', 'vaikom', 'ettumanoor'],
-  idk: ['idukki', 'ഇടുക്കി', 'idk', 'munnar', 'pettimudi', 'thodupuzha', 'kattappana', 'cheruthoni', 'adimali', 'peermade', 'devikulam', 'kumily'],
+  alp: ['alappuzha', 'alleppey', 'ആലപ്പുഴ', 'alp district', 'kuttanad', 'cherthala', 'mavelikkara', 'chengannur', 'kayamkulam', 'haripad'],
+  ktm: ['kottayam', 'കോട്ടയം', 'ktm', 'changanassery', 'pala town', 'pala municipality', 'pala', 'kanjirappally', 'koottickal', 'mundakkayam', 'vaikom', 'ettumanoor'],
+  idk: ['idukki', 'ഇടുക്കി', 'idk district', 'munnar', 'pettimudi', 'thodupuzha', 'kattappana', 'cheruthoni', 'adimali', 'peermade', 'devikulam', 'kumily'],
   ekm: ['ernakulam', 'kochi', 'cochin', 'എറണാകുളം', 'ekm', 'aluva', 'perumbavoor', 'angamaly', 'paravur', 'kalamassery', 'tripunithura', 'kakkanad', 'vytilla'],
   tsr: ['thrissur', 'trichur', 'തൃശ്ശൂർ', 'tsr', 'chalakudy', 'kodungallur', 'kunnamkulam', 'irinjallakuda', 'guruvayur', 'vadakkanchery', 'peechi'],
   pkd: ['palakkad', 'palghat', 'പാലക്കാട്', 'pkd', 'ottapalam', 'chittur', 'mannarkkad', 'alathur', 'pattambi', 'cherpulassery', 'malampuzha', 'kuthiran'],
@@ -113,29 +131,56 @@ function normalizeQuery(text) {
 }
 
 /**
- * Detects if a district is mentioned
+ * Detects if a district is mentioned with exact word boundaries and longest match precedence
  */
-function detectDistrict(norm) {
+export function detectDistrict(norm) {
+  if (!norm) return null;
+  const padded = ` ${norm} `;
+  let bestMatch = null;
+  let maxKwLength = 0;
+
   for (const [id, keywords] of Object.entries(DISTRICT_KEYWORDS)) {
     for (const kw of keywords) {
-      if (norm.includes(kw)) {
-        const deocInfo = KERALA_DEOC_DIRECTORY.find(d => d.id === id);
-        return { id, name: deocInfo ? deocInfo.name : id, deoc: deocInfo };
+      const kwNorm = kw.toLowerCase().trim();
+      if (!kwNorm) continue;
+      // Exact word boundary match in space-padded query
+      if (padded.includes(` ${kwNorm} `)) {
+        if (kwNorm.length > maxKwLength) {
+          maxKwLength = kwNorm.length;
+          const deocInfo = KERALA_DEOC_DIRECTORY.find(d => d.id === id);
+          const fullId = CODE_TO_DISTRICT_ID[id] || id;
+          const weatherInfo = KERALA_DISTRICTS_DATA.find(d => 
+            d.id.toLowerCase() === fullId.toLowerCase() || 
+            d.code.toLowerCase() === id.toLowerCase() ||
+            d.name.toLowerCase() === (deocInfo?.name || '').toLowerCase()
+          );
+          bestMatch = {
+            id,
+            fullId,
+            name: weatherInfo?.name || deocInfo?.name || id,
+            malayalam: weatherInfo?.malayalam || deocInfo?.malayalam || '',
+            deoc: deocInfo,
+            weather: weatherInfo
+          };
+        }
       }
     }
   }
-  return null;
+  return bestMatch;
 }
 
 /**
- * Detects if a specific dam is mentioned
+ * Detects if a specific dam is mentioned with word boundary support
  */
-function detectDam(norm) {
+export function detectDam(norm) {
+  if (!norm) return null;
+  const padded = ` ${norm} `;
   const dams = KSDMA_RESERVOIRS || [];
   for (const dam of dams) {
     const damName = dam.name.toLowerCase();
     const damKey = dam.id.toLowerCase();
-    if (norm.includes(damKey) || norm.includes(damName.replace(' dam', ''))) {
+    const damPure = damName.replace(' dam', '').trim();
+    if (padded.includes(` ${damKey} `) || padded.includes(` ${damPure} `) || norm.includes(damName)) {
       return dam;
     }
   }
@@ -294,9 +339,10 @@ Resylix automatically flags and recalculates any emergency convoy paths that cro
     priority: 8,
     handler: () => {
       const warnings = getKsdmaDistrictWarnings();
-      const redDistricts = Object.values(warnings).filter(w => w.alert === 'Red').map(w => w.name);
-      const orangeDistricts = Object.values(warnings).filter(w => w.alert === 'Orange').map(w => w.name);
-      const yellowDistricts = Object.values(warnings).filter(w => w.alert === 'Yellow').map(w => w.name);
+      const redDistricts = warnings.filter(w => (w.alert || '').toUpperCase() === 'RED').map(w => w.name);
+      const orangeDistricts = warnings.filter(w => (w.alert || '').toUpperCase() === 'ORANGE').map(w => w.name);
+      const yellowDistricts = warnings.filter(w => (w.alert || '').toUpperCase() === 'YELLOW').map(w => w.name);
+      const greenDistricts = warnings.filter(w => (w.alert || '').toUpperCase() === 'GREEN').map(w => w.name);
 
       return {
         answer: `### 🌦️ KSDMA 14-District Weather Warning Matrix
@@ -308,9 +354,9 @@ Resylix synchronizes daily meteorology feeds grounded in official **KSDMA & Indi
   - *Rainfall Threshold*: Extremely heavy rainfall (> 204.4 mm / 24h). Total travel ban on high-range ghat corridors.
 - 🟠 **Orange Alert (Be Prepared)**: ${orangeDistricts.length > 0 ? orangeDistricts.join(', ') : 'None active statewide'}
   - *Rainfall Threshold*: Very heavy rainfall (115.6 - 204.4 mm / 24h). High risk of flash flooding and slope debris flows.
-- 🟡 **Yellow Alert (Be Aware)**: ${yellowDistricts.length > 0 ? yellowDistricts.join(', ') : 'Wayanad, Idukki, Kozhikode, Kannur'}
+- 🟡 **Yellow Alert (Be Aware)**: ${yellowDistricts.length > 0 ? yellowDistricts.join(', ') : 'None active statewide'}
   - *Rainfall Threshold*: Heavy rainfall (64.5 - 115.5 mm / 24h). Local waterlogging, slippery high-range roads.
-- 🟢 **Green (Normal)**: Routine monsoon patterns (< 64.4 mm / 24h).
+- 🟢 **Green (Normal)**: ${greenDistricts.length > 0 ? greenDistricts.join(', ') : 'Routine conditions statewide (< 64.4 mm / 24h)'}.
 
 #### Route Weather Interception:
 When you calculate any convoy route in the Tactical Route Planner, Resylix projects the route line over district weather polygons. If your vehicle enters an Orange or Red district, an alert triggers in the Tactical Voice Navigation HUD.`,
@@ -332,38 +378,10 @@ When you calculate any convoy route in the Tactical Route Planner, Resylix proje
       'kannur', 'kasaragod', 'district', 'collectorate', 'deoc 1077'
     ],
     priority: 8,
-    handler: (query, norm) => {
+    handler: (rawQuery, norm, context) => {
       const matchedDistrict = detectDistrict(norm);
       if (!matchedDistrict) return null;
-
-      const districtWarnings = getKsdmaDistrictWarnings();
-      const currentWarning = districtWarnings[matchedDistrict.id] || { alert: 'Green', rainfall24h: 12, summary: 'Normal seasonal monsoon conditions.' };
-      const deoc = matchedDistrict.deoc;
-
-      return {
-        answer: `### 📍 District Tactical SITREP: **${matchedDistrict.name}** (${deoc?.malayalam || ''})
-
-#### 1. Weather Warning Status:
-- **IMD / KSDMA Alert Level**: **${currentWarning.alert?.toUpperCase()} ALERT**
-- **Expected 24h Rainfall**: ~${currentWarning.rainfall24h || 15} mm
-- **Weather Advisory**: ${currentWarning.summary || 'Standard monsoon caution advised.'}
-
-#### 2. District Emergency Operations Centre (DEOC):
-- **Toll-Free Helpline**: **1077** (Accessible from any landline or mobile in ${matchedDistrict.name})
-- **Direct Operations Desk**: **${deoc?.deocDirect || '0471-2730045'}**
-- **Collectorate Helpline**: **${deoc?.collectoratePhone || 'N/A'}**
-- **Police Emergency**: **112** | **Fire & Rescue**: **101** | **Ambulance**: **108**
-
-#### 3. Primary Regional Hazards:
-${(deoc?.primaryHazards || ['Flash Floods', 'Localized Waterlogging']).map(h => `- ${h}`).join('\n')}
-
-> **Tactical Action**: To view all verified hospitals, fuel pumps, and shelters in ${matchedDistrict.name}, open the Kerala Facilities Directory or run a 5km Proximity Scan.`,
-        actions: [
-          { label: `Call DEOC (${deoc?.deocDirect})`, actionId: 'call_phone', payload: deoc?.deocDirect, icon: 'PhoneCall' },
-          { label: 'Open Weather Matrix', actionId: 'ksdma_weather', icon: 'CloudRain' },
-          { label: `Browse Facilities in ${matchedDistrict.name}`, actionId: 'poi_directory', icon: 'MapPin' }
-        ]
-      };
+      return buildDistrictSpecificResponse(matchedDistrict, rawQuery, norm, context);
     }
   },
 
@@ -804,21 +822,214 @@ Resylix allows dispatchers and convoy drivers to simulate navigation along any p
 ];
 
 // ==============================================================================
-// 3. ADVANCED MULTI-FEATURE SEMANTIC SCORING & NLP ENGINE
+// 3. ADVANCED MULTI-FEATURE SEMANTIC SCORING & DISTRICT RESPONDER
 // ==============================================================================
+
+/**
+ * Contextual multi-intent responder for specific district inquiries
+ * Handles Weather, Dams, Facilities, DEOC Helplines, and general SITREPs
+ */
+export function buildDistrictSpecificResponse(matchedDistrict, rawQuery, norm, context = {}) {
+  const deoc = matchedDistrict.deoc || {};
+  const w = matchedDistrict.weather || {};
+  const alertDef = KSDMA_ALERT_TYPES[(w.alert || 'GREEN').toUpperCase()] || KSDMA_ALERT_TYPES.GREEN;
+  const damsInDistrict = (KSDMA_RESERVOIRS || []).filter(d => 
+    (d.district || '').toLowerCase() === matchedDistrict.name.toLowerCase()
+  );
+
+  const isWeatherQuery = /\b(weather|rain|raining|rainfall|alert|alerts|forecast|monsoon|storm|cloudburst|cyclone|inundation|flood|flooding|climate|wind|squall)\b/i.test(norm) || 
+    norm.includes('കാലാവസ്ഥ') || norm.includes('മഴ') || norm.includes('അലർട്ട്');
+
+  const isDamQuery = /\b(dam|dams|reservoir|reservoirs|water level|waterlevel|rule curve|spillway|shutter|shutters)\b/i.test(norm) ||
+    norm.includes('അണക്കെട്ട്') || norm.includes('ഡാം');
+
+  const isFacilityQuery = /\b(hospital|hospitals|medical|clinic|trauma|doctor|shelter|shelters|camp|camps|fuel|petrol|diesel|pharmacy|medicine|police)\b/i.test(norm) ||
+    norm.includes('ആശുപത്രി');
+
+  const isContactQuery = /\b(helpline|phone|contact|number|numbers|call|deoc|collectorate|control room)\b/i.test(norm) ||
+    norm.includes('ഫോൺ');
+
+  // SUB-INTENT 1: WEATHER & MONSOON SITREP
+  if (isWeatherQuery && !isDamQuery && !isFacilityQuery) {
+    const alertBadge = w.alert === 'RED' ? '🔴 RED ALERT (Take Action / അടിയന്തര നടപടി)' :
+                       w.alert === 'ORANGE' ? '🟠 ORANGE ALERT (Be Prepared / ജാഗ്രത പാലിക്കുക)' :
+                       w.alert === 'YELLOW' ? '🟡 YELLOW ALERT (Be Aware / ശ്രദ്ധിക്കുക)' :
+                       '🟢 GREEN ALERT (Normal Conditions / സാധാരണ നില)';
+
+    return {
+      answer: `### 🌦️ KSDMA Weather & Monsoon SITREP: **${matchedDistrict.name}** (${matchedDistrict.malayalam || ''})
+
+#### 1. Official IMD / KSDMA Meteorological Alert:
+- **Active Warning Status**: **${alertBadge}**
+- **Expected 24h Rainfall**: **~${w.rainfallMm || 20} mm** (${alertDef.rainfallThreshold || ''})
+- **Primary Regional Threat**: **${w.primaryThreat || 'Localized Waterlogging'}** (${w.primaryThreatMl || ''})
+
+#### 2. KSDMA Field & Disaster Management Advisory:
+> "${w.advisory || 'Standard seasonal precautions apply. Keep tuned to DEOC advisories and avoid isolated lowlands during sudden downpours.'}"
+
+#### 3. Monitored Reservoirs & River Basins in ${matchedDistrict.name}:
+${damsInDistrict.length > 0 
+  ? damsInDistrict.map(d => `- **${d.name}** (${d.basin || d.district} Basin): Current Level **${d.currentLevelMeters}m** / FRL ${d.frlMeters}m (Rule Curve: **${d.ruleCurveMeters}m**). Alert Status: **${d.alertLevel} Alert** (${d.spillwayStatus || 'Shutters standby'})`).join('\n')
+  : `- No major hydroelectric dams situated directly within ${matchedDistrict.name}. Basin discharge and local rivers monitored by ${matchedDistrict.name} DDMA.`}
+
+#### 4. Vulnerable Weather Hotspots in ${matchedDistrict.name}:
+${(w.vulnerableHotspots || ['Low-lying waterways', 'Ghat sections']).map(h => `- ⚠️ **${h}**`).join('\n')}
+
+#### 5. 24/7 District Emergency Operations Centre (DEOC):
+- **Toll-Free Helpline**: **1077** (Direct access from any landline or mobile in ${matchedDistrict.name})
+- **Operations Control Desk**: **${w.deocPhone || deoc.deocDirect || '0471-2730045'}**
+- **Collectorate Emergency**: **${deoc.collectoratePhone || 'N/A'}**
+- **Police Emergency**: **112** | **Fire & Rescue**: **101** | **Ambulance**: **108**`,
+      actions: [
+        { label: 'Open Weather Matrix', actionId: 'ksdma_weather', icon: 'CloudRain' },
+        ...(damsInDistrict.length > 0 ? [{ label: `Check ${damsInDistrict[0].name}`, actionId: 'ksdma_dams', icon: 'Waves' }] : []),
+        { label: `Call DEOC (${w.deocPhone || deoc.deocDirect})`, actionId: 'call_phone', payload: w.deocPhone || deoc.deocDirect, icon: 'PhoneCall' },
+        { label: '5.0 KM Proximity Scan', actionId: 'proximity_scan', icon: 'Crosshair' },
+        { label: `Facilities in ${matchedDistrict.name}`, actionId: 'poi_directory', icon: 'MapPin' }
+      ],
+      category: 'DISTRICT_WEATHER',
+      confidence: 0.98
+    };
+  }
+
+  // SUB-INTENT 2: DAMS IN DISTRICT
+  if (isDamQuery) {
+    return {
+      answer: `### 🌊 Reservoirs & Water Level Monitoring: **${matchedDistrict.name}** (${matchedDistrict.malayalam || ''})
+
+Resylix tracks Central Water Commission (CWC) Rule Curves and KSDMA dam water levels across **${matchedDistrict.name}**:
+
+#### Monitored Reservoirs in ${matchedDistrict.name}:
+${damsInDistrict.length > 0 
+  ? damsInDistrict.map(d => `
+##### 🔹 ${d.name} (${d.agency} - ${d.basin} Basin)
+- **Current Water Level**: **${d.currentLevelMeters} m** / Full Reservoir Level (FRL): **${d.frlMeters} m**
+- **CWC Seasonal Rule Curve**: **${d.ruleCurveMeters} m**
+- **Storage Volume**: **${d.storagePercent}%** (~${d.storageMcm} MCM)
+- **Alert Status**: **${d.alertLevel} Alert**
+- **Spillway Gates**: ${d.spillwayStatus || 'Normal operation'}
+- **Downstream Corridor**: ${d.downstreamCorridor || 'Immediate river plains'}
+`).join('\n')
+  : `No major hydroelectric dams are situated directly within ${matchedDistrict.name}. Downstream flood flows from upstream catchments are monitored by the ${matchedDistrict.name} District Disaster Management Authority (DDMA).`}
+
+#### Downstream Safety Notice:
+When spillway shutters operate, sirens sound across downstream banks. Emergency convoys should avoid low-lying bridges and causeways.`,
+      actions: [
+        { label: 'Open Dam Monitor Modal', actionId: 'ksdma_dams', icon: 'Waves' },
+        { label: `Call ${matchedDistrict.name} DEOC (1077)`, actionId: 'call_phone', payload: w.deocPhone || deoc.deocDirect, icon: 'PhoneCall' },
+        { label: 'Weather Warning Matrix', actionId: 'ksdma_weather', icon: 'CloudRain' }
+      ],
+      category: 'DISTRICT_DAMS',
+      confidence: 0.98
+    };
+  }
+
+  // SUB-INTENT 3: FACILITIES & POIS IN DISTRICT
+  if (isFacilityQuery) {
+    const poisInDistrict = (keralaPois || []).filter(p => 
+      (p.district || '').toLowerCase() === matchedDistrict.name.toLowerCase()
+    );
+
+    return {
+      answer: `### 🏥 Verified Emergency Facilities: **${matchedDistrict.name}** (${matchedDistrict.malayalam || ''})
+
+Resylix maintains an offline directory of **${poisInDistrict.length} verified lifeline facilities** in ${matchedDistrict.name}:
+
+#### Key Verified Facilities:
+${poisInDistrict.slice(0, 6).map(p => `- **${p.name}** [${p.category.toUpperCase()}]: ${p.is24x7 ? '🟢 24/7 Available' : 'Normal Hours'} | Phone: **${p.phone || 'N/A'}** (${p.desc || p.address || ''})`).join('\n')}
+
+> Use the **5.0 KM Proximity Scan** to find the nearest emergency hospital, diesel station, or shelter closest to your exact GPS coordinates.`,
+      actions: [
+        { label: `Browse All ${matchedDistrict.name} Facilities`, actionId: 'poi_directory', icon: 'Hospital' },
+        { label: '5.0 KM Proximity Scan', actionId: 'proximity_scan', icon: 'Crosshair' },
+        { label: `Call DEOC (${w.deocPhone || deoc.deocDirect})`, actionId: 'call_phone', payload: w.deocPhone || deoc.deocDirect, icon: 'PhoneCall' }
+      ],
+      category: 'DISTRICT_FACILITIES',
+      confidence: 0.98
+    };
+  }
+
+  // SUB-INTENT 4: EMERGENCY HELPLINES & DEOC
+  if (isContactQuery) {
+    return {
+      answer: `### 📞 Emergency Operations & Helplines: **${matchedDistrict.name}** (${matchedDistrict.malayalam || ''})
+
+#### District Emergency Operations Centre (DEOC):
+- **Toll-Free Helpline**: **1077** (Direct toll-free access from any landline or mobile within ${matchedDistrict.name})
+- **DEOC Direct Operations Desk**: **${w.deocPhone || deoc.deocDirect || '0471-2730045'}**
+- **District Collectorate Emergency Control**: **${deoc.collectoratePhone || 'N/A'}**
+
+#### Statewide Sovereign Emergency Lines:
+- **State Emergency Operations Centre (SEOC)**: **1070** (Thiruvananthapuram)
+- **Police Emergency Response**: **112**
+- **Fire & Rescue Services**: **101**
+- **Ambulance & Trauma Response**: **108**
+- **Kerala Highway Police Helpline**: **9846 100 100**
+
+#### Operational Advisory:
+During active Red and Orange alert events, DEOC lines are manned 24 hours a day by Kerala Police, Revenue, and Health Department coordinators.`,
+      actions: [
+        { label: `Call DEOC (${w.deocPhone || deoc.deocDirect})`, actionId: 'call_phone', payload: w.deocPhone || deoc.deocDirect, icon: 'PhoneCall' },
+        { label: 'Call SEOC (1070)', actionId: 'call_phone', payload: '1070', icon: 'PhoneCall' },
+        { label: `Facilities in ${matchedDistrict.name}`, actionId: 'poi_directory', icon: 'MapPin' }
+      ],
+      category: 'DISTRICT_HELPLINE',
+      confidence: 0.98
+    };
+  }
+
+  // SUB-INTENT 5: COMPREHENSIVE DISTRICT SITREP (DEFAULT)
+  const alertBadge = w.alert === 'RED' ? '🔴 RED ALERT' :
+                     w.alert === 'ORANGE' ? '🟠 ORANGE ALERT' :
+                     w.alert === 'YELLOW' ? '🟡 YELLOW ALERT' : '🟢 GREEN ALERT';
+
+  return {
+    answer: `### 📍 District Tactical SITREP: **${matchedDistrict.name}** (${matchedDistrict.malayalam || ''})
+
+#### 1. Weather Warning Status:
+- **IMD / KSDMA Alert Level**: **${alertBadge}**
+- **Expected 24h Rainfall**: **~${w.rainfallMm || 20} mm** (${alertDef.rainfallThreshold || ''})
+- **Weather Advisory**: ${w.advisory || 'Standard monsoon caution advised.'}
+
+#### 2. District Emergency Operations Centre (DEOC):
+- **Toll-Free Helpline**: **1077** (Accessible from any landline or mobile in ${matchedDistrict.name})
+- **Direct Operations Desk**: **${w.deocPhone || deoc.deocDirect || '0471-2730045'}**
+- **Collectorate Helpline**: **${deoc.collectoratePhone || 'N/A'}**
+- **Police Emergency**: **112** | **Fire & Rescue**: **101** | **Ambulance**: **108**
+
+#### 3. Primary Regional Hazards:
+${(deoc.primaryHazards || ['Flash Floods', 'Localized Waterlogging']).map(h => `- ${h}`).join('\n')}
+
+#### 4. Monitored Reservoirs & Dams:
+${damsInDistrict.length > 0 
+  ? damsInDistrict.map(d => `- **${d.name}**: ${d.alertLevel} Alert (${d.storagePercent}% Storage)`).join('\n')
+  : `- No major reservoirs within district limits; regional river catchments monitored.`}
+
+> **Tactical Action**: To view all verified hospitals, fuel pumps, and shelters in ${matchedDistrict.name}, open the Kerala Facilities Directory or run a 5km Proximity Scan.`,
+    actions: [
+      { label: `Call DEOC (${w.deocPhone || deoc.deocDirect})`, actionId: 'call_phone', payload: w.deocPhone || deoc.deocDirect, icon: 'PhoneCall' },
+      { label: 'Open Weather Matrix', actionId: 'ksdma_weather', icon: 'CloudRain' },
+      { label: `Browse Facilities in ${matchedDistrict.name}`, actionId: 'poi_directory', icon: 'MapPin' }
+    ],
+    category: 'DISTRICT_SPECIFIC',
+    confidence: 0.98
+  };
+}
 
 /**
  * Calculates semantic relevance score between user query and knowledge cluster
  */
 function scoreCluster(cluster, normQuery, rawTokens) {
   let score = 0;
+  const padded = ` ${normQuery} `;
 
-  // 1. Exact keyword & phrase match
+  // 1. Exact keyword & phrase match with word boundaries
   for (const kw of cluster.keywords) {
-    const kwNorm = kw.toLowerCase();
+    const kwNorm = kw.toLowerCase().trim();
+    if (!kwNorm) continue;
     if (normQuery === kwNorm) {
       score += 150; // Exact match
-    } else if (normQuery.includes(kwNorm)) {
+    } else if (padded.includes(` ${kwNorm} `)) {
       score += 25 * (kwNorm.split(' ').length); // Multi-word phrases get higher weight
     } else {
       // Token overlap
@@ -874,6 +1085,25 @@ You can ask me anything about:
   }
 
   const rawTokens = norm.split(/\s+/).filter(t => t.length > 2);
+  const detectedDist = detectDistrict(norm);
+  const detectedDam = detectDam(norm);
+
+  // High-priority global clusters that override entity detection
+  const HIGH_PRIORITY_CLUSTERS = [
+    'CREATOR_ATTRIBUTION',
+    'WAYANAD_LANDSLIDES',
+    'KERALA_FLOODS_HISTORY',
+    'OFFLINE_ROUTING',
+    'TECHNICAL_STACK',
+    'EVACUATION_MANIFEST',
+    'VOICE_NAVIGATION',
+    'MAP_THEMES_NVG',
+    'PWA_INSTALLATION',
+    'RULE_CURVES_EXPLAINED',
+    'COMMAND_PALETTE',
+    'SIMULATION_MODE',
+    'SOVEREIGN_DISCLAIMERS'
+  ];
 
   // Score all knowledge clusters
   const scoredClusters = KNOWLEDGE_CLUSTERS.map(c => ({
@@ -883,7 +1113,37 @@ You can ask me anything about:
 
   const topMatch = scoredClusters[0];
 
-  // If top cluster has high confidence match
+  // 1. If high-priority global cluster matched with high score >= 35
+  if (topMatch && HIGH_PRIORITY_CLUSTERS.includes(topMatch.cluster.id) && topMatch.score >= 35) {
+    const result = topMatch.cluster.handler(rawQuery, norm, context);
+    if (result) {
+      return {
+        answer: result.answer,
+        actions: result.actions || [],
+        category: topMatch.cluster.id,
+        confidence: Math.min(0.99, Math.max(0.85, Number((topMatch.score / 50).toFixed(2))))
+      };
+    }
+  }
+
+  // 2. Specific District Inquiry (Weather, Dams, Facilities, Helpline, or SITREP)
+  if (detectedDist) {
+    return buildDistrictSpecificResponse(detectedDist, rawQuery, norm, context);
+  }
+
+  // 3. Specific Dam Water Level & Rule Curve Inquiry
+  if (detectedDam) {
+    const damCluster = KNOWLEDGE_CLUSTERS.find(c => c.id === 'DAMS_AND_RULE_CURVES');
+    const result = damCluster.handler(rawQuery, norm, context);
+    return {
+      answer: result.answer,
+      actions: result.actions || [],
+      category: 'DAM_SPECIFIC',
+      confidence: 0.98
+    };
+  }
+
+  // 4. Any other cluster with confidence match (e.g. statewide weather, 210 facilities, hazard reporting, general helplines)
   if (topMatch && topMatch.score >= 12) {
     const result = topMatch.cluster.handler(rawQuery, norm, context);
     if (result) {
@@ -896,35 +1156,7 @@ You can ask me anything about:
     }
   }
 
-  // Check if a specific dam is mentioned
-  const detectedDam = detectDam(norm);
-  if (detectedDam) {
-    const damCluster = KNOWLEDGE_CLUSTERS.find(c => c.id === 'DAMS_AND_RULE_CURVES');
-    const result = damCluster.handler(rawQuery, norm, context);
-    return {
-      answer: result.answer,
-      actions: result.actions || [],
-      category: 'DAM_SPECIFIC',
-      confidence: 0.95
-    };
-  }
-
-  // Check if a specific district is mentioned
-  const detectedDist = detectDistrict(norm);
-  if (detectedDist) {
-    const distCluster = KNOWLEDGE_CLUSTERS.find(c => c.id === 'DISTRICT_SPECIFIC');
-    const result = distCluster.handler(rawQuery, norm, context);
-    return {
-      answer: result.answer,
-      actions: result.actions || [],
-      category: 'DISTRICT_SPECIFIC',
-      confidence: 0.95
-    };
-  }
-
-  // --------------------------------------------------------------------------
-  // INTELLIGENT DEEP SYNTHESIS FALLBACK (Never gives an empty or unhelpful response)
-  // --------------------------------------------------------------------------
+  // 5. Intelligent Deep Synthesis Fallback
   return {
     answer: `### 🤖 Tactical AI Analysis: "${rawQuery}"
 
