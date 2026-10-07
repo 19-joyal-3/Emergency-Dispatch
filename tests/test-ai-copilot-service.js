@@ -150,4 +150,38 @@ assert(palakkadWeather.answer.includes('Malampuzha Dam'), 'Should cite Malampuzh
 assert(palakkadWeather.answer.includes('0491-2505309'), 'Should cite Palakkad DEOC phone');
 console.log('✓ Palakkad district-specific weather resolved accurately with Orange Alert and Malampuzha Dam');
 
-console.log('\n✔ ALL 16 EXPANDED TACTICAL AI COPILOT TESTS PASSED PERFECTLY!\n');
+// TEST 17: Kerala Geography & Terrain Grounding
+console.log('--- [TEST 17] Verifying Kerala Geography & Terrain Grounding ---');
+const geoRes = queryTacticalAiCopilotOffline('tell me about kerala geography terrain and rivers');
+assert(geoRes.answer.includes('Malanad'), 'Should mention Malanad');
+assert(geoRes.answer.includes('Anamudi'), 'Should mention highest peak Anamudi');
+assert(/44 rivers/i.test(geoRes.answer), 'Should mention 44 rivers');
+assert(geoRes.answer.includes('Kuttanad'), 'Should mention Kuttanad');
+console.log('✓ Kerala geography & terrain grounding passed');
+
+// TEST 18: Map GIS Engine Grounding
+console.log('--- [TEST 18] Verifying Map GIS Engine Grounding ---');
+const mapEngineRes = queryTacticalAiCopilotOffline('how does the map engine work and pmtiles');
+assert(mapEngineRes.answer.includes('PMTiles'), 'Should mention PMTiles');
+assert(mapEngineRes.answer.includes('Leaflet'), 'Should mention Leaflet');
+assert(mapEngineRes.answer.includes('EPSG:4326') || mapEngineRes.answer.includes('EPSG:3857'), 'Should cite map projection standards');
+console.log('✓ Map GIS engine grounding passed');
+
+// TEST 19: Kerala Highways & Corridors Grounding
+console.log('--- [TEST 19] Verifying Kerala Highways & Corridors Grounding ---');
+const highwayRes = queryTacticalAiCopilotOffline('kerala highway corridors and ghat roads');
+assert(highwayRes.answer.includes('NH-66'), 'Should cite NH-66 corridor');
+assert(highwayRes.answer.includes('NH-544'), 'Should cite NH-544 Kuthiran tunnel');
+assert(highwayRes.answer.includes('Thamarassery Churam'), 'Should cite Thamarassery Churam');
+console.log('✓ Kerala highways and ghat corridors grounding passed');
+
+// TEST 20: Expert Committee Pitch Grounding
+console.log('--- [TEST 20] Verifying Expert Committee Pitch Grounding ---');
+const pitchRes = queryTacticalAiCopilotOffline('expert committee pitch presentation problem solution');
+assert(pitchRes.answer.includes('Sovereign Solution') || pitchRes.answer.includes('Defensibility'), 'Should present defensibility solution');
+assert(pitchRes.answer.includes('Joyal Thomas Francis'), 'Should cite founder Joyal Thomas Francis');
+assert(pitchRes.answer.includes('KSDMA'), 'Should cite KSDMA alignment');
+console.log('✓ Expert committee pitch grounding passed');
+
+console.log('\n✔ ALL 20 EXPANDED TACTICAL AI COPILOT TESTS PASSED PERFECTLY!\n');
+

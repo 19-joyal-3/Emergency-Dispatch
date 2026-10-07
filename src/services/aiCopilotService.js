@@ -818,6 +818,170 @@ Resylix allows dispatchers and convoy drivers to simulate navigation along any p
         { label: 'Browse KSDMA Dam Feeds', actionId: 'ksdma_dams', icon: 'Waves' }
       ]
     })
+  },
+
+  // 20. KERALA GEOGRAPHY, PHYSIOGRAPHY & TERRAIN
+  {
+    id: 'KERALA_GEOGRAPHY_TERRAIN',
+    keywords: [
+      'geography', 'kerala geography', 'geo', 'terrain', 'physiography', 'highlands', 'midlands',
+      'lowlands', 'malanad', 'idanad', 'theeram', 'rivers', '44 rivers', 'periyar', 'bharathappuzha',
+      'pamba', 'chaliyar', 'western ghats', 'sahyadri', 'anamudi', 'meesapulimala', 'chembra',
+      'agasthyarkoodam', 'peaks', 'churam', 'passes', 'palakkad gap', 'thamarassery', 'aryankavu',
+      'bodimettu', 'vembanad', 'ashtamudi', 'backwaters', 'kuttanad', 'kerala map', 'geography of kerala'
+    ],
+    priority: 9,
+    handler: () => ({
+      answer: `### 🗺️ Kerala Geographic & Physiographic Landscape
+
+Kerala spans a specialized 38,863 km² territory between the Arabian Sea (West) and the Western Ghats (East), defined by steep elevation gradients, rapid hydrologic runoffs, and three distinct physiographical zones:
+
+#### 1. The Three Physiographic Zones:
+- ⛰️ **Highlands (Malanad / മലനാട്)**: Elevation > 75 m above MSL. The Western Ghats (Sahyadri) ridge forming Kerala's eastern spine. Dense forests, tea/cardamom/rubber estates, and high-gradient catchment basins prone to debris flows and deep-seated landslides.
+  - **Highest Peaks**: **Anamudi** (2,695 m / 8,842 ft — highest peak in South India, Idukki), **Meesapulimala** (2,640 m), **Chembra Peak** (2,100 m, Wayanad), **Agasthyarkoodam** (1,868 m, TVM), **Banasura Peak** (2,073 m).
+- 🌾 **Midlands (Idanad / ഇടനാട്)**: Elevation 7.5 m – 75 m. Undulating laterite hills, river valleys, and alluvial terraces. High population density and critical transit junctions.
+- 🌊 **Lowlands & Coastal Plains (Theeram / തീരം)**: Elevation < 7.5 m along a 590 km Arabian Sea coastline. Contains tidal backwaters, lagoons (*kayals*), and **Kuttanad** (Alappuzha/Kottayam), which lies **1.2 to 2.2 meters below mean sea level**, requiring active deltaic flood moderation.
+
+#### 2. The 44 Rivers of Kerala:
+- **41 West-Flowing Rivers** (Draining directly into the Arabian Sea or backwaters):
+  - **Periyar River** (244 km — longest river, lifeblood of Idukki & Ernakulam, feeding 17 major dams)
+  - **Bharathappuzha / Nila** (209 km — flows through Palakkad, Thrissur, Malappuram)
+  - **Pamba River** (176 km — sacred river of Sabarimala, central to Pathanamthitta & Alappuzha Kuttanad flooding)
+  - **Chaliyar River** (169 km — drains Wayanad and Malappuram, epicenter of Chooralmala torrent)
+  - **Chalakudy River** (145.5 km — receives spills from Sholayar and Parambikulam)
+- **3 East-Flowing Rivers** (Draining across interstate borders into the Bay of Bengal basin):
+  - **Kabini River** (Wayanad -> Kaveri, Karnataka)
+  - **Bhavani River** (Attappady / Palakkad -> Kaveri, Tamil Nadu)
+  - **Pambar River** (Idukki / Marayoor -> Amaravathi, Tamil Nadu)
+
+#### 3. Strategic Mountain Passes (Ghat Churams):
+- **Palakkad Gap**: A major 30–40 km geological break in the Western Ghats between the Nilgiri and Anaimalai hills. Operates as an interstate freight corridor and weather funnel.
+- **Thamarassery Churam (NH-766)**: 9 steep hairpin bends connecting Kozhikode to Wayanad.
+- **Aryankavu Pass (NH-744)**: Connects Kollam to Sengottai & Tenkasi (Tamil Nadu).
+- **Munnar Gap & Bodimettu (NH-85)**: High-altitude transit from Kochi to Theni / Madurai.`,
+      actions: [
+        { label: 'Check 24 Monitored Dams', actionId: 'ksdma_dams', icon: 'Waves' },
+        { label: 'Open 14-District Weather Matrix', actionId: 'ksdma_weather', icon: 'CloudRain' },
+        { label: 'Facilities Directory', actionId: 'poi_directory', icon: 'Hospital' }
+      ]
+    })
+  },
+
+  // 21. MAP & GIS ENGINE ARCHITECTURE
+  {
+    id: 'MAP_GIS_ENGINE',
+    keywords: [
+      'map', 'maps', 'gis', 'mapping', 'spatial', 'vector tile', 'pmtiles', 'leaflet',
+      'projection', 'epsg', 'wgs84', 'web mercator', 'haversine', 'point in polygon',
+      'coordinates', 'geofence', 'geofencing', 'latitude', 'longitude', 'tile cache',
+      'basemap', 'map engine', 'how map works'
+    ],
+    priority: 9,
+    handler: () => ({
+      answer: `### 🗺️ Resylix Sovereign GIS & Map Engine Architecture
+
+Resylix implements a completely independent, zero-connectivity spatial GIS engine designed to function when global map CDNs and telecom backbones fail:
+
+#### 1. Core Rendering & Tile Protocol:
+- **Client-Side Vector Engine**: Built on Leaflet.js extended with custom GPU-accelerated HTML5 Canvas vector tile layers and hardware-accelerated polyline interpolation.
+- **PMTiles Serverless Archive**: Bundles \`/kerala_satellite.pmtiles\`, an open single-file archive format that allows random-access range requests directly from browser cache or local disk storage without requiring an external tile server.
+- **Standalone Vector Basemap**: Pre-bakes topological contours, coastlines, rivers (Periyar, Pamba, Nila), and arterial highway coordinates directly into client JavaScript memory (\`kerala_basemap_vector.json\`).
+
+#### 2. Coordinate Systems & Geodetic Projections:
+- **Ellipsoid Reference**: WGS84 (**EPSG:4326**) for all raw GPS lat/lng inputs and POI coordinate storage.
+- **Display Projection**: Spherical Web Mercator (**EPSG:3857**) dynamically projected onto interactive raster and vector map panes.
+- **Geodesic Distance Engine**: Employs the spherical **Haversine formula** with Earth radius $R = 6,371\\text{ km}$ for the 5.0 km proximity radar and convoy maneuver calculations.
+- **Spatial Geofencing (Point-in-Polygon)**: Ray-Casting algorithm evaluates whether coordinates intersect any of the 14 district administrative polygons in under 0.2 milliseconds.
+
+#### 3. Multi-Spectrum Tactical Map Themes:
+- 🟢 **NVG Green Phosphor** (\`#00ff41\`): Optimized for night vision goggles and low-light tactical operations.
+- ⬛ **Tactical Dark HUD**: High contrast, low glare for vehicle dashboards and nocturnal convoys.
+- ☀️ **Solar Daylight High-Contrast**: Anti-glare rendering for bright direct outdoor sunlight.
+- 🛰️ **Satellite Hybrid**: Offline vector contours overlaid onto high-resolution georeferenced satellite imagery.
+
+#### 4. Data Compression & Resilient Storage:
+- **Dexie.js (IndexedDB)**: Stores offline map tile caches with Stale-While-Revalidate service worker policies (\`resylix-dispatch-v13\`) and rolling FIFO eviction.
+- **Universal QR Coordinate Compression**: Encodes start, destination, waypoints, and triage manifests into ultra-dense Base64 / pipe-delimited alphanumeric QR strings for instant physical scanning across field units.`,
+      actions: [
+        { label: 'Toggle Map Theme', actionId: 'theme', icon: 'Eye' },
+        { label: 'Offline Storage Manager', actionId: 'storage', icon: 'Terminal' },
+        { label: 'Open Route Planner', actionId: 'tab_planner', icon: 'Navigation' }
+      ]
+    })
+  },
+
+  // 22. KERALA HIGHWAYS & STRATEGIC TRANSPORT CORRIDORS
+  {
+    id: 'KERALA_HIGHWAYS_CORRIDORS',
+    keywords: [
+      'highway', 'highways', 'roads', 'nh 66', 'nh 544', 'nh 766', 'mc road', 'state highway',
+      'arterial roads', 'ghat roads', 'transport corridors', 'bypass', 'kuthiran tunnel',
+      'kerala roads', 'road network'
+    ],
+    priority: 8,
+    handler: () => ({
+      answer: `### 🛣️ Kerala Highway Grid & Strategic Logistics Corridors
+
+Resylix embeds the topological road graph of Kerala across major National Highways, State Highways, and mountain corridors:
+
+#### 1. Primary National Highways (Lifelines):
+- **NH-66 (Pan-Kerala Coastal Corridor)**: 668 km running from Thalapady (Kasaragod) in the north to Kaliyakkavilai (Thiruvananthapuram) in the south, connecting Kannur, Kozhikode, Ernakulam, Alappuzha, and Kollam.
+- **NH-544 (Interstate Logistics Artery)**: Connects Kochi (Edappally) to Coimbatore / Salem via Aluva, Angamaly, Chalakudy, Thrissur, the twin-tube **Kuthiran Tunnel**, and the Palakkad Gap (Walayar border).
+- **NH-766 (Highland Wayanad Lifeline)**: Kozhikode to Kollegal (Karnataka) via Kunnamangalam, Thamarassery Churam (9 hairpin bends), Kalpetta, and Sulthan Bathery.
+- **NH-85 (Kochi - Madurai Corridor)**: Connects Kochi to Dhanushkodi via Muvattupuzha, Kothamangalam, Neriamangalam, Adimali, Munnar Gap, and Bodimettu border.
+- **NH-183 (Central High-Range Highway)**: Kottayam to Dindigul via Kanjirappally, Mundakkayam, Peermade, Vandiperiyar, and Kumily border.
+- **NH-744 (Kollam - Thirumangalam)**: Connects Kollam port to Tamil Nadu via Kundara, Kottarakkara, Punalur, Thenmala, and the Aryankavu ghat pass.
+
+#### 2. Key State Arteries & Bypass Systems:
+- **Main Central Road (MC Road / SH-1)**: 240 km running through the midland spine from Thiruvananthapuram to Angamaly via Venjaramoodu, Kilimanur, Kottarakkara, Adoor, Pandalam, Chengannur, Thiruvalla, Changanassery, Kottayam, Ettumanoor, Koothattukulam, and Muvattupuzha.
+- **AC Road (Alappuzha - Changanassery)**: Trans-Kuttanad arterial link across the low-lying flood polders (elevated causeways and bridges).
+- **Hill Highway (SH-59)**: Parallel high-range corridor under development connecting Kasaragod to Thiruvananthapuram along the foothills of the Western Ghats.
+
+#### Dynamic Road Obstacle Defense in Resylix:
+When landslides, fallen trees, or bridge washouts occur (such as Kuthiran slips or Churam blockades), Resylix injects an infinite weight penalty into the affected edge and recalculates a safe bypass corridor in under 15 milliseconds.`,
+      actions: [
+        { label: 'Open Route Planner', actionId: 'tab_planner', icon: 'Navigation' },
+        { label: 'Report Road Hazard', actionId: 'report_hazard', icon: 'AlertTriangle' },
+        { label: '5.0 KM Proximity Scan', actionId: 'proximity_scan', icon: 'Crosshair' }
+      ]
+    })
+  },
+
+  // 23. EXECUTIVE PITCH & EXPERT COMMITTEE DEFENSIBILITY
+  {
+    id: 'PITCH_EXPERT_COMMITTEE',
+    keywords: [
+      'pitch', 'pitching', 'expert committee', 'committee meeting', 'evaluation', 'presentation',
+      'grant', 'startup mission', 'ksum', 'nidhi prayas', 'defense', 'shortlisted',
+      'defensibility', 'competitive advantage', 'why resylix', 'business plan'
+    ],
+    priority: 10,
+    handler: () => ({
+      answer: `### 🏆 Resylix Executive Pitch & Expert Committee Defensibility Matrix
+
+Resylix was conceived, architected, and engineered by **Joyal Thomas Francis** ([@19-joyal-3](https://github.com/19-joyal-3)) as a sovereign, offline-first crisis navigation system specifically for Kerala's vulnerable geographic and climatic terrain.
+
+#### 1. Core Problem Statement:
+- **The Telecom Blackout Dilemma**: In catastrophic climate disasters (e.g., 2018 Kerala Floods, 2024 Wayanad Chooralmala landslides), cellular base stations lose power within 2 hours, optical fiber lines snap, and commercial navigation apps (Google Maps, Apple Maps) fail completely.
+- **The Spillway Blindspot**: Commercial routing algorithms have zero awareness of Central Water Commission (CWC) dam rule curves or flash-flood discharge corridors, directing emergency convoys onto flooded bridges and submerged roads.
+
+#### 2. The Resylix Sovereign Solution:
+1. **100% Offline In-Browser Routing**: Runs Dijkstra's shortest path graph algorithm locally on the device CPU in **< 15 ms** with zero internet connection.
+2. **Dynamic Hazard & Obstacle Avoidance**: Automatically isolates blocked roads and landslide zones with infinite weight penalties, calculating real-time detours.
+3. **KSDMA & Hydrology Intelligence**: Synchronizes 24 major reservoir rule curves and 14-district IMD heavy rainfall warning polygons directly into tactical route projections.
+4. **Decentralized V2V Mesh & BLE Radar**: Enables peer-to-peer distress signal transmission between rescue vehicles without cellular infrastructure.
+5. **Universal QR Triage Handoff**: Compresses route waypoints, rural hamlets, and patient manifests into offline QR codes for instant physical handover to NDRF, Indian Army, and district collectors.
+
+#### 3. Key Defensibility & Technological Moats:
+- **Zero Server Dependency**: The entire application shell, vector tiles, road graphs, and 210 verified POIs run standalone on client hardware as a hardened PWA and Android package.
+- **Privacy & Sovereign Security**: 0 user tracking, 0 telemetry leakage, 100% compliant with government data sovereignty protocols.
+- **Battle-Tested Grounding**: Tailored specifically for all 14 revenue districts, 44 river basins, and key mountain passes of Kerala.`,
+      actions: [
+        { label: 'View Source Code', actionId: 'open_repo', icon: 'ExternalLink', url: 'https://github.com/19-joyal-3/Emergency-Dispatch' },
+        { label: 'Launch Demo Scenarios', actionId: 'demo_scenarios', icon: 'Zap' },
+        { label: 'Open Presentation Deck', actionId: 'open_presentation', icon: 'Presentation' }
+      ]
+    })
   }
 ];
 
@@ -1102,7 +1266,11 @@ You can ask me anything about:
     'RULE_CURVES_EXPLAINED',
     'COMMAND_PALETTE',
     'SIMULATION_MODE',
-    'SOVEREIGN_DISCLAIMERS'
+    'SOVEREIGN_DISCLAIMERS',
+    'KERALA_GEOGRAPHY_TERRAIN',
+    'MAP_GIS_ENGINE',
+    'KERALA_HIGHWAYS_CORRIDORS',
+    'PITCH_EXPERT_COMMITTEE'
   ];
 
   // Score all knowledge clusters
